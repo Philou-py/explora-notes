@@ -1,0 +1,31 @@
+.avatarContainer {
+  width: var(--size);
+  height: var(--size);
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  background-color: var(--avatar-bg);
+
+  // The next/image component creates a div surrounding the image
+  // This is also required for the .initials div
+  div {
+    width: 100%;
+  }
+
+  .borderAround {
+    // Next Images have default settings for border and padding
+    // hence !important
+    border: 2px solid var(--border-colour) !important;
+    padding: 2px !important;
+  }
+
+  .avatar {
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .initials {
+    font-size: 1.2em;
+    text-align: center;
+  }
+}

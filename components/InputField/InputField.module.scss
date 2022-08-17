@@ -1,0 +1,309 @@
+$zLabel: 1;
+$zTextInput: 2;
+$zDropDown: 4;
+$zFile: 3;
+
+// Sass mixin that changes the colour theme according to the validity of the user input
+@mixin changeTheme($theme-colour) {
+  input,
+  textarea,
+  .selectionContainer {
+    caret-color: $theme-colour;
+    border-color: $theme-colour;
+  }
+
+  .line {
+    background-color: $theme-colour;
+  }
+
+  .prependIcon,
+  label,
+  .message,
+  .counter {
+    color: $theme-colour;
+  }
+
+  &:hover {
+    input,
+    textarea,
+    .selectionContainer {
+      caret-color: $theme-colour;
+      border-color: darken($theme-colour, 10%);
+    }
+
+    .line {
+      background-color: darken($theme-colour, 10%);
+    }
+
+    .prependIcon,
+    label,
+    .message,
+    .counter {
+      color: darken($theme-colour, 10%);
+    }
+  }
+}
+
+@mixin setEllipsisOverflow() {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.select * {
+  cursor: pointer !important;
+}
+
+.inputField {
+  position: relative;
+  display: flex;
+  padding: 16px 0 2px;
+  font-size: 18px;
+  box-sizing: border-box;
+  color: black;
+
+  .prepend {
+    // Taille fixe pour l'icône (l'icône a la forme d'un carré de 24px de côté)
+    width: 30px; // 24 + 6 = 30px
+    height: 26px; // 24 + 2 = 26px
+    padding: 2px 6px 0 0;
+    // L'icône ne doit pas prendre moins de place, même si le composant rétrécit.
+    flex-shrink: 0;
+
+    .prependIcon {
+      color: rgba(black, 0.7);
+      transition: all 0.3s;
+    }
+  }
+
+  .content {
+    flex-grow: 1;
+    width: calc(100% - var(--offset-width));
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  input[type="file"] {
+    position: absolute;
+    z-index: $zFile;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+  }
+
+  input,
+  textarea {
+    position: relative;
+    z-index: $zTextInput;
+    border: none;
+    background-color: transparent;
+    // La fonction 'rgba', dans ce cas, permet de donner une opacité de 0.7 à la couleur black.
+    border-bottom: 1px solid rgba(black, 0.7);
+    border-radius: 0;
+    font-size: 1em;
+    outline: 0;
+    padding: 1px 0 5px;
+    transition: border-color 0.3s linear, background-color 0.2s linear;
+
+    // &:disabled {
+    //   color: initial;
+    // }
+
+    &::placeholder {
+      color: rgba(black, 0.5);
+    }
+  }
+
+  textarea {
+    // Autoriser le redimensionnement vertical seulement
+    resize: vertical;
+  }
+
+  label {
+    @include setEllipsisOverflow();
+    position: absolute;
+    z-index: $zLabel;
+    top: 17px;
+    left: 0;
+    color: rgba(black, 0.7);
+    // Avoid label overflow
+    max-width: calc(100% - var(--offset-width));
+    // Transition pour les propriétés 'top', 'color' et 'font-size'
+    // Utiliser 'all' permet de moins écrire
+    transition: all 0.25s;
+  }
+
+  .shift-label {
+    left: 30px;
+  }
+
+  .line {
+    height: 2px;
+    width: 0;
+    position: absolute;
+    bottom: 15px;
+    background-color: rgba(black, 0.7);
+    transition: all 0.3s;
+  }
+
+  .selectionContainer {
+    @include setEllipsisOverflow();
+    position: relative;
+    border-bottom: 1px solid rgba(black, 0.7);
+    padding: 1px 0 5px;
+    height: 30px;
+    transition: border-color 0.3s linear;
+  }
+
+  .arrow-container {
+    position: absolute;
+    right: 0;
+    top: 3px;
+
+    height: 24px;
+    width: 24px;
+  }
+
+  .drop-down {
+    position: absolute;
+    z-index: $zDropDown;
+    top: 0;
+    left: 0;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: calc(100% - var(--offset-width));
+    // box-shadow: 0 0 5px 0;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    max-height: 200px;
+    overflow: auto;
+
+    li {
+      background-color: white;
+      padding: 6px 10px;
+      transition: all 0.3s;
+      // Break long words
+      // See: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Text/Wrapping_Text#breaking_long_words
+      overflow-wrap: break-word;
+
+      &:hover {
+        background-color: lightgrey;
+      }
+    }
+  }
+
+  &:hover {
+    input,
+    textarea {
+      border-color: rgba(black, 0.9);
+    }
+
+    .line {
+      background-color: rgba(black, 0.9);
+    }
+
+    .prependIcon,
+    label {
+      color: rgba(black, 0.9);
+    }
+
+    .counter {
+      color: rgba(black, 0.9);
+    }
+  }
+
+  input:disabled {
+    color: black;
+  }
+
+  &.disabled * {
+    color: graytext;
+    cursor: default !important;
+  }
+
+  &.disabled input,
+  &.disabled textarea,
+  &.disabled .selectionContainer {
+    color: graytext;
+    background-color: rgba(#1867c0, 0.2);
+  }
+
+  &.active {
+    label {
+      top: 0px;
+      font-size: 0.78em;
+    }
+  }
+
+  &.focused {
+    @include changeTheme(#1867c0);
+
+    .line {
+      width: 100%;
+    }
+  }
+
+  &.valid:not(.empty) {
+    @include changeTheme(#00c853);
+  }
+
+  &.invalid {
+    @keyframes secouer {
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      10%,
+      30%,
+      50%,
+      70%,
+      90% {
+        transform: translateX(-5px);
+      }
+
+      20%,
+      40%,
+      60%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+
+    label {
+      animation-name: secouer;
+      animation-duration: 0.9s;
+    }
+
+    @include changeTheme(#ff5252);
+  }
+
+  &.emptyAndRequired {
+    @include changeTheme(#9e1030); // #9c27b0
+  }
+
+  .hints {
+    display: flex;
+    height: 15px;
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .message {
+    width: 80%;
+    transition: all 0.3s;
+  }
+
+  .counter {
+    display: block;
+    width: 20%;
+    text-align: right;
+    transition: all 0.3s;
+  }
+}

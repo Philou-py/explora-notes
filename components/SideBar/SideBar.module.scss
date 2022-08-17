@@ -1,0 +1,67 @@
+.bg {
+  top: 0;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(black, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 9999;
+  visibility: hidden;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.content {
+  height: 100%;
+  width: 250px;
+  padding: 20px 0;
+  background-color: #eee;
+  transform: translateX(-250px);
+  transition: transform 0.3s ease, visibility 0.3s ease;
+  visibility: hidden;
+
+  &.show {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  &.clipped {
+    margin-top: 60px;
+    position: fixed;
+  }
+}
+
+.avatar,
+.authButton {
+  margin: 0 auto;
+}
+
+.authButton {
+  display: block;
+}
+
+.title {
+  color: black;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+nav.navList {
+  margin: 30px 0;
+
+  a {
+    display: block;
+    padding: 8px 15px;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    color: black;
+
+    &:hover {
+      background-color: rgba(#9e1030, 0.5);
+    }
+  }
+}

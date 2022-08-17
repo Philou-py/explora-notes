@@ -1,0 +1,47 @@
+.container {
+  &.xs {
+    padding: 0 3%;
+  }
+
+  &.sm {
+    padding: 0 5%;
+  }
+
+  &.md {
+    padding: 0 10%;
+  }
+
+  &.lg {
+    padding: 0 13%;
+  }
+
+  &.xl {
+    padding: 0 18%;
+  }
+}
+
+.container.large {
+  &.xs {
+    padding: 0 5%;
+  }
+
+  &.sm {
+    padding: 0 10%;
+  }
+
+  &.md {
+    padding: 0 15%;
+  }
+
+  &.lg {
+    padding: 0 20%;
+  }
+
+  &.xl {
+    padding: 0 25%;
+  }
+}
+
+.container.narrow {
+  padding: 0 20px;
+}

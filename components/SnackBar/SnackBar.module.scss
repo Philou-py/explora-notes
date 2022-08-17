@@ -1,0 +1,31 @@
+.snackBarWrapper {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  padding-left: 10px;
+  padding-right: 10px;
+  display: flex;
+  justify-content: center;
+  z-index: 10000;
+  visibility: hidden;
+  opacity: 0;
+  transform: scale(0) translateY(60px);
+  transition: opacity 500ms ease, transform 500ms ease, visibility 500ms ease;
+
+  &.show {
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.snackBar {
+  padding: 12px 15px;
+  border-radius: 10px;
+  background-color: #2c2c2c;
+  color: white;
+  box-shadow: 0 3px 5px -1px rgb(0 0 0 / 20%), 0 6px 10px 0 rgb(0 0 0 / 14%),
+    0 1px 18px 0 rgb(0 0 0 / 12%);
+  text-align: center;
+}

@@ -1,0 +1,99 @@
+$navMenuHeight: 60px;
+
+.navBar {
+  background-color: #9e1030;
+  box-shadow: 0 2px 4px 0 darkgrey;
+
+  &.fixed {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 9000;
+  }
+
+  &.flat {
+    box-shadow: none;
+  }
+
+  .navBarContainer {
+    display: flex;
+    height: $navMenuHeight;
+  }
+
+  .presentation {
+    display: flex;
+    align-items: center;
+
+    * {
+      cursor: pointer;
+    }
+
+    .navIconButton {
+      margin: 0 20px 0 8px;
+
+      &:hover {
+        background-color: #755139 !important;
+      }
+    }
+
+    .logoAndTitle {
+      display: flex;
+      align-items: center;
+
+      .logoContainer {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        margin-right: 5px;
+      }
+
+      .title {
+        color: white;
+      }
+    }
+
+    &.centerNav {
+      flex-grow: 1;
+
+      .logoAndTitle {
+        margin: 0 auto;
+      }
+    }
+  }
+
+  nav.navMenu {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+
+    a,
+    .authTrigger {
+      height: $navMenuHeight;
+      line-height: $navMenuHeight;
+      padding: 0 15px;
+      text-align: center;
+      text-decoration: none;
+      transition: background-color 400ms ease;
+      color: white;
+
+      &:hover {
+        background-color: #755139;
+      }
+    }
+
+    .authTrigger {
+      font-size: 18px;
+      cursor: pointer;
+    }
+  }
+
+  .avatarContainer {
+    height: 100%;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+  }
+}

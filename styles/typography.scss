@@ -1,0 +1,67 @@
+* {
+  font-family: "Cormorant Upright", "Times New Roman";
+}
+
+p,
+li,
+td,
+a {
+  font-size: 18px;
+  line-height: 1.3em;
+}
+
+th {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+h1 {
+  font-size: 3.25rem;
+  font-weight: 500;
+  margin: 0;
+
+  &.xs,
+  &.sm {
+    font-size: 2.5rem;
+  }
+}
+
+h2 {
+  font-size: 2.75rem;
+  font-weight: 500;
+  margin: 0;
+
+  &.xs,
+  &.sm {
+    font-size: 2.3rem;
+  }
+}
+
+h3 {
+  font-size: 2.25rem;
+  font-weight: 500;
+  margin: 0;
+
+  &.xs,
+  &.sm {
+    font-size: 2.1rem;
+  }
+}
+
+h4 {
+  font-size: 1.75rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+h5 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+h6 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}

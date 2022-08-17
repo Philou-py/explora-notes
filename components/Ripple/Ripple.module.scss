@@ -1,0 +1,27 @@
+.rippleContainer {
+  position: relative;
+  overflow: hidden;
+
+  @keyframes ripple {
+    0% {
+      opacity: 0.5;
+    }
+
+    8% {
+      opacity: 0.9;
+    }
+
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  span.ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0.2);
+    animation: ripple 1s cubic-bezier(0.1, -0.01, 0.58, 1) forwards;
+    background-color: rgba(black, 0.3);
+  }
+}

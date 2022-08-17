@@ -1,0 +1,121 @@
+.table {
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.2);
+  position: relative;
+  border-collapse: collapse;
+  color: rgba(0, 0, 0, 0.87);
+  border-radius: 5px;
+  overflow: hidden;
+
+  .start {
+    text-align: start;
+    justify-content: flex-start;
+  }
+
+  .center {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .end {
+    text-align: end;
+    justify-content: flex-end;
+  }
+
+  tr {
+    position: relative;
+
+    &:not(.headers):hover td {
+      background-color: rgba(0, 0, 0, 0.05);
+      background-clip: padding-box;
+    }
+  }
+
+  tbody tr:not(:last-of-type) td:not(.mobileDisplay),
+  thead tr th {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  tbody tr td:not(:last-of-type):not(.mobileDisplay),
+  thead tr th:not(:last-of-type) {
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  tbody tr:not(:last-of-type) td.mobileDisplay:last-of-type {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  td,
+  th {
+    position: relative;
+    padding: 5px 10px;
+    transition: background-color ease 80ms;
+  }
+
+  .sortIcon {
+    vertical-align: middle;
+    color: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: transform ease 400ms, color ease 400ms, opacity ease 200ms;
+
+    &.reversedIcon {
+      transform: rotate(0.5turn);
+    }
+  }
+
+  th {
+    color: rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    transition: color ease 200ms;
+
+    &:hover {
+      color: rgba(0, 0, 0, 0.97);
+
+      .sortIcon {
+        opacity: 1;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    &.activeSort {
+      color: rgba(0, 0, 0, 0.97);
+
+      .sortIcon {
+        opacity: 1;
+        color: rgba(0, 0, 0, 0.97);
+      }
+    }
+  }
+
+  th.noSorting {
+    cursor: default;
+  }
+
+  td.mobileDisplay {
+    display: block;
+
+    .tdContent {
+      display: flex;
+      justify-content: space-between;
+
+      .tdHeader {
+        color: rgba(0, 0, 0, 0.97);
+        font-weight: bold;
+      }
+
+      .valDisplay {
+        text-align: right;
+      }
+    }
+  }
+
+  .valDisplay {
+    display: flex;
+    align-items: center;
+  }
+
+  thead.mobileSortHeader tr > div {
+    margin: 0 3% 0;
+  }
+}
