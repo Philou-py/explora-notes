@@ -1,0 +1,30 @@
+{
+  "name": "explora-note",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Philippe Schoenhenz",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "packageManager": "yarn@3.2.2",
+  "dependencies": {
+    "classnames": "^2.3.1",
+    "firebase": "^9.9.2",
+    "material-symbols": "latest",
+    "next": "^12.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sass": "^1.54.4",
+    "sharp": "^0.30.7"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.3",
+    "@types/react": "^18.0.17",
+    "eslint": "^8.22.0",
+    "eslint-config-next": "^12.2.5",
+    "typescript": "latest"
+  }
+}
