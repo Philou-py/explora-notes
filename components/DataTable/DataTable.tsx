@@ -77,7 +77,7 @@ export default function DataTable<
 
   const headersTemplate = (
     <tr className={cx("headers")}>
-      {headers.map(({ value, text, align = "start", isSortable }) => (
+      {headers.map(({ value, text, align = "center", isSortable }) => (
         <th
           key={value}
           className={cx(align, { activeSort: sortedBy === value, noSorting: isSortable === false })}
@@ -164,7 +164,17 @@ export default function DataTable<
           </tr>
         </thead>
       )}
-      <tbody>{itemsTemplate}</tbody>
+      <tbody>
+        {items.length !== 0 ? (
+          itemsTemplate
+        ) : (
+          <tr>
+            <td colSpan={headers.length} className={cx("noData")}>
+              Aucune donnée !
+            </td>
+          </tr>
+        )}
+      </tbody>
     </table>
   );
 }

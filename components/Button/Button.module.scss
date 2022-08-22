@@ -1,4 +1,5 @@
 $defaultSize: 36px;
+$smallSize: 35px;
 $largeSize: 45px;
 $xLargeSize: 55px;
 
@@ -29,6 +30,14 @@ a.btn {
 
   &:hover {
     background-color: #dadada;
+  }
+
+  &.small {
+    height: $smallSize;
+    line-height: $smallSize;
+    padding: 0 14px;
+    min-width: 50px;
+    font-size: 13px;
   }
 
   &.large {
@@ -84,12 +93,22 @@ a.btn {
       font-size: 22px;
     }
 
+    &.small {
+      width: 26px;
+      height: 26px;
+      padding: 4px;
+
+      span.material-symbols {
+        font-size: 18px;
+      }
+    }
+
     &.large {
       width: 45px;
       height: 45px;
       padding: 10px;
 
-      span.material-icons {
+      span.material-symbols {
         font-size: 25px;
       }
     }

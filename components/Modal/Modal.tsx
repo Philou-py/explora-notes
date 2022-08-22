@@ -13,7 +13,6 @@ export default function Modal({ showModal = false, closeFunc, children: child }:
 
   const handleBgClick = useCallback(
     (event: MouseEvent) => {
-      console.log("Mouse event triggered!");
       if ((event.target as HTMLDivElement).isSameNode(modalBgRef.current)) {
         closeFunc(false);
       }

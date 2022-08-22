@@ -58,7 +58,7 @@ $zFile: 3;
   position: relative;
   display: flex;
   padding: 16px 0 2px;
-  font-size: 18px;
+  font-size: 20px;
   box-sizing: border-box;
   color: black;
 
@@ -250,7 +250,7 @@ $zFile: 3;
   }
 
   &.valid:not(.empty) {
-    @include changeTheme(#00c853);
+    @include changeTheme(#3cbe72);
   }
 
   &.invalid {

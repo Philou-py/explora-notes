@@ -1,7 +1,6 @@
 import {
   ReactNode,
   ReactElement,
-  ComponentType,
   cloneElement,
   DetailedHTMLProps,
   HTMLAttributes,
@@ -95,7 +94,7 @@ interface CardActionsProps
   children?: ReactNode;
 }
 
-export function CardActions({ className, children, ...otherProps }: CardContentProps) {
+export function CardActions({ className, children, ...otherProps }: CardActionsProps) {
   return (
     <div className={cn(cardStyles.cardActions, className)} {...otherProps}>
       {children}

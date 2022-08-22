@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useId,
+  ReactNode,
   CSSProperties,
   useCallback,
   memo,
@@ -218,7 +219,7 @@ function InputField(props: TextInputProps | TextAreaProps | SelectInputProps | F
     false
   );
 
-  let inputTemplate;
+  let inputTemplate: ReactNode;
   if (props.type !== "textarea" && props.type !== "select") {
     inputTemplate = (
       <input
@@ -234,7 +235,7 @@ function InputField(props: TextInputProps | TextAreaProps | SelectInputProps | F
       />
     );
   } else if (props.type === "select") {
-    let valueIndex;
+    let valueIndex: number;
     if (value !== "") {
       valueIndex = 0;
       while (value !== props.selectItems[valueIndex][1]) {
@@ -286,7 +287,7 @@ function InputField(props: TextInputProps | TextAreaProps | SelectInputProps | F
     );
   }
 
-  let fileInputTemplate;
+  let fileInputTemplate: ReactNode;
   if (props.type === "file") {
     fileInputTemplate = (
       <input type="file" accept={props.acceptTypes} onChange={handleInput} disabled={isDisabled} />

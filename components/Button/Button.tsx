@@ -7,12 +7,13 @@ import { Icon } from "..";
 interface ButtonProps {
   isFlat?: boolean;
   type?: "raised" | "outlined" | "icon" | "text";
+  formSubmit?: boolean;
   isDisabled?: boolean;
   isFullWidth?: boolean;
   isLink?: boolean;
   href?: string;
   title?: string;
-  size?: "large" | "x-large";
+  size?: "small" | "large" | "x-large";
   iconName?: string;
   prependIcon?: string;
   trailingIcon?: string;
@@ -87,7 +88,7 @@ function Button(props: ButtonProps) {
     )
   ) : (
     <button
-      type="button"
+      type={props.formSubmit ? "submit" : "button"}
       onClick={props.onClick}
       className={buttonClassNames}
       disabled={props.isDisabled}
