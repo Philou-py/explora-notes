@@ -9,6 +9,8 @@ import {
   onSnapshot,
   CollectionReference,
   addDoc,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
@@ -25,6 +27,7 @@ import {
   Button,
   Spacer,
   Form,
+  SortOrder,
 } from "../components";
 
 interface TableHeader {
@@ -48,6 +51,7 @@ interface Evaluation {
   gradePrecision: number;
   subject: string;
   bringBackGradesTo20: boolean;
+  coefficient: number;
 }
 
 export default function Evaluations() {
@@ -63,10 +67,10 @@ export default function Evaluations() {
     setData,
     isValid,
     register,
-  } = useForm({ title: "", subject: "", gradePrecision: "" });
+  } = useForm({ title: "", subject: "", gradePrecision: "0.5", coefficient: "1.0" });
 
   const resetForm = useCallback(() => {
-    setData({ title: "", subject: "", gradePrecision: "" });
+    setData({ title: "", subject: "", gradePrecision: "0.5", coefficient: "1.0" });
     setNbQuestions(1);
     setScale([1]);
     setBringBackGradesTo20(true);
@@ -130,47 +134,15 @@ export default function Evaluations() {
     [subjects]
   );
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const q = query(
-        collection(db, "evaluations") as CollectionReference<Evaluation>,
-        where("creator", "==", currentUser.id)
-      );
-
-      const queryUnsub = onSnapshot(q, (querySnapshot) => {
-        const evals = [];
-        querySnapshot.forEach((doc) => {
-          const docData = doc.data();
-          evals.push({
-            key: { rawContent: doc.id },
-            creationDate: {
-              rawContent: docData.creationDate,
-              content: new Date(docData.creationDate).toLocaleDateString("fr-FR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }),
-            },
-            title: { rawContent: docData.title },
-            subject: { rawContent: docData.subject, content: getSubject(docData.subject) },
-            nbQuestions: { rawContent: docData.nbQuestions },
-          });
-        });
-        setEvaluations(evals);
-      });
-
-      return queryUnsub;
-    }
-  }, [currentUser, isAuthenticated, getSubject]);
-
   const handleSubmit = useCallback(async () => {
     const evaluationToSend = {
       ...newEval,
       gradePrecision: Number(newEval.gradePrecision),
+      coefficient: Number(newEval.coefficient),
       scale,
       totalPoints,
       nbQuestions,
-      creationDate: new Date().toISOString().slice(0, 10),
+      creationDate: new Date().toISOString(),
       bringBackGradesTo20,
       creator: currentUser.id,
     };
@@ -191,12 +163,86 @@ export default function Evaluations() {
     handleModalClose,
   ]);
 
+  const handleDeleteEvaluation = useCallback(
+    async (evalId: string) => {
+      await deleteDoc(doc(db, "evaluations", evalId));
+      haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
+    },
+    [haveASnack]
+  );
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const q = query(
+        collection(db, "evaluations") as CollectionReference<Evaluation>,
+        where("creator", "==", currentUser.id)
+      );
+
+      const queryUnsub = onSnapshot(q, (querySnapshot) => {
+        const evals = [];
+        querySnapshot.forEach((doc) => {
+          const docData = doc.data();
+          console.log(docData);
+          evals.push({
+            key: { rawContent: doc.id },
+            creationDate: {
+              rawContent: docData.creationDate,
+              content: new Date(docData.creationDate).toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+            },
+            title: { rawContent: docData.title },
+            subject: { rawContent: docData.subject, content: getSubject(docData.subject) },
+            nbQuestions: { rawContent: docData.nbQuestions },
+            coefficient: { rawContent: docData.coefficient },
+            actions: {
+              content: [
+                // <Button
+                //   type="icon"
+                //   iconName="edit"
+                //   className="orange--text"
+                //   key={piece.id + "-edit"}
+                //   onClick={() => {
+                //     setIsAddingPiece(false);
+                //     setPieceId(piece.id);
+                //     setKeepScore(true);
+                //     setCurrentScoreURL(piece.scoreURL || "");
+                //     setData({ title: piece.title, scoreFile: "", composerId: piece.composer.id });
+                //     handleModalOpen();
+                //   }}
+                //   isFlat
+                // />,
+                <Button
+                  type="icon"
+                  iconName="delete"
+                  className="red--text ml-1"
+                  key={`eval-${docData.id}-delete`}
+                  onClick={() => {
+                    handleDeleteEvaluation(doc.id);
+                  }}
+                  isFlat
+                />,
+              ],
+            },
+          });
+        });
+        setEvaluations(evals);
+      });
+
+      return queryUnsub;
+    }
+  }, [currentUser, isAuthenticated, getSubject, handleDeleteEvaluation]);
+
   const tableHeaders = useMemo<TableHeader[]>(
     () => [
       { text: "Date de création", value: "creationDate" },
       { text: "Titre", value: "title" },
       { text: "Matière", value: "subject" },
       { text: "Nb de questions", value: "nbQuestions", alignContent: "center" },
+      { text: "Coefficient", value: "coefficient", alignContent: "center" },
+      { text: "Actions", value: "actions", isSortable: false, alignContent: "center" },
     ],
     []
   );
@@ -208,7 +254,7 @@ export default function Evaluations() {
         <p className={cx("questionText")}>Question {qNb} :</p>
         <div className={cx("radioButtonsContainer")}>
           {[...Array(20).keys()]
-            .map((i) => (i + 1) / 2)
+            .map((i) => (i + 1) * Number(newEval.gradePrecision))
             .map((i) => (
               <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
                 <label>
@@ -244,6 +290,23 @@ export default function Evaluations() {
     []
   );
 
+  const coefficientForSelect = useMemo(
+    () => [
+      ["0.5", "0.5"],
+      ["1.0", "1.0"],
+      ["1.5", "1.5"],
+      ["2.0", "2.0"],
+      ["2.5", "2.5"],
+      ["3.0", "3.0"],
+      ["4.0", "4.0"],
+      ["5.0", "5.0"],
+      ["6.0", "6.0"],
+      ["7.0", "7.0"],
+      ["8.0", "8.0"],
+    ],
+    []
+  );
+
   return (
     <Container className={cx("evaluations")}>
       <h1 className="page-title text-center">Mes Évaluations</h1>
@@ -254,7 +317,12 @@ export default function Evaluations() {
         </Button>
       </div>
 
-      <DataTable headers={tableHeaders} items={evaluations} />
+      <DataTable
+        headers={tableHeaders}
+        items={evaluations}
+        sortBy="creationDate"
+        sortOrder={SortOrder.DESC}
+      />
 
       <Modal showModal={modalOpen} closeFunc={handleModalClose}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
@@ -281,10 +349,18 @@ export default function Evaluations() {
                 <InputField
                   type="select"
                   label="Précision de la notation"
-                  prependIcon="subject"
+                  prependIcon="precision_manufacturing"
                   selectItems={precisionsForSelect}
                   isRequired
                   {...register("gradePrecision")}
+                />
+                <InputField
+                  type="select"
+                  label="Coefficient"
+                  prependIcon="weight"
+                  selectItems={coefficientForSelect}
+                  isRequired
+                  {...register("coefficient")}
                 />
                 <label className={cx("checkboxContainer")}>
                   <input
@@ -292,7 +368,7 @@ export default function Evaluations() {
                     onChange={handle20GradesCheck}
                     checked={bringBackGradesTo20}
                   />
-                  Ramener les notes sur 20
+                  Ramener la note sur 20
                 </label>
               </fieldset>
 
