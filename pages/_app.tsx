@@ -21,7 +21,7 @@ export default function MyApp({ Component, pageProps }) {
     }),
     []
   );
-  const [sideBarOpen, setSideBarOpen] = useState(true);
+  const [sideBarOpen, setSideBarOpen] = useState(false);
 
   const handleNavIconClick = useCallback(() => {
     setSideBarOpen((prev) => !prev);
@@ -39,8 +39,8 @@ export default function MyApp({ Component, pageProps }) {
             title="ExploraNotes"
             logoPath={toccatechLogo}
             navLinks={[
-              ["Encyclopédie", "/encyclopaedia"],
-              ["Ma Partothèque", "/score-library"],
+              ["Mes Évaluations", "/evaluations"],
+              ["Mes classes", "/classes"],
             ]}
             centerNavSmScreens
             onNavIconClick={handleNavIconClick}
@@ -51,8 +51,8 @@ export default function MyApp({ Component, pageProps }) {
             showSideBar={sideBarOpen}
             onClose={handleBgClick}
             navLinks={[
-              ["Encyclopédie", "/encyclopaedia"],
-              ["Ma Partothèque", "/score-library"],
+              ["Mes Évaluations", "/evaluations"],
+              ["Mes classes", "/classes"],
             ]}
             isClippedIfPossible
             handleAuth

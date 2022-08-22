@@ -1,17 +1,20 @@
 import {
   createContext,
   useState,
-  useEffect,
   ReactNode,
   SetStateAction,
   Dispatch,
   useCallback,
   useContext,
+  useEffect,
 } from "react";
 import { SnackContext } from "./SnackContext";
 import { Modal } from "../components";
 import ConnexionForm from "../layouts/ConnexionForm";
 import SignUpForm from "../layouts/SignUpForm";
+import { auth, db } from "../firebase-config";
+import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged, User as FirebaseUser, signOut as authSignOut } from "firebase/auth";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -19,17 +22,8 @@ interface AuthProviderProps {
 
 interface User {
   id: string;
-  userProfileId: string;
   email: string;
   username: string;
-  avatarURL?: string;
-  authToken: string;
-  pieces: {
-    id: string;
-    title: string;
-    scoreURL?: string;
-    composer: { id: string; name: string; photoURL: string };
-  }[];
 }
 
 export const AuthContext = createContext<{
@@ -47,72 +41,8 @@ export const AuthContext = createContext<{
   signOut: () => {},
 });
 
-function getCookie(cookieName: string) {
-  const name = cookieName + "=";
-  const decoded = decodeURIComponent(document.cookie);
-  const cookies = decoded.split("; ");
-  let res = "";
-  cookies.forEach((val) => {
-    if (val.indexOf(name) === 0) res = val.substring(name.length);
-  });
-  return res;
-}
-
-async function fetchCurrentUser(authToken: string) {
-  const DGRAPH_URL =
-    window.location.hostname === "toccatech.fr"
-      ? "http://dgraph.toccatech.fr/graphql"
-      : "https://dgraph.toccatech.com/graphql";
-
-  const response = await fetch(DGRAPH_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Toccatech-Auth": authToken },
-    body: JSON.stringify({
-      query: `
-      query {
-        queryUser {
-          id
-          email
-          userProfile {
-            id
-            username
-            avatarURL
-            pieces {
-              id
-              title
-              scoreURL
-              composer {
-                id
-                name
-                photoURL
-              }
-            }
-          }
-        }
-      }
-    `,
-    }),
-  });
-  const result = await response.json();
-  const queryData = result.data;
-
-  if (queryData && queryData.queryUser.length !== 0) {
-    const firstUser = queryData.queryUser[0];
-    return {
-      id: firstUser.id,
-      userProfileId: firstUser.userProfile.id,
-      email: firstUser.email,
-      username: firstUser.userProfile.username,
-      avatarURL: firstUser.userProfile.avatarURL,
-      authToken: authToken,
-      pieces: firstUser.userProfile.pieces,
-    } as User;
-  } else {
-    return null;
-  }
-}
-
 export default function AuthProvider({ children }: AuthProviderProps) {
+  console.log("Auth provider rendered!");
   const { haveASnack } = useContext(SnackContext);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | undefined>();
@@ -124,25 +54,16 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signOut = useCallback(async () => {
-    console.log("Déconnexion...");
-    const SIGN_OUT_URL =
-      window.location.hostname === "toccatech.fr"
-        ? "http://auth-server.toccatech.fr/signout"
-        : "https://auth-server.toccatech.com/signout";
-
+    console.log("Signing out...");
     try {
-      const response = await fetch(SIGN_OUT_URL, {
-        credentials: "include",
-      });
-      if (response.status == 200) {
-        haveASnack("success", <h6>Vous êtes à présent déconnecté !</h6>);
-        setIsAuthenticated(false);
-        setCurrentUser(undefined);
-      } else {
-        haveASnack("error", <h6>Oh non, une erreur non identifiée est survenue !</h6>);
-      }
+      await authSignOut(auth);
+      console.log("User successfully signed out!");
+      haveASnack("success", <h6>Vous êtes à présent déconnecté !</h6>);
+      setIsAuthenticated(false);
+      setCurrentUser(undefined);
     } catch (error) {
-      haveASnack("error", <h6>Oh non, le serveur d&rsquo;authentification est inaccessible !</h6>);
+      console.log("An error occured when signing out!", error.code, error.message);
+      haveASnack("error", <h6>Oh non, une erreur non identifiée est survenue !</h6>);
     }
   }, [haveASnack]);
 
@@ -151,18 +72,28 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
-    const authToken = getCookie("X-Toccatech-Auth");
-    fetchCurrentUser(authToken).then((data) => {
-      if (data) {
-        console.log("User authenticated!", data);
-        setIsAuthenticated(true);
-        setCurrentUser(data);
+    const authObserver = (user: FirebaseUser) => {
+      console.log("Auth observer ran!");
+      if (user) {
+        getDoc(doc(db, "users", user.uid)).then((userDocSnap) => {
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            setIsAuthenticated(true);
+            setCurrentUser({
+              id: user.uid,
+              username: userData.username,
+              email: user.email,
+            });
+          }
+        });
       } else {
-        console.log("User not authenticated!");
-        setIsAuthenticated(false);
         setCurrentUser(undefined);
+        setIsAuthenticated(false);
       }
-    });
+      authUnsubscribe();
+    };
+
+    const authUnsubscribe = onAuthStateChanged(auth, authObserver);
   }, []);
 
   return (

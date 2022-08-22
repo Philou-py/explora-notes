@@ -12,6 +12,9 @@ import {
   Button,
   Spacer,
 } from "../components";
+import { auth, db } from "../firebase-config";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { getDoc, doc } from "firebase/firestore";
 
 interface ConnexionFormProps {
   noAccountFunc?: () => void;
@@ -29,68 +32,55 @@ function ConnexionForm({ noAccountFunc, onCompleted, className }: ConnexionFormP
     isValid,
     register,
   } = useForm({
-    username: "",
+    email: "",
     pwd: "",
   });
 
   const buttonTitle = !isValid ? "Le formulaire n'est pas valide !" : undefined;
 
   const handleSubmit = useCallback(async () => {
-    console.log("Connection...");
-    const SIGN_IN_URL =
-      window.location.hostname === "toccatech.fr"
-        ? "http://auth-server.toccatech.fr/signin"
-        : "https://auth-server.toccatech.com/signin";
-
+    console.log("Signing in...");
     try {
-      const response = await fetch(SIGN_IN_URL, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: user.username,
-          password: user.pwd,
-        }),
+      const userCredentials = await signInWithEmailAndPassword(auth, user.email, user.pwd);
+      getDoc(doc(db, "users", userCredentials.user.uid)).then((userDocSnap) => {
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          console.log("Successfully logged in!");
+          haveASnack("success", <h6>Content de vous revoir, {userData.username} !</h6>);
+          setIsAuthenticated(true);
+          setCurrentUser({
+            id: userCredentials.user.uid,
+            username: userData.username,
+            email: user.email,
+          });
+          if (onCompleted) onCompleted();
+        }
       });
-      const result = await response.json();
-      if (response.status == 400) {
-        console.log("Erreur de validation !");
-        haveASnack("error", <h6>Données saisies invalides !</h6>);
-      } else if (response.status == 404) {
-        console.log("Nom d'utilisateur inconnu !");
-        haveASnack("error", <h6>Nom d&rsquo;utilisateur inconnu !</h6>);
-      } else if (response.status == 403) {
-        console.log("Mot de passe incorrect !");
-        haveASnack("error", <h6>Mot de passe incorrect !</h6>);
-      } else if (response.status == 500) {
-        console.log("Erreur serveur !");
-        haveASnack("error", <h6>Oh non, une erreur non identifiée est survenue !</h6>);
-      } else if (response.status == 200) {
-        console.log("Succès !");
-        haveASnack("success", <h6>Content de vous revoir, {result.user.username} !</h6>);
-        setCurrentUser(result.user);
-        setIsAuthenticated(true);
-        if (onCompleted) onCompleted();
-      }
-      console.log(result);
     } catch (error) {
-      console.log(error);
-      haveASnack("error", <h6>Oh non, le serveur d&rsquo;authentification est inaccessible !</h6>);
+      if (error.code === "auth/user-not-found") {
+        console.log("Unknown email!");
+        haveASnack("error", <h6>Cette adresse email est inconnue !</h6>);
+      } else if (error.code === "auth/wrong-password") {
+        haveASnack("error", <h6>Le mot de passe est incorrect !</h6>);
+      } else {
+        console.log("Firebase Error!", error.code, error.message);
+        haveASnack("error", <h6>Oh non, une erreur non identifiée est survenue !</h6>);
+      }
     }
   }, [user, haveASnack, setCurrentUser, setIsAuthenticated, onCompleted]);
 
   return (
     <Card cssWidth={noAccountFunc ? "clamp(300px, 40%, 600px)" : ""} className={className}>
-      <CardHeader title={<h3>Connexion</h3>} centerTitle />
-      <CardContent>
-        <Form>
+      <Form onSubmit={handleSubmit}>
+        <CardHeader title={<h3>Connexion</h3>} centerTitle />
+        <CardContent>
           <InputField
             type="text"
-            label="Nom d&rsquo;utilisateur"
+            label="Adresse email"
             prependIcon="account_circle"
             fullWidth
             isRequired
-            {...register("username")}
+            {...register("email")}
           />
           <InputField
             type="password"
@@ -101,20 +91,21 @@ function ConnexionForm({ noAccountFunc, onCompleted, className }: ConnexionFormP
             isRequired
             {...register("pwd")}
           />
-        </Form>
-      </CardContent>
-      <CardActions>
-        {noAccountFunc && <a onClick={noAccountFunc}>Pas de compte ?</a>}
-        <Spacer />
-        <Button
-          className="blue darken-3"
-          isDisabled={!isValid || isLoading}
-          title={buttonTitle}
-          onClick={handleSubmit}
-        >
-          {isLoading ? "Chargement..." : "Valider"}
-        </Button>
-      </CardActions>
+        </CardContent>
+        <CardActions>
+          {noAccountFunc && <a onClick={noAccountFunc}>Pas de compte ?</a>}
+          <Spacer />
+          <Button
+            className="blue darken-3"
+            isDisabled={!isValid || isLoading}
+            title={buttonTitle}
+            onClick={handleSubmit}
+            formSubmit
+          >
+            {isLoading ? "Chargement..." : "Valider"}
+          </Button>
+        </CardActions>
+      </Form>
     </Card>
   );
 }
