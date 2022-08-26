@@ -5,7 +5,7 @@ import cn from "classnames";
 interface ModalProps {
   showModal: boolean;
   children: ReactElement;
-  closeFunc: (isOpen: boolean) => void;
+  closeFunc?: (isOpen: boolean) => void;
 }
 
 export default function Modal({ showModal = false, closeFunc, children: child }: ModalProps) {
@@ -13,7 +13,7 @@ export default function Modal({ showModal = false, closeFunc, children: child }:
 
   const handleBgClick = useCallback(
     (event: MouseEvent) => {
-      if ((event.target as HTMLDivElement).isSameNode(modalBgRef.current)) {
+      if (closeFunc && (event.target as HTMLDivElement).isSameNode(modalBgRef.current)) {
         closeFunc(false);
       }
     },

@@ -100,6 +100,7 @@ $zFile: 3;
   input,
   textarea {
     position: relative;
+    width: 100%;
     z-index: $zTextInput;
     border: none;
     background-color: transparent;
