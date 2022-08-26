@@ -55,7 +55,7 @@ function SignUpForm({ alreadyAnAccountFunc, onCompleted, className }: ConnexionF
         email: user.email,
         accountType: "teacher",
       };
-      await setDoc(doc(db, "users", user.uid), firestoreUser);
+      await setDoc(doc(db, "users", user.email), firestoreUser);
 
       haveASnack("success", <h6>Bienvenue, {firestoreUser.username} !</h6>);
       setCurrentUser({ ...firestoreUser, id: user.uid });

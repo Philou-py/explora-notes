@@ -40,7 +40,7 @@ export default function MyApp({ Component, pageProps }) {
             logoPath={toccatechLogo}
             navLinks={[
               ["Mes Évaluations", "/evaluations"],
-              ["Mes classes", "/classes"],
+              ["Mes groupes", "/groups"],
             ]}
             centerNavSmScreens
             onNavIconClick={handleNavIconClick}
@@ -52,7 +52,7 @@ export default function MyApp({ Component, pageProps }) {
             onClose={handleBgClick}
             navLinks={[
               ["Mes Évaluations", "/evaluations"],
-              ["Mes classes", "/classes"],
+              ["Mes groupes", "/groups"],
             ]}
             isClippedIfPossible
             handleAuth

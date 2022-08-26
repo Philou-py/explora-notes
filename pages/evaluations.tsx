@@ -11,6 +11,7 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
@@ -49,40 +50,59 @@ interface Evaluation {
   nbQuestions: number;
   scale: number[];
   gradePrecision: number;
-  subject: string;
-  bringBackGradesTo20: boolean;
   coefficient: number;
+  associatedGroupIds: string[];
+}
+
+interface Group {
+  id: string;
+  teacher: string;
+  schoolYear: string;
+  name: string;
+  nbStudents: number;
+  subject: string;
 }
 
 export default function Evaluations() {
   const { currentUser, isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
-  const [evaluations, setEvaluations] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [rawEvals, setRawEvals] = useState<Evaluation[]>([]);
+  const [addEvalModalOpen, setAddEvalModalOpen] = useState(false);
+  const [bindToGrModalOpen, setBindToGrModalOpen] = useState(false);
+  const [currentEvalToBind, setCurrentEvalToBind] = useState({ id: "", name: "" });
+  const [currentGroups, setCurrentGroups] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [nbCurrentGroups, setNbCurrentGroups] = useState(0);
   const [nbQuestions, setNbQuestions] = useState(1);
   const [scale, setScale] = useState([1]);
-  const [bringBackGradesTo20, setBringBackGradesTo20] = useState(true);
   const {
     data: newEval,
     setData,
     isValid,
     register,
-  } = useForm({ title: "", subject: "", gradePrecision: "0.5", coefficient: "1.0" });
+  } = useForm({ title: "", gradePrecision: "0.5", coefficient: "1.0" });
 
   const resetForm = useCallback(() => {
-    setData({ title: "", subject: "", gradePrecision: "0.5", coefficient: "1.0" });
+    setData({ title: "", gradePrecision: "0.5", coefficient: "1.0" });
     setNbQuestions(1);
     setScale([1]);
-    setBringBackGradesTo20(true);
   }, [setData]);
 
-  const handleModalClose = useCallback(() => {
-    setModalOpen(false);
+  const handleAddEvalModalClose = useCallback(() => {
+    setAddEvalModalOpen(false);
     resetForm();
   }, [resetForm]);
 
-  const handleModalOpen = useCallback(() => {
-    setModalOpen(true);
+  const handleAddEvalModalOpen = useCallback(() => {
+    setAddEvalModalOpen(true);
+  }, []);
+
+  const handleBindToGrModalClose = useCallback(() => {
+    setBindToGrModalOpen(false);
+  }, []);
+
+  const handleBindToGrModalOpen = useCallback(() => {
+    setBindToGrModalOpen(true);
   }, []);
 
   const handleAddQuestion = useCallback(() => {
@@ -91,47 +111,87 @@ export default function Evaluations() {
   }, []);
 
   const handleRemoveQuestion = useCallback(() => {
-    setScale((prev) => prev.slice(0, -1));
-    setNbQuestions((prev) => (prev > 0 ? prev - 1 : prev));
-  }, []);
-
-  const handle20GradesCheck = useCallback(() => {
-    setBringBackGradesTo20((prev) => !prev);
-  }, []);
+    if (nbQuestions > 1) {
+      setScale((prev) => prev.slice(0, -1));
+      setNbQuestions((prev) => prev - 1);
+    }
+  }, [nbQuestions]);
 
   const totalPoints = useMemo(() => scale.reduce((total, newVal) => total + newVal, 0), [scale]);
 
-  const subjects = useMemo(
-    () => [
-      ["Physique-chimie", "physics"],
-      ["ES Physique-chimie", "st-physics"],
-      ["Mathématiques", "maths"],
-      ["NSI", "it"],
-      ["Français", "french"],
-      ["Anglais", "english"],
-      ["Allemand", "german"],
-      ["Italien", "italian"],
-      ["Espagnol", "spanish"],
-      ["EPS", "sport"],
-      ["SES", "economics"],
-      ["SVT", "biology"],
-      ["ES SVT", "st-biology"],
-      ["Histoire-géographie", "history-geography"],
-      ["Art-plastique", "arts"],
-    ],
-    []
+  const handleAddCurrentGroup = useCallback(() => {
+    setCurrentGroups((prev) => [...prev, ""]);
+    setNbCurrentGroups((prev) => prev + 1);
+  }, []);
+
+  const handleRemoveCurrentGroup = useCallback(() => {
+    setCurrentGroups((prev) => prev.slice(0, -1));
+    setNbCurrentGroups((prev) => prev - 1);
+  }, []);
+
+  const getGroupName = useCallback(
+    (groupId: string) => {
+      return groups.filter((g) => g.id === groupId)[0].name;
+    },
+    [groups]
   );
 
-  const getSubject = useCallback(
-    (sub: string) => {
-      for (let i = 0; i < subjects.length; i++) {
-        if (subjects[i][1] === sub) {
-          return subjects[i][0];
-        }
-      }
-      return "";
+  const handleDeleteEvaluation = useCallback(
+    async (evalId: string) => {
+      await deleteDoc(doc(db, "evaluations", evalId));
+      haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
     },
-    [subjects]
+    [haveASnack]
+  );
+
+  const evaluations = useMemo(
+    () =>
+      rawEvals.map((rawEval) => ({
+        key: { rawContent: rawEval.id },
+        creationDate: {
+          rawContent: rawEval.creationDate,
+          content: new Date(rawEval.creationDate).toLocaleDateString("fr-FR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+        },
+        title: { rawContent: rawEval.title },
+        nbQuestions: { rawContent: rawEval.nbQuestions },
+        coefficient: { rawContent: rawEval.coefficient },
+        associatedGroups: {
+          rawContent: rawEval.associatedGroupIds.map((id) => getGroupName(id)).join(", "),
+        },
+        actions: {
+          rawContent: "",
+          content: [
+            <Button
+              type="icon"
+              iconName="group_add"
+              className="purple--text"
+              key={`eval-${rawEval.id}-bind`}
+              onClick={() => {
+                setCurrentEvalToBind({ id: rawEval.id, name: rawEval.title });
+                setCurrentGroups(rawEval.associatedGroupIds);
+                setNbCurrentGroups(rawEval.associatedGroupIds.length);
+                handleBindToGrModalOpen();
+              }}
+              isFlat
+            />,
+            <Button
+              type="icon"
+              iconName="delete"
+              className="red--text ml-1"
+              key={`eval-${rawEval.id}-delete`}
+              onClick={() => {
+                handleDeleteEvaluation(rawEval.id);
+              }}
+              isFlat
+            />,
+          ],
+        },
+      })),
+    [getGroupName, handleBindToGrModalOpen, handleDeleteEvaluation, rawEvals]
   );
 
   const handleSubmit = useCallback(async () => {
@@ -143,114 +203,112 @@ export default function Evaluations() {
       totalPoints,
       nbQuestions,
       creationDate: new Date().toISOString(),
-      bringBackGradesTo20,
       creator: currentUser.id,
+      associatedGroupIds: [],
     };
     await addDoc(collection(db, "evaluations"), evaluationToSend);
     haveASnack(
       "success",
       <h6>L&rsquo;évaluation &laquo; {newEval.title} &raquo; a bien été créée !</h6>
     );
-    handleModalClose();
-  }, [
-    newEval,
-    scale,
-    totalPoints,
-    nbQuestions,
-    currentUser,
-    haveASnack,
-    bringBackGradesTo20,
-    handleModalClose,
-  ]);
+    handleAddEvalModalClose();
+  }, [newEval, scale, totalPoints, nbQuestions, currentUser, haveASnack, handleAddEvalModalClose]);
 
-  const handleDeleteEvaluation = useCallback(
-    async (evalId: string) => {
-      await deleteDoc(doc(db, "evaluations", evalId));
-      haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
-    },
-    [haveASnack]
-  );
+  const handleBindToGrSubmit = useCallback(async () => {
+    const evalRef = doc(db, "evaluations", currentEvalToBind.id);
+    await updateDoc(evalRef, { associatedGroupIds: currentGroups });
+    haveASnack(
+      "success",
+      <h6>
+        Les groupes associés à l&rsquo;évaluation &laquo; {currentEvalToBind.name} &raquo; ont bien
+        été mis à jour !
+      </h6>
+    );
+    handleBindToGrModalClose();
+  }, [currentGroups, currentEvalToBind, haveASnack, handleBindToGrModalClose]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      const q = query(
+      const qEvals = query(
         collection(db, "evaluations") as CollectionReference<Evaluation>,
         where("creator", "==", currentUser.id)
       );
 
-      const queryUnsub = onSnapshot(q, (querySnapshot) => {
+      const queryUnsub = onSnapshot(qEvals, (querySnapshot) => {
         const evals = [];
         querySnapshot.forEach((doc) => {
           const docData = doc.data();
-          console.log(docData);
-          evals.push({
-            key: { rawContent: doc.id },
-            creationDate: {
-              rawContent: docData.creationDate,
-              content: new Date(docData.creationDate).toLocaleDateString("fr-FR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }),
-            },
-            title: { rawContent: docData.title },
-            subject: { rawContent: docData.subject, content: getSubject(docData.subject) },
-            nbQuestions: { rawContent: docData.nbQuestions },
-            coefficient: { rawContent: docData.coefficient },
-            actions: {
-              content: [
-                // <Button
-                //   type="icon"
-                //   iconName="edit"
-                //   className="orange--text"
-                //   key={piece.id + "-edit"}
-                //   onClick={() => {
-                //     setIsAddingPiece(false);
-                //     setPieceId(piece.id);
-                //     setKeepScore(true);
-                //     setCurrentScoreURL(piece.scoreURL || "");
-                //     setData({ title: piece.title, scoreFile: "", composerId: piece.composer.id });
-                //     handleModalOpen();
-                //   }}
-                //   isFlat
-                // />,
-                <Button
-                  type="icon"
-                  iconName="delete"
-                  className="red--text ml-1"
-                  key={`eval-${docData.id}-delete`}
-                  onClick={() => {
-                    handleDeleteEvaluation(doc.id);
-                  }}
-                  isFlat
-                />,
-              ],
-            },
-          });
+          evals.push({ id: doc.id, ...docData });
         });
-        setEvaluations(evals);
+        setRawEvals(evals);
       });
 
-      return queryUnsub;
+      const qGroups = query(
+        collection(db, "groups") as CollectionReference<Group>,
+        where("teacher", "==", currentUser.id)
+      );
+
+      const queryGroupUnsub = onSnapshot(qGroups, (querySnapshot) => {
+        const receivedGroups = [];
+        querySnapshot.forEach((doc) => {
+          const docData = doc.data();
+          receivedGroups.push({ id: doc.id, ...docData });
+        });
+        setGroups(receivedGroups);
+      });
+
+      return () => {
+        queryUnsub();
+        queryGroupUnsub();
+      };
     }
-  }, [currentUser, isAuthenticated, getSubject, handleDeleteEvaluation]);
+  }, [currentUser, isAuthenticated]);
 
   const tableHeaders = useMemo<TableHeader[]>(
     () => [
       { text: "Date de création", value: "creationDate" },
       { text: "Titre", value: "title" },
-      { text: "Matière", value: "subject" },
       { text: "Nb de questions", value: "nbQuestions", alignContent: "center" },
       { text: "Coefficient", value: "coefficient", alignContent: "center" },
+      { text: "Groupes associés", value: "associatedGroups", alignContent: "center" },
       { text: "Actions", value: "actions", isSortable: false, alignContent: "center" },
     ],
     []
   );
 
+  const precisionsForSelect = useMemo(
+    () => [
+      ["0.25", "0.25"],
+      ["0.5", "0.5"],
+      ["1.0", "1.0"],
+      ["2.0", "2.0"],
+    ],
+    []
+  );
+
+  const coefficientForSelect = useMemo(
+    () => [
+      ["0.5", "0.5"],
+      ["1.0", "1.0"],
+      ["1.5", "1.5"],
+      ["2.0", "2.0"],
+      ["2.5", "2.5"],
+      ["3.0", "3.0"],
+      ["4.0", "4.0"],
+      ["5.0", "5.0"],
+      ["6.0", "6.0"],
+      ["7.0", "7.0"],
+      ["8.0", "8.0"],
+    ],
+    []
+  );
+
+  const groupsForSelect = useMemo(() => groups.map((gr) => [gr.name, gr.id]), [groups]);
+
   const scaleTemplate = [...Array(nbQuestions).keys()]
     .map((n) => n + 1)
     .map((qNb: number) => (
-      <div key={`question-${qNb}-container`}>
+      <div key={`question-${qNb}-container`} className={cx("questionInput")}>
         <p className={cx("questionText")}>Question {qNb} :</p>
         <div className={cx("radioButtonsContainer")}>
           {[...Array(20).keys()]
@@ -280,39 +338,31 @@ export default function Evaluations() {
       </div>
     ));
 
-  const precisionsForSelect = useMemo(
-    () => [
-      ["0.25", "0.25"],
-      ["0.5", "0.5"],
-      ["1.0", "1.0"],
-      ["2.0", "2.0"],
-    ],
-    []
-  );
-
-  const coefficientForSelect = useMemo(
-    () => [
-      ["0.5", "0.5"],
-      ["1.0", "1.0"],
-      ["1.5", "1.5"],
-      ["2.0", "2.0"],
-      ["2.5", "2.5"],
-      ["3.0", "3.0"],
-      ["4.0", "4.0"],
-      ["5.0", "5.0"],
-      ["6.0", "6.0"],
-      ["7.0", "7.0"],
-      ["8.0", "8.0"],
-    ],
-    []
-  );
+  const groupInputTemplate = [...Array(nbCurrentGroups).keys()].map((i) => (
+    <InputField
+      key={i}
+      type="select"
+      label="Groupe"
+      prependIcon="group"
+      value={currentGroups[i]}
+      setValue={(newValue) => {
+        setCurrentGroups((prev) => {
+          const copy = [...prev];
+          copy[i] = newValue;
+          return copy;
+        });
+      }}
+      selectItems={groupsForSelect}
+      isRequired
+    />
+  ));
 
   return (
     <Container className={cx("evaluations")}>
-      <h1 className="page-title text-center">Mes Évaluations</h1>
+      <h1 className="pageTitle text-center">Mes Évaluations</h1>
 
       <div className={cx("newEvalContainer")}>
-        <Button className="blue darken-3 text-center" onClick={handleModalOpen}>
+        <Button className="blue darken-3 text-center" onClick={handleAddEvalModalOpen}>
           Nouvelle Évaluation
         </Button>
       </div>
@@ -324,7 +374,50 @@ export default function Evaluations() {
         sortOrder={SortOrder.DESC}
       />
 
-      <Modal showModal={modalOpen} closeFunc={handleModalClose}>
+      <Modal showModal={bindToGrModalOpen}>
+        <Card cssWidth="clamp(50px, 500px, 95%)">
+          <Form onSubmit={handleBindToGrSubmit}>
+            <CardHeader title={<h2>Associer une évaluation à une classe</h2>} centerTitle />
+
+            <CardContent>
+              <p>Evaluation en question : {currentEvalToBind.name}</p>
+              {groupInputTemplate}
+
+              <div className={cx("addIconContainer")}>
+                <Button
+                  type="icon"
+                  iconName="remove"
+                  className="yellow darken-1 mr-4"
+                  onClick={handleRemoveCurrentGroup}
+                  size="small"
+                />
+                <Button
+                  type="icon"
+                  iconName="add"
+                  className="red darken-1"
+                  onClick={handleAddCurrentGroup}
+                />
+              </div>
+            </CardContent>
+
+            <CardActions>
+              <Spacer />
+              <Button className="red--text mr-4" type="outlined" onClick={handleBindToGrModalClose}>
+                Annuler
+              </Button>
+              <Button
+                className="blue darken-3"
+                isDisabled={!isAuthenticated || currentGroups.includes("")}
+                formSubmit
+              >
+                Valider
+              </Button>
+            </CardActions>
+          </Form>
+        </Card>
+      </Modal>
+
+      <Modal showModal={addEvalModalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
           <Form onSubmit={handleSubmit}>
             <CardHeader title={<h2>Créer une évaluation</h2>} centerTitle />
@@ -340,14 +433,6 @@ export default function Evaluations() {
                 />
                 <InputField
                   type="select"
-                  label="Matière"
-                  prependIcon="subject"
-                  selectItems={subjects}
-                  isRequired
-                  {...register("subject")}
-                />
-                <InputField
-                  type="select"
                   label="Précision de la notation"
                   prependIcon="precision_manufacturing"
                   selectItems={precisionsForSelect}
@@ -356,27 +441,17 @@ export default function Evaluations() {
                 />
                 <InputField
                   type="select"
-                  label="Coefficient"
+                  label="Coefficient de la note ramenée sur 20"
                   prependIcon="weight"
                   selectItems={coefficientForSelect}
                   isRequired
                   {...register("coefficient")}
                 />
-                <label className={cx("checkboxContainer")}>
-                  <input
-                    type="checkbox"
-                    onChange={handle20GradesCheck}
-                    checked={bringBackGradesTo20}
-                  />
-                  Ramener la note sur 20
-                </label>
+                <p>Les notes des copies seront ramenées sur 20 points.</p>
               </fieldset>
 
               <fieldset className={cx("scale")}>
                 <legend>Barème</legend>
-                <p className={cx("scaleSummary")}>
-                  Nombre de questions : {nbQuestions} | Total des points : {totalPoints}
-                </p>
                 <>{scaleTemplate}</>
                 <div className={cx("addIconContainer")}>
                   <Button
@@ -393,12 +468,15 @@ export default function Evaluations() {
                     onClick={handleAddQuestion}
                   />
                 </div>
+                <p>
+                  Nombre de questions : {nbQuestions} | Total des points : {totalPoints}
+                </p>
               </fieldset>
             </CardContent>
 
             <CardActions>
               <Spacer />
-              <Button className="red--text mr-4" type="outlined" onClick={handleModalClose}>
+              <Button className="red--text mr-4" type="outlined" onClick={handleAddEvalModalClose}>
                 Annuler
               </Button>
               <Button
