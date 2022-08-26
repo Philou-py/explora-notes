@@ -1,0 +1,72 @@
+.groups {
+  .newGroupContainer {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 30px;
+  }
+
+  fieldset {
+    margin-bottom: 20px;
+
+    &.generalInfo {
+      border-color: forestgreen;
+
+      legend {
+        background-color: forestgreen;
+      }
+    }
+
+    &.studentDetails {
+      border-color: royalblue;
+
+      legend {
+        background-color: royalblue;
+      }
+    }
+  }
+
+  legend {
+    color: white;
+    padding: 3px 6px;
+  }
+
+  p {
+    color: black;
+    text-align: center;
+  }
+
+  .nameInput {
+    display: flex;
+    align-items: center;
+
+    .deleteButton {
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+  }
+
+  .addIconContainer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  @keyframes enter {
+    from {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+      max-height: 220px;
+    }
+  }
+
+  .studentInput {
+    overflow: hidden;
+    animation-name: enter;
+    animation-duration: 0.3s;
+  }
+}
