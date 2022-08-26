@@ -7,7 +7,7 @@ import { Container } from "../components";
 export default function Home() {
   return (
     <>
-      <h1 className="text-center">Welcome to ExploraNotes!</h1>
+      <h1 className="pageTitle text-center">Welcome to ExploraNotes!</h1>
       <Container>
         <p className="text-justify">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Aspernatur eaque error laboriosam
