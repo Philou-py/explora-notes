@@ -62,16 +62,7 @@ function SideBar({
           </a>
         </Link>
       )}
-      {isAuthenticated && currentUser!.avatarURL && (
-        <Avatar
-          type="image-avatar"
-          className={sideBarStyles.avatar}
-          borderColour="#33c9ff"
-          src={currentUser!.avatarURL}
-          size={150}
-        />
-      )}
-      {isAuthenticated && !currentUser!.avatarURL && (
+      {isAuthenticated && (
         <Avatar
           type="initials-avatar"
           className={sideBarStyles.avatar}

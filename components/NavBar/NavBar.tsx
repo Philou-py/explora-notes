@@ -97,17 +97,7 @@ export default function NavBar({
           </Link>
         </div>
         {["md", "lg", "xl"].includes(cbp) && navMenu}
-        {["md", "lg", "xl"].includes(cbp) && isAuthenticated && currentUser!.avatarURL && (
-          <div className={navBarStyles.avatarContainer}>
-            <Avatar
-              type="image-avatar"
-              borderColour="#33c9ff"
-              src={currentUser!.avatarURL}
-              size={50}
-            />
-          </div>
-        )}
-        {["md", "lg", "xl"].includes(cbp) && isAuthenticated && !currentUser!.avatarURL && (
+        {["md", "lg", "xl"].includes(cbp) && isAuthenticated && (
           <div className={navBarStyles.avatarContainer}>
             <Avatar
               type="initials-avatar"

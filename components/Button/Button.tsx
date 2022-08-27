@@ -19,6 +19,7 @@ interface ButtonProps {
   trailingIcon?: string;
   className?: string;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+  noKeyboardFocus?: boolean;
   children?: string;
 }
 
@@ -82,7 +83,7 @@ function Button(props: ButtonProps) {
         </a>
       </Link>
     ) : (
-      <a className={buttonClassNames} title={props.title}>
+      <a className={buttonClassNames} title={props.title} tabIndex={props.noKeyboardFocus ? -1 : 0}>
         {buttonContent}
       </a>
     )
@@ -94,6 +95,7 @@ function Button(props: ButtonProps) {
       disabled={props.isDisabled}
       title={props.title}
       onMouseDown={createRipple}
+      tabIndex={props.noKeyboardFocus ? -1 : 0}
     >
       {buttonContent}
     </button>
