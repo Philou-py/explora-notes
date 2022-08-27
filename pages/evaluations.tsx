@@ -30,6 +30,7 @@ import {
   Form,
   SortOrder,
 } from "../components";
+import { useConfirmation } from "../hooks/useConfirmation";
 
 interface TableHeader {
   text: string;
@@ -66,13 +67,15 @@ interface Group {
 export default function Evaluations() {
   const { currentUser, isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
+  const { confirmModalTemplate, promptConfirmation } = useConfirmation();
+
   const [rawEvals, setRawEvals] = useState<Evaluation[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [addEvalModalOpen, setAddEvalModalOpen] = useState(false);
   const [bindToGrModalOpen, setBindToGrModalOpen] = useState(false);
   const [currentEvalToBind, setCurrentEvalToBind] = useState({ id: "", name: "" });
-  const [currentGroups, setCurrentGroups] = useState<string[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [nbCurrentGroups, setNbCurrentGroups] = useState(0);
+  const [currentGroups, setCurrentGroups] = useState<string[]>([""]);
+  const [nbCurrentGroups, setNbCurrentGroups] = useState(1);
   const [nbQuestions, setNbQuestions] = useState(1);
   const [scale, setScale] = useState([1]);
   const {
@@ -125,9 +128,11 @@ export default function Evaluations() {
   }, []);
 
   const handleRemoveCurrentGroup = useCallback(() => {
-    setCurrentGroups((prev) => prev.slice(0, -1));
-    setNbCurrentGroups((prev) => prev - 1);
-  }, []);
+    if (nbCurrentGroups !== 0) {
+      setCurrentGroups((prev) => prev.slice(0, -1));
+      setNbCurrentGroups((prev) => prev - 1);
+    }
+  }, [nbCurrentGroups]);
 
   const getGroupName = useCallback(
     (groupId: string) => {
@@ -137,11 +142,17 @@ export default function Evaluations() {
   );
 
   const handleDeleteEvaluation = useCallback(
-    async (evalId: string) => {
-      await deleteDoc(doc(db, "evaluations", evalId));
-      haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
+    (evalId: string) => {
+      promptConfirmation(
+        "Voulez-vous supprimer cette évaluation de manière définitive ?",
+        async () => {
+          // TODO: Delete associated copies for each student
+          await deleteDoc(doc(db, "evaluations", evalId));
+          haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
+        }
+      );
     },
-    [haveASnack]
+    [haveASnack, promptConfirmation]
   );
 
   const evaluations = useMemo(
@@ -167,19 +178,22 @@ export default function Evaluations() {
           content: [
             <Button
               type="icon"
+              size="small"
               iconName="group_add"
               className="purple--text"
               key={`eval-${rawEval.id}-bind`}
               onClick={() => {
+                const gNb = rawEval.associatedGroupIds.length;
                 setCurrentEvalToBind({ id: rawEval.id, name: rawEval.title });
-                setCurrentGroups(rawEval.associatedGroupIds);
-                setNbCurrentGroups(rawEval.associatedGroupIds.length);
+                setCurrentGroups(gNb > 0 ? rawEval.associatedGroupIds : [""]);
+                setNbCurrentGroups(gNb > 0 ? gNb : 1);
                 handleBindToGrModalOpen();
               }}
               isFlat
             />,
             <Button
               type="icon"
+              size="small"
               iconName="delete"
               className="red--text ml-1"
               key={`eval-${rawEval.id}-delete`}
@@ -342,6 +356,7 @@ export default function Evaluations() {
     <InputField
       key={i}
       type="select"
+      className={cx("groupInput")}
       label="Groupe"
       prependIcon="group"
       value={currentGroups[i]}
@@ -377,10 +392,10 @@ export default function Evaluations() {
       <Modal showModal={bindToGrModalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
           <Form onSubmit={handleBindToGrSubmit}>
-            <CardHeader title={<h2>Associer une évaluation à une classe</h2>} centerTitle />
+            <CardHeader title={<h2>Gérer les groupes évalués</h2>} centerTitle />
 
             <CardContent>
-              <p>Evaluation en question : {currentEvalToBind.name}</p>
+              <p>Évaluation en question : {currentEvalToBind.name}</p>
               {groupInputTemplate}
 
               <div className={cx("addIconContainer")}>
@@ -492,6 +507,8 @@ export default function Evaluations() {
           </Form>
         </Card>
       </Modal>
+
+      {confirmModalTemplate}
     </Container>
   );
 }

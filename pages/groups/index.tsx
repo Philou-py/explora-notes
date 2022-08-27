@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect, useContext, useMemo } from "react";
-import groupStyles from "../pageStyles/Groups.module.scss";
+import groupStyles from "../../pageStyles/Groups.module.scss";
 import cn from "classnames/bind";
 import {
   Container,
@@ -15,8 +15,8 @@ import {
   Spacer,
   Form,
   useForm,
-} from "../components";
-import { db } from "../firebase-config";
+} from "../../components";
+import { db } from "../../firebase-config";
 import {
   doc,
   setDoc,
@@ -27,11 +27,21 @@ import {
   where,
   addDoc,
   arrayUnion,
+  deleteDoc,
 } from "firebase/firestore";
-import { AuthContext } from "../contexts/AuthContext";
-import { SnackContext } from "../contexts/SnackContext";
+import { AuthContext } from "../../contexts/AuthContext";
+import { SnackContext } from "../../contexts/SnackContext";
+import { BreakpointsContext } from "../../contexts/BreakpointsContext";
+import { useConfirmation } from "../../hooks/useConfirmation";
 
-const cx = cn.bind(groupStyles);
+interface TableHeader {
+  text: string;
+  value: string;
+  isSortable?: boolean;
+  align?: "start" | "center" | "end";
+  alignContent?: "start" | "center" | "end";
+  unitSuffix?: string;
+}
 
 interface Group {
   id: string;
@@ -42,11 +52,18 @@ interface Group {
   subject: string;
 }
 
+const cx = cn.bind(groupStyles);
+
+// TODO: après le bouton plus, mettre le pointeur sur l'endroit d'écriture
+
 export default function Groups() {
   const { currentUser, isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
+  const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
+  const { confirmModalTemplate, promptConfirmation } = useConfirmation();
+
   const [modalOpen, setModalOpen] = useState(false);
-  const [groups, setGroups] = useState([]);
+  const [rawGroups, setRawGroups] = useState<Group[]>([]);
   const { data: newGroup, setData, isValid, register } = useForm({ name: "", subject: "" });
   const [students, setStudents] = useState<[string, string][]>([["", ""]]);
   const [nbStudents, setNbStudents] = useState(1);
@@ -116,35 +133,52 @@ export default function Groups() {
     setIsLoading(true);
     const groupToSend = {
       ...newGroup,
-      nbStudents,
+      nbStudents: actualNbStudents,
       schoolYear,
       teacher: currentUser.id,
     };
     const groupRef = await addDoc(collection(db, "groups"), groupToSend);
-    students.forEach(async (studentNameParts) => {
-      const docId = studentNameParts.join("-");
-      const studentRef = doc(db, "students", docId);
-      await setDoc(
-        studentRef,
-        {
-          lastName: studentNameParts[0],
-          firstName: studentNameParts[1],
-          groupIds: arrayUnion(groupRef.id),
-        },
-        { merge: true }
-      );
-    });
+    students
+      .filter((name) => name !== null)
+      .forEach(async (studentNameParts) => {
+        const docId = studentNameParts.join("-");
+        const studentRef = doc(db, "students", docId);
+        await setDoc(
+          studentRef,
+          {
+            lastName: studentNameParts[0],
+            firstName: studentNameParts[1],
+            groupIds: arrayUnion(groupRef.id),
+          },
+          { merge: true }
+        );
+      });
     haveASnack("success", <h6>Le groupe &laquo; {newGroup.name} &raquo; a bien été créée !</h6>);
     handleModalClose();
     setIsLoading(false);
-  }, [newGroup, nbStudents, schoolYear, currentUser, students, haveASnack, handleModalClose]);
+  }, [newGroup, actualNbStudents, schoolYear, currentUser, students, haveASnack, handleModalClose]);
 
-  const tableHeaders = useMemo(
+  const handleDeleteGroup = useCallback(
+    (groupId: string) => {
+      promptConfirmation(
+        "Voulez-vous supprimer ce groupe et dissocier tous les élèves associés ?",
+        async () => {
+          // TODO: delete group ID in the groupIds property of each student
+          await deleteDoc(doc(db, "groups", groupId));
+          haveASnack("success", <h6>Le groupe a bien été supprimé !</h6>);
+        }
+      );
+    },
+    [haveASnack, promptConfirmation]
+  );
+
+  const tableHeaders = useMemo<TableHeader[]>(
     () => [
       { text: "Nom du groupe", value: "name" },
       { text: "Matière", value: "subject" },
-      { text: "Nb d'élèves", value: "nbStudents" },
-      { text: "Année scolaire", value: "schoolYear" },
+      { text: "Nb d'élèves", value: "nbStudents", alignContent: "center" },
+      { text: "Année scolaire", value: "schoolYear", alignContent: "center" },
+      { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
     ],
     []
   );
@@ -193,20 +227,64 @@ export default function Groups() {
         const g = [];
         querySnapshot.forEach((doc) => {
           const docData = doc.data();
-          g.push({
-            key: { rawContent: doc.id },
-            name: { rawContent: docData.name },
-            subject: { rawContent: docData.subject, content: getSubject(docData.subject) },
-            nbStudents: { rawContent: docData.nbStudents, alignContent: "center" },
-            schoolYear: { rawContent: docData.schoolYear, alignContent: "center" },
-          });
+          g.push({ id: doc.id, ...docData });
         });
-        setGroups(g);
+        setRawGroups(g);
       });
 
       return queryUnsub;
     }
   }, [isAuthenticated, currentUser, getSubject]);
+
+  const groups = useMemo(
+    () =>
+      rawGroups.map((rawGroup) => ({
+        key: { rawContent: rawGroup.id },
+        name: { rawContent: rawGroup.name },
+        subject: { rawContent: rawGroup.subject, content: getSubject(rawGroup.subject) },
+        nbStudents: { rawContent: rawGroup.nbStudents, alignContent: "center" },
+        schoolYear: { rawContent: rawGroup.schoolYear, alignContent: "center" },
+        actions: {
+          rawContent: "",
+          content: [
+            <Button
+              type={cbp === "sm" ? "icon" : "text"}
+              size="small"
+              iconName={cbp === "sm" ? "visibility" : undefined}
+              prependIcon={cbp === "sm" ? undefined : "visibility"}
+              className="purple--text"
+              key={`group-${rawGroup.id}-details-btn`}
+              href={`/groups/${rawGroup.id}`}
+              isFlat
+              isLink
+            >
+              {cbp === "sm" ? undefined : "Détails"}
+            </Button>,
+            <Button
+              type="icon"
+              size="small"
+              iconName="edit"
+              className="orange--text"
+              key={`group-${rawGroup.id}-edit`}
+              onClick={() => {}}
+              isFlat
+            />,
+            <Button
+              type="icon"
+              size="small"
+              iconName="delete"
+              className="red--text ml-1"
+              key={`group-${rawGroup.id}-delete`}
+              onClick={() => {
+                handleDeleteGroup(rawGroup.id);
+              }}
+              isFlat
+            />,
+          ],
+        },
+      })),
+    [rawGroups, getSubject, handleDeleteGroup, cbp]
+  );
 
   const studentsTemplate = [...Array(nbStudents).keys()].map(
     (i) =>
@@ -260,6 +338,7 @@ export default function Groups() {
                 handleRemoveStudent(i);
               }}
               size="small"
+              noKeyboardFocus
             />
           </div>
         </div>
@@ -342,6 +421,8 @@ export default function Groups() {
           </Form>
         </Card>
       </Modal>
+
+      {confirmModalTemplate}
     </Container>
   );
 }
