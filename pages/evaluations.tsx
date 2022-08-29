@@ -12,6 +12,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  orderBy,
 } from "firebase/firestore";
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
@@ -50,7 +51,7 @@ interface Evaluation {
   totalPoints: number;
   nbQuestions: number;
   scale: number[];
-  gradePrecision: number;
+  markPrecision: number;
   coefficient: number;
   associatedGroupIds: string[];
 }
@@ -83,10 +84,10 @@ export default function Evaluations() {
     setData,
     isValid,
     register,
-  } = useForm({ title: "", gradePrecision: "0.5", coefficient: "1.0" });
+  } = useForm({ title: "", markPrecision: "0.5", coefficient: "1.0" });
 
   const resetForm = useCallback(() => {
-    setData({ title: "", gradePrecision: "0.5", coefficient: "1.0" });
+    setData({ title: "", markPrecision: "0.5", coefficient: "1.0" });
     setNbQuestions(1);
     setScale([1]);
   }, [setData]);
@@ -211,7 +212,7 @@ export default function Evaluations() {
   const handleSubmit = useCallback(async () => {
     const evaluationToSend = {
       ...newEval,
-      gradePrecision: Number(newEval.gradePrecision),
+      markPrecision: Number(newEval.markPrecision),
       coefficient: Number(newEval.coefficient),
       scale,
       totalPoints,
@@ -259,7 +260,8 @@ export default function Evaluations() {
 
       const qGroups = query(
         collection(db, "groups") as CollectionReference<Group>,
-        where("teacher", "==", currentUser.id)
+        where("teacher", "==", currentUser.id),
+        orderBy("schoolYear", "desc")
       );
 
       const queryGroupUnsub = onSnapshot(qGroups, (querySnapshot) => {
@@ -317,7 +319,43 @@ export default function Evaluations() {
     []
   );
 
-  const groupsForSelect = useMemo(() => groups.map((gr) => [gr.name, gr.id]), [groups]);
+  const subjects = useMemo(
+    () => [
+      ["Physique-chimie", "physics"],
+      ["ES Physique-chimie", "st-physics"],
+      ["Mathématiques", "maths"],
+      ["NSI", "it"],
+      ["Français", "french"],
+      ["Anglais", "english"],
+      ["Allemand", "german"],
+      ["Italien", "italian"],
+      ["Espagnol", "spanish"],
+      ["EPS", "sport"],
+      ["SES", "economics"],
+      ["SVT", "biology"],
+      ["ES SVT", "st-biology"],
+      ["Histoire-géographie", "history-geography"],
+      ["Art-plastique", "arts"],
+    ],
+    []
+  );
+
+  const getSubject = useCallback(
+    (sub: string) => {
+      for (let i = 0; i < subjects.length; i++) {
+        if (subjects[i][1] === sub) {
+          return subjects[i][0];
+        }
+      }
+      return "";
+    },
+    [subjects]
+  );
+
+  const groupsForSelect = useMemo(
+    () => groups.map((gr) => [`${gr.name} - ${getSubject(gr.subject)} - ${gr.schoolYear}`, gr.id]),
+    [groups, getSubject]
+  );
 
   const scaleTemplate = [...Array(nbQuestions).keys()]
     .map((n) => n + 1)
@@ -326,7 +364,7 @@ export default function Evaluations() {
         <p className={cx("questionText")}>Question {qNb} :</p>
         <div className={cx("radioButtonsContainer")}>
           {[...Array(20).keys()]
-            .map((i) => (i + 1) * Number(newEval.gradePrecision))
+            .map((i) => (i + 1) * Number(newEval.markPrecision))
             .map((i) => (
               <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
                 <label>
@@ -452,7 +490,7 @@ export default function Evaluations() {
                   prependIcon="precision_manufacturing"
                   selectItems={precisionsForSelect}
                   isRequired
-                  {...register("gradePrecision")}
+                  {...register("markPrecision")}
                 />
                 <InputField
                   type="select"

@@ -26,7 +26,6 @@ import {
   CollectionReference,
   where,
   addDoc,
-  arrayUnion,
   deleteDoc,
 } from "firebase/firestore";
 import { AuthContext } from "../../contexts/AuthContext";
@@ -136,23 +135,22 @@ export default function Groups() {
       nbStudents: actualNbStudents,
       schoolYear,
       teacher: currentUser.id,
+      studentIdsAndAverages: [],
     };
-    const groupRef = await addDoc(collection(db, "groups"), groupToSend);
+    const studentIds = [];
     students
       .filter((name) => name !== null)
       .forEach(async (studentNameParts) => {
         const docId = studentNameParts.join("-");
+        studentIds.push({ id: docId });
         const studentRef = doc(db, "students", docId);
-        await setDoc(
-          studentRef,
-          {
-            lastName: studentNameParts[0],
-            firstName: studentNameParts[1],
-            groupIds: arrayUnion(groupRef.id),
-          },
-          { merge: true }
-        );
+        await setDoc(studentRef, {
+          lastName: studentNameParts[0],
+          firstName: studentNameParts[1],
+        });
       });
+    groupToSend.studentIdsAndAverages = studentIds;
+    await addDoc(collection(db, "groups"), groupToSend);
     haveASnack("success", <h6>Le groupe &laquo; {newGroup.name} &raquo; a bien été créée !</h6>);
     handleModalClose();
     setIsLoading(false);
