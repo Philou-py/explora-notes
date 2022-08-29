@@ -37,21 +37,27 @@ interface Group {
   name: string;
   nbStudents: number;
   subject: string;
-  studentIdsAndAverages: { id: string; averageOfGroupSubject: number }[];
-  fetchedStudents: Student[];
+  studentIdsAndAverages: {
+    id: string;
+    subjectAverage?: number;
+    subjectMarkNb: number;
+    subjectPointsSum: number;
+  }[];
 }
 
 interface Student {
   id: string;
   firstName: string;
   lastName: string;
-  averageOfGroupSubject: number;
+  subjectAverage?: number;
+  subjectMarkNb: number;
+  subjectPointsSum: number;
 }
 
 interface Copy {
-  mark?: number;
+  mark: number;
   pointsObtained: number[];
-  markOutOf20?: number;
+  markOutOf20: number;
   totalPoints: number;
   coefficient: number;
   studentId: string;
@@ -59,8 +65,20 @@ interface Copy {
   groupId: string;
 }
 
+interface StudentMark {
+  mark?: number;
+  markOutOf20?: number;
+  totalPoints: number;
+  pointsObtained: number[];
+  copyId: string;
+}
+
 const roundNum = (value: number, nbDecimals: number) => {
-  return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
+  if (value) {
+    return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
+  } else {
+    return "";
+  }
 };
 
 export const useStudentsTable = () => {
@@ -75,7 +93,7 @@ export const useStudentsTable = () => {
       { text: "Prénom", value: "firstName" },
       {
         text: "Moyenne dans cette matière",
-        value: "averageOfGroupSubject",
+        value: "subjectAverage",
         alignContent: "center",
       },
     ],
@@ -88,7 +106,10 @@ export const useStudentsTable = () => {
         key: { rawContent: student.id },
         lastName: { rawContent: student.lastName },
         firstName: { rawContent: student.firstName },
-        averageOfGroupSubject: { rawContent: student.averageOfGroupSubject },
+        subjectAverage: {
+          rawContent: student.subjectAverage,
+          content: roundNum(student.subjectAverage, 2),
+        },
       })),
     [students]
   );
@@ -101,16 +122,16 @@ export const useStudentsTable = () => {
 };
 
 export const useMarksTable = (
-  handleAddCopy: (studentId: string) => void,
+  handleAddCopy: (student: Student) => void,
   handleDeleteCopy: (studentId: string) => void,
-  prefillCopyForm: (studentId: string) => void
+  prefillCopyForm: (studentMark: StudentMark, copyId: string) => void
 ) => {
   const router = useRouter();
   const { groupId, evalId } = router.query as { groupId: string; evalId: string };
   const { currentUser } = useContext(AuthContext);
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
   const [marksByStudent, setMarksByStudent] = useState<{
-    [key: string]: { mark: number; markOutOf20: number; totalPoints: number };
+    [key: string]: StudentMark;
   }>({});
   const [groupAverage, setGroupAverage] = useState<number | undefined>();
   const { group, students, groupNotFound } = useFetchGroup(groupId, currentUser);
@@ -132,11 +153,13 @@ export const useMarksTable = (
           mark: copyData.mark,
           markOutOf20: copyData.markOutOf20,
           totalPoints: copyData.totalPoints,
+          pointsObtained: copyData.pointsObtained,
+          copyId: copyRef.id,
         };
         totalMarkPoints += copyData.mark;
         copyCounter++;
       });
-      const groupAverage = roundNum(totalMarkPoints / copyCounter, 2);
+      const groupAverage = totalMarkPoints / copyCounter;
       setMarksByStudent(mByStudent);
       setGroupAverage(groupAverage);
     });
@@ -150,7 +173,7 @@ export const useMarksTable = (
     () => [
       { text: "Nom de famille", value: "lastName" },
       { text: "Prénom", value: "firstName" },
-      { text: "Note de l'élève", value: "mark", alignContent: "center" },
+      { text: "Note de l’élève", value: "mark", alignContent: "center" },
       { text: "Note sur 20", value: "markOutOf20", alignContent: "center" },
       { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
     ],
@@ -164,13 +187,15 @@ export const useMarksTable = (
         lastName: { rawContent: student.lastName },
         firstName: { rawContent: student.firstName },
         mark: {
-          rawContent: marksByStudent[student.id]
+          rawContent: marksByStudent[student.id] ? marksByStudent[student.id].mark : "",
+          content: marksByStudent[student.id]
             ? `${marksByStudent[student.id].mark} / ${marksByStudent[student.id].totalPoints}`
             : "",
         },
         markOutOf20: {
-          rawContent: marksByStudent[student.id]
-            ? `${marksByStudent[student.id].markOutOf20} / 20`
+          rawContent: marksByStudent[student.id] ? marksByStudent[student.id].markOutOf20 : "",
+          content: marksByStudent[student.id]
+            ? `${roundNum(marksByStudent[student.id].markOutOf20, 2)} / 20`
             : "",
         },
         actions: {
@@ -189,9 +214,9 @@ export const useMarksTable = (
               key={`manage-copy-${student.id}`}
               onClick={() => {
                 if (marksByStudent[student.id] && prefillCopyForm) {
-                  prefillCopyForm(student.id);
+                  prefillCopyForm(marksByStudent[student.id], marksByStudent[student.id].copyId);
                 }
-                handleAddCopy(student.id);
+                handleAddCopy(student);
               }}
               isFlat
             >
@@ -248,20 +273,27 @@ export const useFetchGroup = (groupId: string, currentUser?: User) => {
             );
 
             const studentAverages = {};
+            const subjectMarkNbPerStudent = {};
+            const subjectPointsSums = {};
             groupData.studentIdsAndAverages.forEach((st: Partial<Student>) => {
-              studentAverages[st.id] = st.averageOfGroupSubject;
+              studentAverages[st.id] = st.subjectAverage;
+              subjectMarkNbPerStudent[st.id] = st.subjectMarkNb;
+              subjectPointsSums[st.id] = st.subjectPointsSum;
             });
 
             const fetchedStudents = [];
             studentsSnapshot.forEach((studentRef) =>
               fetchedStudents.push({
                 id: studentRef.id,
-                averageOfGroupSubject: studentAverages[studentRef.id],
+                subjectAverage: studentAverages[studentRef.id],
+                subjectMarkNb: subjectMarkNbPerStudent[studentRef.id],
+                subjectPointsSum: subjectPointsSums[studentRef.id],
                 ...studentRef.data(),
               })
             );
+
             setStudents(fetchedStudents);
-            setGroup({ id: groupSnapshot.id, fetchedStudents, ...groupData } as Group);
+            setGroup({ id: groupSnapshot.id, ...groupData } as Group);
             setNotFound(false);
             return;
           }

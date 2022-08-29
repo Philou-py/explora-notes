@@ -49,6 +49,12 @@ interface Group {
   name: string;
   nbStudents: number;
   subject: string;
+  studentIdsAndAverages: {
+    id: string;
+    subjectAverage: number;
+    subjectMarkNb: number;
+    subjectPointsSum: number;
+  }[];
 }
 
 const cx = cn.bind(groupStyles);
@@ -142,7 +148,7 @@ export default function Groups() {
       .filter((name) => name !== null)
       .forEach(async (studentNameParts) => {
         const docId = studentNameParts.join("-");
-        studentIds.push({ id: docId });
+        studentIds.push({ id: docId, subjectMarkNb: 0, subjectPointsSum: 0 });
         const studentRef = doc(db, "students", docId);
         await setDoc(studentRef, {
           lastName: studentNameParts[0],
@@ -174,7 +180,7 @@ export default function Groups() {
     () => [
       { text: "Nom du groupe", value: "name" },
       { text: "Matière", value: "subject" },
-      { text: "Nb d'élèves", value: "nbStudents", alignContent: "center" },
+      { text: "Nb d’élèves", value: "nbStudents", alignContent: "center" },
       { text: "Année scolaire", value: "schoolYear", alignContent: "center" },
       { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
     ],

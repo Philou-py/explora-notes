@@ -61,16 +61,6 @@
     align-items: center;
   }
 
-  .checkboxContainer {
-    font-size: 20px;
-    display: flex;
-    margin: 10px 0;
-
-    input {
-      margin-right: 10px;
-    }
-  }
-
   @keyframes enter {
     from {
       max-height: 0;

@@ -8,7 +8,7 @@ import { SnackContext } from "../../../contexts/SnackContext";
 import { BreakpointsContext } from "../../../contexts/BreakpointsContext";
 import groupDashboardStyles from "../../../pageStyles/GroupDashboard.module.scss";
 import cn from "classnames/bind";
-import { useFetchGroup, useStudentsTable } from "../../../hooks/useFetchGroup";
+import { useStudentsTable } from "../../../hooks/useFetchGroup";
 
 interface TableHeader {
   text: string;
