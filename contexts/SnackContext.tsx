@@ -29,7 +29,7 @@ export default function SnackProvider({ children }: SnackProviderProps) {
 
   const haveASnack = useCallback((type: SnackBarType, content: ReactElement, timeout?: number) => {
     setSnackBarType(type);
-    setSnackTimeout(timeout ? timeout : 5000);
+    setSnackTimeout(timeout || 5000);
     setSnackBarContent(content);
     setShowSnackBar(true);
   }, []);

@@ -90,10 +90,11 @@ export default function AuthProvider({ children }: AuthProviderProps) {
         setCurrentUser(undefined);
         setIsAuthenticated(false);
       }
-      authUnsubscribe();
     };
 
     const authUnsubscribe = onAuthStateChanged(auth, authObserver);
+
+    return authUnsubscribe;
   }, []);
 
   return (
