@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState, useCallback, ReactNode } from "react";
+import { useContext, useMemo, useState, useCallback, ReactNode, memo } from "react";
 import { BreakpointsContext } from "../../contexts/BreakpointsContext";
 import { Icon, InputField } from "..";
 import dtStyles from "./DataTable.module.scss";
@@ -28,7 +28,7 @@ interface DataTableProps<TableItem> {
 
 let cx = cn.bind(dtStyles);
 
-export default function DataTable<
+function DataTable<
   TableItem extends {
     [key: string]: {
       rawContent: string | number;
@@ -178,3 +178,5 @@ export default function DataTable<
     </table>
   );
 }
+
+export default memo(DataTable);
