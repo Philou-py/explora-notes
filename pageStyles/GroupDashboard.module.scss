@@ -7,4 +7,27 @@
     text-align: center;
     margin-top: 30%;
   }
+
+  .evaluationSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &.xs {
+      flex-direction: column;
+      justify-content: center;
+
+      h2 {
+        margin-bottom: 10px;
+      }
+
+      .exportButton {
+        margin-bottom: 20px;
+      }
+    }
+  }
+
+  .note20points {
+    margin-top: 0;
+  }
 }

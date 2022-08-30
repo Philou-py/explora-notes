@@ -128,7 +128,7 @@ export const useStudentsTable = () => {
               : "",
           content:
             student.studentMarkSummary && student.studentMarkSummary.subjectAverageOutOf20
-              ? `${roundNum(student.studentMarkSummary.subjectAverageOutOf20, 2)} / 20`
+              ? roundNum(student.studentMarkSummary.subjectAverageOutOf20, 2)
               : "Pas encore de notes !",
         },
       })),

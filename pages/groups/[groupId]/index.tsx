@@ -211,7 +211,7 @@ export default function GroupDashboard() {
               : "",
           content:
             group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].average
-              ? `${roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)} / 20`
+              ? roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)
               : "Aucune note !",
         },
         minMark: {
@@ -221,7 +221,7 @@ export default function GroupDashboard() {
               : "",
           content:
             group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].minMark
-              ? `${roundNum(group.evalStatistics[rawEval.id].minMarkOutOf20, 2)} / 20`
+              ? roundNum(group.evalStatistics[rawEval.id].minMarkOutOf20, 2)
               : "",
         },
         maxMark: {
@@ -231,7 +231,7 @@ export default function GroupDashboard() {
               : "",
           content:
             group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].maxMark
-              ? `${roundNum(group.evalStatistics[rawEval.id].maxMarkOutOf20, 2)} / 20`
+              ? roundNum(group.evalStatistics[rawEval.id].maxMarkOutOf20, 2)
               : "",
         },
         nbCorrectedCopies: {
@@ -287,7 +287,7 @@ export default function GroupDashboard() {
       { text: "Date de création", value: "creationDate" },
       { text: "Titre", value: "title" },
       { text: "Coefficient", value: "coefficient", alignContent: "center" },
-      { text: "Moyenne du groupe", value: "groupAverage", alignContent: "center" },
+      { text: "Moyenne", value: "groupAverage", alignContent: "center" },
       { text: "Note min", value: "minMark", alignContent: "center" },
       { text: "Note max", value: "maxMark", alignContent: "center" },
       { text: "Copies corrigées", value: "nbCorrectedCopies", alignContent: "center" },
@@ -331,20 +331,27 @@ export default function GroupDashboard() {
               "Détails du groupe - Chargement..."}
           </h1>
 
-          <h2>Évaluations associées</h2>
-          <Button
-            className="blue darken-3 text-center"
-            onClick={() => {
-              exportAllToXLSX(
-                groupId,
-                `${group.name} - ${getSubject(group.subject)} - ${group.schoolYear}`,
-                rawEvaluations,
-                students
-              );
-            }}
-          >
-            Exporter tout
-          </Button>
+          <div className={cx("evaluationSection", cbp)}>
+            <h2>Évaluations associées</h2>
+            <Button
+              className={cn("blue darken-3 text-center", cx("exportButton"))}
+              onClick={() => {
+                exportAllToXLSX(
+                  groupId,
+                  `${group.name} - ${getSubject(group.subject)} - ${group.schoolYear}`,
+                  rawEvaluations,
+                  students
+                );
+              }}
+            >
+              Exporter tout
+            </Button>
+          </div>
+
+          <p className={cx("note20points")}>
+            Les notes de ce tableau sont exprimées sur 20 points.
+          </p>
+
           <DataTable
             headers={evaluationsTableHeaders}
             items={evaluations}
@@ -353,6 +360,11 @@ export default function GroupDashboard() {
           />
 
           <h2>Élèves du groupe</h2>
+
+          <p className={cx("note20points")}>
+            Les notes de ce tableau sont exprimées sur 20 points.
+          </p>
+
           {studentsTableTemplate}
         </>
       )}
