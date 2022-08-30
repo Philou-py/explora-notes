@@ -194,6 +194,18 @@ export default function Evaluations() {
         coefficient: { rawContent: rawEval.coefficient },
         associatedGroups: {
           rawContent: rawEval.associatedGroupIds.map((id) => getGroupName(id)).join(", "),
+          content: rawEval.associatedGroupIds.map((gId) => (
+            <Button
+              key={gId}
+              type="outlined"
+              href={`/groups/${gId}/${rawEval.id}`}
+              className="cyan--text mr-2"
+              isLink
+              isFlat
+            >
+              {getGroupName(gId)}
+            </Button>
+          )),
         },
         actions: {
           rawContent: "",
@@ -400,7 +412,7 @@ export default function Evaluations() {
 
   return (
     <Container className={cx("evaluations")}>
-      <h1 className="pageTitle text-center">Mes Évaluations</h1>
+      <h1 className="pageTitle text-center">Évaluations</h1>
 
       <div className={cx("newEvalContainer")}>
         <Button className="blue darken-3 text-center" onClick={handleAddEvalModalOpen}>
@@ -418,7 +430,7 @@ export default function Evaluations() {
       <Modal showModal={bindToGrModalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
           <Form onSubmit={handleBindToGrSubmit}>
-            <CardHeader title={<h2>Gérer les groupes évalués</h2>} centerTitle />
+            <CardHeader title={<h2>Groupes évalués</h2>} centerTitle />
 
             <CardContent>
               <p>Évaluation en question : {currentEvalToBind.name}</p>
@@ -474,7 +486,7 @@ export default function Evaluations() {
                 />
                 <InputField
                   type="select"
-                  label="Précision de la notation"
+                  label="Intervalle de notation"
                   prependIcon="precision_manufacturing"
                   selectItems={precisionsForSelect}
                   isRequired

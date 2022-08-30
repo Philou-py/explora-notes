@@ -139,7 +139,7 @@ export const useStudentsTable = () => {
     <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="lastName" />
   );
 
-  return { groupNotFound, studentsTableTemplate, group };
+  return { groupNotFound, studentsTableTemplate, group, students };
 };
 
 export const useMarksTable = (

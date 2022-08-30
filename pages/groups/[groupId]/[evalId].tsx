@@ -396,7 +396,7 @@ export default function EvalForGroupDetails() {
     () =>
       group && evaluation
         ? [
-            ["Mes groupes", "/groups"],
+            ["Groupes", "/groups"],
             [group.name, `/groups/${group.id}`],
             [evaluation.title, `/groups/${groupId}/${evalId}`],
           ]

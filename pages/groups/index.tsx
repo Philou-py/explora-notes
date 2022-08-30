@@ -179,14 +179,11 @@ export default function Groups() {
 
   const handleDeleteGroup = useCallback(
     (groupId: string) => {
-      promptConfirmation(
-        "Voulez-vous supprimer ce groupe et dissocier tous les élèves associés ?",
-        async () => {
-          // TODO: delete group ID in the groupIds property of each student
-          await deleteDoc(doc(db, "groups", groupId));
-          haveASnack("success", <h6>Le groupe a bien été supprimé !</h6>);
-        }
-      );
+      promptConfirmation("Voulez-vous supprimer ce groupe et ses élèves associés ?", async () => {
+        // TODO: delete group ID in the groupIds property of each student
+        await deleteDoc(doc(db, "groups", groupId));
+        haveASnack("success", <h6>Le groupe a bien été supprimé !</h6>);
+      });
     },
     [haveASnack, promptConfirmation]
   );
@@ -244,7 +241,7 @@ export default function Groups() {
               isFlat
               isLink
             >
-              {cbp === "sm" ? undefined : "Détails"}
+              {cbp === "sm" ? undefined : "Tableau de bord"}
             </Button>,
             <Button
               type="icon"
@@ -333,7 +330,7 @@ export default function Groups() {
 
   return (
     <Container className={cx("groups")}>
-      <h1 className="pageTitle text-center">Mes groupes</h1>
+      <h1 className="pageTitle text-center">Groupes et tableaux de bord</h1>
 
       <div className={cx("newGroupContainer")}>
         <Button className="blue darken-3 text-center" onClick={handleModalOpen}>

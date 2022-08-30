@@ -1,6 +1,13 @@
 import { useRouter } from "next/router";
 import { useState, useEffect, useCallback, useContext, useMemo } from "react";
-import { collection, query, where, onSnapshot, CollectionReference } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  CollectionReference,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../../firebase-config";
 import { Container, DataTable, SortOrder, Button, BreadCrumbs } from "../../../components";
 import { AuthContext } from "../../../contexts/AuthContext";
@@ -9,6 +16,7 @@ import groupDashboardStyles from "../../../pageStyles/GroupDashboard.module.scss
 import cn from "classnames/bind";
 import { useStudentsTable } from "../../../hooks/useFetchGroup";
 import { useGetSubject } from "../../../hooks/useGetSubject";
+import { utils, writeFile } from "xlsx";
 
 interface TableHeader {
   text: string;
@@ -31,7 +39,111 @@ interface Evaluation {
   associatedGroupIds: string[];
 }
 
+interface Copy {
+  mark: number;
+  pointsObtained: number[];
+  markOutOf20: number;
+  totalPoints: number;
+  coefficient: number;
+  studentId: string;
+  evaluationId: string;
+  groupId: string;
+}
+
+interface Student {
+  id: string;
+  firstName: string;
+  lastName: string;
+  studentMarkSummary: {
+    subjectAverageOutOf20?: number;
+    subjectWeightTotal: number;
+    subjectPointsSum: number;
+  };
+}
+
 const cx = cn.bind(groupDashboardStyles);
+
+const exportOneToXLSX = async (
+  groupId: string,
+  evalId: string,
+  evalTitle: string,
+  groupName: string,
+  students: Student[]
+) => {
+  const copiesSnapshot = await getDocs(
+    query(
+      collection(db, "copies") as CollectionReference<Copy>,
+      where("evaluationId", "==", evalId),
+      where("groupId", "==", groupId)
+    )
+  );
+  const copies = [];
+  copiesSnapshot.forEach((copyRef) => {
+    const copyData = copyRef.data();
+    const pointsPerQuestion = {};
+    copyData.pointsObtained.forEach((point, index) => {
+      pointsPerQuestion[`Question ${index + 1}`] = point;
+    });
+    const student = students.find((st) => st.id === copyData.studentId);
+    copies.push({
+      "Nom de famille": student.lastName,
+      Prénom: student.firstName,
+      [`Note (sur ${copyData.totalPoints})`]: copyData.mark,
+      "Note sur 20": copyData.markOutOf20,
+      ...pointsPerQuestion,
+    });
+  });
+  const worksheet = utils.json_to_sheet(copies);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, worksheet, "Évaluation");
+  writeFile(workbook, `${evalTitle} - ${groupName}.xlsx`);
+};
+
+const exportAllToXLSX = async (
+  groupId: string,
+  groupName: string,
+  evaluations: Evaluation[],
+  students: Student[]
+) => {
+  const copiesSnapshot = await getDocs(
+    query(collection(db, "copies") as CollectionReference<Copy>, where("groupId", "==", groupId))
+  );
+  const studentMarks = {};
+  const studentMap = {};
+  students.forEach((st) => {
+    studentMap[st.id] = st;
+    if (!studentMarks[st.id]) {
+      studentMarks[st.id] = {};
+    }
+  });
+
+  copiesSnapshot.forEach((copyRef) => {
+    const copyData = copyRef.data();
+    studentMarks[copyData.studentId][copyData.evaluationId] = copyData.markOutOf20;
+  });
+
+  console.log(studentMarks);
+
+  const exportData = [];
+  Object.keys(studentMarks).forEach((studentId) => {
+    const marksOutOf20 = studentMarks[studentId];
+    const { lastName, firstName } = studentMap[studentId];
+    const evalMap = {};
+    evaluations.forEach((e) => {
+      evalMap[e.title] = marksOutOf20[e.id];
+    });
+    exportData.push({
+      "Nom de famille": lastName,
+      Prénom: firstName,
+      ...evalMap,
+    });
+  });
+
+  const worksheet = utils.json_to_sheet(exportData);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, worksheet, "Évaluation");
+  writeFile(workbook, `Évaluations du groupe ${groupName}.xlsx`);
+};
 
 const roundNum = (value: number, nbDecimals: number) => {
   if (value) {
@@ -48,7 +160,7 @@ export default function GroupDashboard() {
   const { groupId } = router.query as { groupId: string };
   const { getSubject } = useGetSubject();
   const [rawEvaluations, setRawEvaluations] = useState<Evaluation[]>([]);
-  const { groupNotFound, group, studentsTableTemplate } = useStudentsTable();
+  const { groupNotFound, group, studentsTableTemplate, students } = useStudentsTable();
 
   const getEvaluations = useCallback(() => {
     const qEvaluations = query(
@@ -99,10 +211,28 @@ export default function GroupDashboard() {
               : "",
           content:
             group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].average
-              ? `${roundNum(group.evalStatistics[rawEval.id].average, 2)} / ${
-                  rawEval.totalPoints
-                } - ${roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)} / 20`
+              ? `${roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)} / 20`
               : "Aucune note !",
+        },
+        minMark: {
+          rawContent:
+            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].minMark
+              ? group.evalStatistics[rawEval.id].minMark
+              : "",
+          content:
+            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].minMark
+              ? `${roundNum(group.evalStatistics[rawEval.id].minMarkOutOf20, 2)} / 20`
+              : "",
+        },
+        maxMark: {
+          rawContent:
+            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].maxMark
+              ? group.evalStatistics[rawEval.id].maxMark
+              : "",
+          content:
+            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].maxMark
+              ? `${roundNum(group.evalStatistics[rawEval.id].maxMarkOutOf20, 2)} / 20`
+              : "",
         },
         nbCorrectedCopies: {
           rawContent:
@@ -122,17 +252,34 @@ export default function GroupDashboard() {
               iconName={cbp === "sm" ? "visibility" : undefined}
               prependIcon={cbp === "sm" ? undefined : "visibility"}
               className="purple--text"
-              key={`group-${groupId}-eval-${rawEval.id}-details-btn`}
+              key={`group-${groupId}-eval-${rawEval.id}-details`}
               href={`/groups/${groupId}/${rawEval.id}`}
               isFlat
               isLink
             >
               {cbp === "sm" ? undefined : "Détails"}
             </Button>,
+            <Button
+              type="icon"
+              size="small"
+              iconName="file_download"
+              className="green--text"
+              key={`group-${groupId}-eval-${rawEval.id}-export`}
+              onClick={() => {
+                exportOneToXLSX(
+                  groupId,
+                  rawEval.id,
+                  rawEval.title,
+                  `${group.name} - ${getSubject(group.subject)} - ${group.schoolYear}`,
+                  students
+                );
+              }}
+              isFlat
+            />,
           ],
         },
       })),
-    [rawEvaluations, cbp, groupId, group]
+    [rawEvaluations, cbp, groupId, group, students, getSubject]
   );
 
   const evaluationsTableHeaders = useMemo<TableHeader[]>(
@@ -141,6 +288,8 @@ export default function GroupDashboard() {
       { text: "Titre", value: "title" },
       { text: "Coefficient", value: "coefficient", alignContent: "center" },
       { text: "Moyenne du groupe", value: "groupAverage", alignContent: "center" },
+      { text: "Note min", value: "minMark", alignContent: "center" },
+      { text: "Note max", value: "maxMark", alignContent: "center" },
       { text: "Copies corrigées", value: "nbCorrectedCopies", alignContent: "center" },
       { text: "Actions", value: "actions", isSortable: false, alignContent: "center" },
     ],
@@ -151,7 +300,7 @@ export default function GroupDashboard() {
     () =>
       group
         ? [
-            ["Mes groupes", "/groups"],
+            ["Groupes", "/groups"],
             [group.name, `/groups/${group.id}`],
           ]
         : [],
@@ -165,7 +314,7 @@ export default function GroupDashboard() {
           Connectez-vous pour accéder au tableau de bord de cette classe !
         </h1>
       )}
-      {groupNotFound && (
+      {isAuthenticated && groupNotFound && (
         <h3 className={cx("groupNotFound")}>
           Oups ! Ce groupe n&rsquo;existe pas, ou bien vous n&rsquo;avez pas la permission de
           consulter son tableau de bord !
@@ -183,6 +332,19 @@ export default function GroupDashboard() {
           </h1>
 
           <h2>Évaluations associées</h2>
+          <Button
+            className="blue darken-3 text-center"
+            onClick={() => {
+              exportAllToXLSX(
+                groupId,
+                `${group.name} - ${getSubject(group.subject)} - ${group.schoolYear}`,
+                rawEvaluations,
+                students
+              );
+            }}
+          >
+            Exporter tout
+          </Button>
           <DataTable
             headers={evaluationsTableHeaders}
             items={evaluations}
