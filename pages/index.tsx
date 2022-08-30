@@ -10,15 +10,8 @@ export default function Home() {
       <h1 className="pageTitle text-center">Welcome to ExploraNotes!</h1>
       <Container>
         <p className="text-justify">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Aspernatur eaque error laboriosam
-          illo quidem maiores numquam exercitationem commodi blanditiis dolorem! Fugit, illo
-          perspiciatis? Ut, quidem. Deserunt corrupti eveniet eum optio atque at reprehenderit illo
-          nesciunt commodi, amet quod placeat expedita dolores magnam dignissimos iusto aperiam ad
-          facilis repellendus officia quidem inventore enim repellat! Magni similique sed, commodi
-          veniam, obcaecati id at amet tempore nostrum fuga facere architecto hic excepturi
-          praesentium distinctio fugit delectus blanditiis laboriosam cumque temporibus iste modi.
-          Voluptate, quia odit beatae facilis fuga tempore non dignissimos ducimus alias corporis
-          iure voluptatum! Inventore omnis dolorum rerum, quam doloremque distinctio.
+          Cette application est destinée aux professeurs qui pourront créer leurs groupes
+          d&rsquo;élèves, saisir le barème des évaluations et renseigner les résultats.
         </p>
       </Container>
     </>

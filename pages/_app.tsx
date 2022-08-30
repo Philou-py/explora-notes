@@ -39,22 +39,20 @@ export default function MyApp({ Component, pageProps }) {
             title="ExploraNotes"
             logoPath={toccatechLogo}
             navLinks={[
-              ["Mes Évaluations", "/evaluations"],
-              ["Mes groupes", "/groups"],
+              ["Évaluations", "/evaluations"],
+              ["Groupes", "/groups"],
             ]}
             centerNavSmScreens
             onNavIconClick={handleNavIconClick}
-            hasClippedSideBar
             handleAuth
           />
           <SideBar
             showSideBar={sideBarOpen}
             onClose={handleBgClick}
             navLinks={[
-              ["Mes Évaluations", "/evaluations"],
-              ["Mes groupes", "/groups"],
+              ["Évaluations", "/evaluations"],
+              ["Groupes", "/groups"],
             ]}
-            isClippedIfPossible
             handleAuth
           />
           <RenderComp Component={Component} pageProps={pageProps} sideBarOpen={sideBarOpen} />
@@ -72,15 +70,14 @@ function RenderComp({
   const navBarHeight = 60;
   const sideBarWidth = 250;
 
-  const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
-
-  const pushContentStyle =
-    cbp !== "xs"
-      ? {
-          paddingLeft: sideBarOpen ? sideBarWidth : 0,
-          transition: "padding-left 300ms ease",
-        }
-      : {};
+  // For clipped SideBar
+  // const pushContentStyle =
+  //   cbp !== "xs"
+  //     ? {
+  //         paddingLeft: sideBarOpen ? sideBarWidth : 0,
+  //         transition: "padding-left 300ms ease",
+  //       }
+  //     : {};
 
   return (
     <div
@@ -89,7 +86,7 @@ function RenderComp({
         display: "grid",
         gridTemplateRows: "auto min-content",
         height: "100vh",
-        ...pushContentStyle,
+        // ...pushContentStyle,
       }}
     >
       <div style={{ marginTop: 10, marginBottom: 10 }}>
