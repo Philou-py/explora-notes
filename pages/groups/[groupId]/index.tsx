@@ -173,7 +173,7 @@ export default function GroupDashboard() {
       )}
       {isAuthenticated && !groupNotFound && (
         <>
-          <BreadCrumbs items={breadCrumbItems} />
+          <BreadCrumbs items={breadCrumbItems} namespace="GroupDasboard" />
           <h1 className="pageTitle text-center">
             {(group &&
               `${group.name} - ${getSubject(group.subject)} - ${

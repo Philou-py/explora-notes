@@ -414,7 +414,7 @@ export default function EvalForGroupDetails() {
       )}
       {!groupNotFound && !evalNotFound && (
         <>
-          <BreadCrumbs items={breadCrumbItems} />
+          <BreadCrumbs items={breadCrumbItems} namespace="EvaluationDetailsForGroup" />
           <h1 className="pageTitle text-center">
             {evaluation && `${evaluation.title} - `}Détails de l&rsquo;évaluation
             {group && ` pour ${group.name} ${group.schoolYear}`}
