@@ -17,7 +17,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sass": "^1.54.4",
-    "sharp": "^0.30.7"
+    "sharp": "^0.30.7",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.18.10/xlsx-0.18.10.tgz"
   },
   "devDependencies": {
     "@types/node": "^18.7.3",
