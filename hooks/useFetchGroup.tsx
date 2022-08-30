@@ -37,21 +37,36 @@ interface Group {
   name: string;
   nbStudents: number;
   subject: string;
-  studentIdsAndAverages: {
-    id: string;
-    subjectAverage?: number;
-    subjectMarkNb: number;
-    subjectPointsSum: number;
-  }[];
+  studentMarkSummaries: {
+    [id: string]: {
+      subjectAverageOutOf20?: number;
+      subjectWeightTotal: number;
+      subjectPointsSum: number;
+    };
+  };
+  evalStatistics: {
+    [id: string]: {
+      average: number;
+      averageOutOf20: number;
+      totalPoints: number;
+      copyNb: number;
+      minMark: number;
+      minMarkOutOf20: number;
+      maxMark: number;
+      maxMarkOutOf20: number;
+    };
+  };
 }
 
 interface Student {
   id: string;
   firstName: string;
   lastName: string;
-  subjectAverage?: number;
-  subjectMarkNb: number;
-  subjectPointsSum: number;
+  studentMarkSummary: {
+    subjectAverageOutOf20?: number;
+    subjectWeightTotal: number;
+    subjectPointsSum: number;
+  };
 }
 
 interface Copy {
@@ -93,7 +108,7 @@ export const useStudentsTable = () => {
       { text: "Prénom", value: "firstName" },
       {
         text: "Moyenne dans cette matière",
-        value: "subjectAverage",
+        value: "subjectAverageOutOf20",
         alignContent: "center",
       },
     ],
@@ -106,9 +121,15 @@ export const useStudentsTable = () => {
         key: { rawContent: student.id },
         lastName: { rawContent: student.lastName },
         firstName: { rawContent: student.firstName },
-        subjectAverage: {
-          rawContent: student.subjectAverage,
-          content: roundNum(student.subjectAverage, 2),
+        subjectAverageOutOf20: {
+          rawContent:
+            student.studentMarkSummary && student.studentMarkSummary.subjectAverageOutOf20
+              ? student.studentMarkSummary.subjectAverageOutOf20
+              : "",
+          content:
+            student.studentMarkSummary && student.studentMarkSummary.subjectAverageOutOf20
+              ? `${roundNum(student.studentMarkSummary.subjectAverageOutOf20, 2)} / 20`
+              : "Pas encore de notes !",
         },
       })),
     [students]
@@ -122,8 +143,14 @@ export const useStudentsTable = () => {
 };
 
 export const useMarksTable = (
-  handleAddCopy: (student: Student) => void,
-  handleDeleteCopy: (studentId: string) => void,
+  handleAddCopy: (student: Student, minMWS: number, maxMWS: number) => void,
+  handleDeleteCopy: (
+    student: Student,
+    studentMark: StudentMark,
+    group: Group,
+    minMWS: number,
+    maxMWS: number
+  ) => void,
   prefillCopyForm: (studentMark: StudentMark, copyId: string) => void
 ) => {
   const router = useRouter();
@@ -133,7 +160,7 @@ export const useMarksTable = (
   const [marksByStudent, setMarksByStudent] = useState<{
     [key: string]: StudentMark;
   }>({});
-  const [groupAverage, setGroupAverage] = useState<number | undefined>();
+  const [copyMarks, setCopyMarks] = useState<[string, number][]>([]);
   const { group, students, groupNotFound } = useFetchGroup(groupId, currentUser);
 
   const getCopies = useCallback(() => {
@@ -145,8 +172,8 @@ export const useMarksTable = (
 
     const copiesUnsub = onSnapshot(qCopies, (copiesSnapshot) => {
       const mByStudent = {};
-      let totalMarkPoints = 0;
-      let copyCounter = 0;
+      const copyMarks = [];
+
       copiesSnapshot.forEach((copyRef) => {
         const copyData = copyRef.data();
         mByStudent[copyData.studentId] = {
@@ -156,12 +183,11 @@ export const useMarksTable = (
           pointsObtained: copyData.pointsObtained,
           copyId: copyRef.id,
         };
-        totalMarkPoints += copyData.mark;
-        copyCounter++;
+        copyMarks.push([copyData.studentId, copyData.mark]);
       });
-      const groupAverage = totalMarkPoints / copyCounter;
+
       setMarksByStudent(mByStudent);
-      setGroupAverage(groupAverage);
+      setCopyMarks(copyMarks);
     });
 
     return copiesUnsub;
@@ -174,7 +200,6 @@ export const useMarksTable = (
       { text: "Nom de famille", value: "lastName" },
       { text: "Prénom", value: "firstName" },
       { text: "Note de l’élève", value: "mark", alignContent: "center" },
-      { text: "Note sur 20", value: "markOutOf20", alignContent: "center" },
       { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
     ],
     []
@@ -189,14 +214,10 @@ export const useMarksTable = (
         mark: {
           rawContent: marksByStudent[student.id] ? marksByStudent[student.id].mark : "",
           content: marksByStudent[student.id]
-            ? `${marksByStudent[student.id].mark} / ${marksByStudent[student.id].totalPoints}`
-            : "",
-        },
-        markOutOf20: {
-          rawContent: marksByStudent[student.id] ? marksByStudent[student.id].markOutOf20 : "",
-          content: marksByStudent[student.id]
-            ? `${roundNum(marksByStudent[student.id].markOutOf20, 2)} / 20`
-            : "",
+            ? `${marksByStudent[student.id].mark} / ${
+                marksByStudent[student.id].totalPoints
+              } - ${roundNum(marksByStudent[student.id].markOutOf20, 2)} / 20`
+            : "Copie non corrigée",
         },
         actions: {
           rawContent: "",
@@ -216,7 +237,11 @@ export const useMarksTable = (
                 if (marksByStudent[student.id] && prefillCopyForm) {
                   prefillCopyForm(marksByStudent[student.id], marksByStudent[student.id].copyId);
                 }
-                handleAddCopy(student);
+                handleAddCopy(
+                  student,
+                  Math.min(...copyMarks.filter((c) => c[0] !== student.id).map((c) => c[1])),
+                  Math.max(...copyMarks.filter((c) => c[0] !== student.id).map((c) => c[1]))
+                );
               }}
               isFlat
             >
@@ -233,21 +258,41 @@ export const useMarksTable = (
               className="red--text ml-1"
               key={`delete-copy-${student.id}`}
               onClick={() => {
-                handleDeleteCopy(student.id);
+                handleDeleteCopy(
+                  student,
+                  marksByStudent[student.id],
+                  group,
+                  Math.min(...copyMarks.filter((c) => c[0] !== student.id).map((c) => c[1])),
+                  Math.max(...copyMarks.filter((c) => c[0] !== student.id).map((c) => c[1]))
+                );
               }}
               isFlat
             />,
           ],
         },
       })),
-    [students, cbp, handleAddCopy, handleDeleteCopy, prefillCopyForm, marksByStudent]
+    [
+      students,
+      cbp,
+      handleAddCopy,
+      handleDeleteCopy,
+      prefillCopyForm,
+      marksByStudent,
+      copyMarks,
+      group,
+    ]
   );
 
   const marksTableTemplate = !groupNotFound && (
     <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="lastName" />
   );
 
-  return { marksTableTemplate, group, groupAverage, groupNotFound };
+  return {
+    marksTableTemplate,
+    group,
+    evalStatistics: group && group.evalStatistics[evalId],
+    groupNotFound,
+  };
 };
 
 export const useFetchGroup = (groupId: string, currentUser?: User) => {
@@ -264,30 +309,15 @@ export const useFetchGroup = (groupId: string, currentUser?: User) => {
             const studentsSnapshot = await getDocs(
               query(
                 collection(db, "students") as CollectionReference<Student>,
-                where(
-                  documentId(),
-                  "in",
-                  groupData.studentIdsAndAverages.map((st: Partial<Student>) => st.id)
-                )
+                where(documentId(), "in", groupData.studentIds)
               )
             );
-
-            const studentAverages = {};
-            const subjectMarkNbPerStudent = {};
-            const subjectPointsSums = {};
-            groupData.studentIdsAndAverages.forEach((st: Partial<Student>) => {
-              studentAverages[st.id] = st.subjectAverage;
-              subjectMarkNbPerStudent[st.id] = st.subjectMarkNb;
-              subjectPointsSums[st.id] = st.subjectPointsSum;
-            });
 
             const fetchedStudents = [];
             studentsSnapshot.forEach((studentRef) =>
               fetchedStudents.push({
                 id: studentRef.id,
-                subjectAverage: studentAverages[studentRef.id],
-                subjectMarkNb: subjectMarkNbPerStudent[studentRef.id],
-                subjectPointsSum: subjectPointsSums[studentRef.id],
+                studentMarkSummary: groupData.studentMarkSummaries[studentRef.id],
                 ...studentRef.data(),
               })
             );
@@ -303,6 +333,8 @@ export const useFetchGroup = (groupId: string, currentUser?: User) => {
       });
       return groupUnsub;
     } else {
+      setNotFound(true);
+      setGroup(undefined);
       return () => {};
     }
   }, [groupId, currentUser]);
