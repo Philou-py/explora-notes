@@ -144,23 +144,25 @@ function DataTable<
     <table className={cn(cx("table"), className)}>
       {cbp !== "xs" && <thead>{headersTemplate}</thead>}
       {cbp === "xs" && (
-        <thead className={cx("mobileSortHeader")}>
-          <tr>
-            <InputField
-              type="select"
-              value={sortedBy}
-              setValue={setSortedBy}
-              label="Trier les données..."
-              selectItems={mobileHeaderList}
-            />
-            <InputField
-              type="select"
-              value={sortedOrder === SortOrder.ASC ? "ascending" : "descending"}
-              setValue={handleSortOrderChange}
-              label="Modifier le sens..."
-              selectItems={mobileSelectOrder}
-              isDisabled={sortedBy === ""}
-            />
+        <thead>
+          <tr className={cx("mobileSortInputFields")}>
+            <td>
+              <InputField
+                type="select"
+                value={sortedBy}
+                setValue={setSortedBy}
+                label="Trier les données..."
+                selectItems={mobileHeaderList}
+              />
+              <InputField
+                type="select"
+                value={sortedOrder === SortOrder.ASC ? "ascending" : "descending"}
+                setValue={handleSortOrderChange}
+                label="Modifier le sens..."
+                selectItems={mobileSelectOrder}
+                isDisabled={sortedBy === ""}
+              />
+            </td>
           </tr>
         </thead>
       )}

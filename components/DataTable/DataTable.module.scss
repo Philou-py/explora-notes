@@ -33,7 +33,7 @@
   tr {
     position: relative;
 
-    &:not(.headers):hover td {
+    &:not(.headers):not(.mobileSortInputFields):hover td {
       background-color: rgba(0, 0, 0, 0.05);
       background-clip: padding-box;
     }
@@ -120,9 +120,5 @@
   .valDisplay {
     display: flex;
     align-items: center;
-  }
-
-  thead.mobileSortHeader tr > div {
-    margin: 0 3% 0;
   }
 }
