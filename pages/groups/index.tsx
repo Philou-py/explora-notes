@@ -32,6 +32,7 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { SnackContext } from "../../contexts/SnackContext";
 import { BreakpointsContext } from "../../contexts/BreakpointsContext";
 import { useConfirmation } from "../../hooks/useConfirmation";
+import { useGetSubject } from "../../hooks/useGetSubject";
 
 interface TableHeader {
   text: string;
@@ -49,12 +50,25 @@ interface Group {
   name: string;
   nbStudents: number;
   subject: string;
-  studentIdsAndAverages: {
-    id: string;
-    subjectAverage: number;
-    subjectMarkNb: number;
-    subjectPointsSum: number;
-  }[];
+  studentMarkSummaries: {
+    [id: string]: {
+      subjectAverageOutOf20?: number;
+      subjectWeightTotal: number;
+      subjectPointsSum: number;
+    };
+  };
+  evalStatistics: {
+    [id: string]: {
+      average: number;
+      averageOutOf20: number;
+      totalPoints: number;
+      copyNb: number;
+      minMark: number;
+      minMarkOutOf20: number;
+      maxMark: number;
+      maxMarkOutOf20: number;
+    };
+  };
 }
 
 const cx = cn.bind(groupStyles);
@@ -66,6 +80,7 @@ export default function Groups() {
   const { haveASnack } = useContext(SnackContext);
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
+  const { getSubject, subjects } = useGetSubject();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [rawGroups, setRawGroups] = useState<Group[]>([]);
@@ -141,21 +156,21 @@ export default function Groups() {
       nbStudents: actualNbStudents,
       schoolYear,
       teacher: currentUser.id,
-      studentIdsAndAverages: [],
+      studentIds: [],
+      evalStatistics: {},
+      studentMarkSummaries: {},
     };
-    const studentIds = [];
     students
       .filter((name) => name !== null)
       .forEach(async (studentNameParts) => {
         const docId = studentNameParts.join("-");
-        studentIds.push({ id: docId, subjectMarkNb: 0, subjectPointsSum: 0 });
+        groupToSend.studentIds.push(docId);
         const studentRef = doc(db, "students", docId);
         await setDoc(studentRef, {
           lastName: studentNameParts[0],
           firstName: studentNameParts[1],
         });
       });
-    groupToSend.studentIdsAndAverages = studentIds;
     await addDoc(collection(db, "groups"), groupToSend);
     haveASnack("success", <h6>Le groupe &laquo; {newGroup.name} &raquo; a bien été créée !</h6>);
     handleModalClose();
@@ -185,39 +200,6 @@ export default function Groups() {
       { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
     ],
     []
-  );
-
-  const subjects = useMemo(
-    () => [
-      ["Physique-chimie", "physics"],
-      ["ES Physique-chimie", "st-physics"],
-      ["Mathématiques", "maths"],
-      ["NSI", "it"],
-      ["Français", "french"],
-      ["Anglais", "english"],
-      ["Allemand", "german"],
-      ["Italien", "italian"],
-      ["Espagnol", "spanish"],
-      ["EPS", "sport"],
-      ["SES", "economics"],
-      ["SVT", "biology"],
-      ["ES SVT", "st-biology"],
-      ["Histoire-géographie", "history-geography"],
-      ["Art-plastique", "arts"],
-    ],
-    []
-  );
-
-  const getSubject = useCallback(
-    (sub: string) => {
-      for (let i = 0; i < subjects.length; i++) {
-        if (subjects[i][1] === sub) {
-          return subjects[i][0];
-        }
-      }
-      return "";
-    },
-    [subjects]
   );
 
   useEffect(() => {

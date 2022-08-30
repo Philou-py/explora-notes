@@ -2,13 +2,13 @@ import { useRouter } from "next/router";
 import { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { collection, query, where, onSnapshot, CollectionReference } from "firebase/firestore";
 import { db } from "../../../firebase-config";
-import { Container, DataTable, SortOrder, Button } from "../../../components";
+import { Container, DataTable, SortOrder, Button, BreadCrumbs } from "../../../components";
 import { AuthContext } from "../../../contexts/AuthContext";
-import { SnackContext } from "../../../contexts/SnackContext";
 import { BreakpointsContext } from "../../../contexts/BreakpointsContext";
 import groupDashboardStyles from "../../../pageStyles/GroupDashboard.module.scss";
 import cn from "classnames/bind";
 import { useStudentsTable } from "../../../hooks/useFetchGroup";
+import { useGetSubject } from "../../../hooks/useGetSubject";
 
 interface TableHeader {
   text: string;
@@ -33,12 +33,20 @@ interface Evaluation {
 
 const cx = cn.bind(groupDashboardStyles);
 
+const roundNum = (value: number, nbDecimals: number) => {
+  if (value) {
+    return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
+  } else {
+    return "";
+  }
+};
+
 export default function GroupDashboard() {
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
   const { isAuthenticated } = useContext(AuthContext);
-  const { haveASnack } = useContext(SnackContext);
   const router = useRouter();
   const { groupId } = router.query as { groupId: string };
+  const { getSubject } = useGetSubject();
   const [rawEvaluations, setRawEvaluations] = useState<Evaluation[]>([]);
   const { groupNotFound, group, studentsTableTemplate } = useStudentsTable();
 
@@ -84,6 +92,27 @@ export default function GroupDashboard() {
         },
         title: { rawContent: rawEval.title },
         coefficient: { rawContent: rawEval.coefficient },
+        groupAverage: {
+          rawContent:
+            group && group.evalStatistics[rawEval.id]
+              ? group.evalStatistics[rawEval.id].average
+              : "",
+          content:
+            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].average
+              ? `${roundNum(group.evalStatistics[rawEval.id].average, 2)} / ${
+                  rawEval.totalPoints
+                } - ${roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)} / 20`
+              : "Aucune note !",
+        },
+        nbCorrectedCopies: {
+          rawContent:
+            group && group.evalStatistics[rawEval.id] ? group.evalStatistics[rawEval.id].copyNb : 0,
+          content: group
+            ? group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].copyNb
+              ? `${group.evalStatistics[rawEval.id].copyNb} / ${group.nbStudents}`
+              : `0 / ${group.nbStudents}`
+            : "",
+        },
         actions: {
           rawContent: "",
           content: [
@@ -103,7 +132,7 @@ export default function GroupDashboard() {
           ],
         },
       })),
-    [rawEvaluations, cbp, groupId]
+    [rawEvaluations, cbp, groupId, group]
   );
 
   const evaluationsTableHeaders = useMemo<TableHeader[]>(
@@ -111,9 +140,22 @@ export default function GroupDashboard() {
       { text: "Date de création", value: "creationDate" },
       { text: "Titre", value: "title" },
       { text: "Coefficient", value: "coefficient", alignContent: "center" },
+      { text: "Moyenne du groupe", value: "groupAverage", alignContent: "center" },
+      { text: "Copies corrigées", value: "nbCorrectedCopies", alignContent: "center" },
       { text: "Actions", value: "actions", isSortable: false, alignContent: "center" },
     ],
     []
+  );
+
+  const breadCrumbItems = useMemo<[string, string][]>(
+    () =>
+      group
+        ? [
+            ["Mes groupes", "/groups"],
+            [group.name, `/groups/${group.id}`],
+          ]
+        : [],
+    [group]
   );
 
   return (
@@ -131,12 +173,14 @@ export default function GroupDashboard() {
       )}
       {isAuthenticated && !groupNotFound && (
         <>
+          <BreadCrumbs items={breadCrumbItems} />
           <h1 className="pageTitle text-center">
-            {(group && `${group.name} - Tableau de bord`) || "Détails du groupe - Chargement..."}
+            {(group &&
+              `${group.name} - ${getSubject(group.subject)} - ${
+                group.schoolYear
+              } - Tableau de bord`) ||
+              "Détails du groupe - Chargement..."}
           </h1>
-
-          <h2>Élèves du groupe</h2>
-          {studentsTableTemplate}
 
           <h2>Évaluations associées</h2>
           <DataTable
@@ -145,6 +189,9 @@ export default function GroupDashboard() {
             sortBy="creationDate"
             sortOrder={SortOrder.DESC}
           />
+
+          <h2>Élèves du groupe</h2>
+          {studentsTableTemplate}
         </>
       )}
     </Container>

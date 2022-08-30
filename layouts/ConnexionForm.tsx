@@ -22,6 +22,8 @@ interface ConnexionFormProps {
   className?: string;
 }
 
+// TODO: mot de passe oublié
+
 function ConnexionForm({ noAccountFunc, onCompleted, className }: ConnexionFormProps) {
   const { setCurrentUser, setIsAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);

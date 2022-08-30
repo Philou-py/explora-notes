@@ -32,6 +32,7 @@ import {
   SortOrder,
 } from "../components";
 import { useConfirmation } from "../hooks/useConfirmation";
+import { useGetSubject } from "../hooks/useGetSubject";
 
 interface TableHeader {
   text: string;
@@ -63,12 +64,32 @@ interface Group {
   name: string;
   nbStudents: number;
   subject: string;
+  studentMarkSummaries: {
+    [id: string]: {
+      subjectAverageOutOf20?: number;
+      subjectWeightTotal: number;
+      subjectPointsSum: number;
+    };
+  };
+  evalStatistics: {
+    [id: string]: {
+      average: number;
+      averageOutOf20: number;
+      totalPoints: number;
+      copyNb: number;
+      minMark: number;
+      minMarkOutOf20: number;
+      maxMark: number;
+      maxMarkOutOf20: number;
+    };
+  };
 }
 
 export default function Evaluations() {
   const { currentUser, isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
+  const { getSubject } = useGetSubject();
 
   const [rawEvals, setRawEvals] = useState<Evaluation[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -317,39 +338,6 @@ export default function Evaluations() {
       ["8.0", "8.0"],
     ],
     []
-  );
-
-  const subjects = useMemo(
-    () => [
-      ["Physique-chimie", "physics"],
-      ["ES Physique-chimie", "st-physics"],
-      ["Mathématiques", "maths"],
-      ["NSI", "it"],
-      ["Français", "french"],
-      ["Anglais", "english"],
-      ["Allemand", "german"],
-      ["Italien", "italian"],
-      ["Espagnol", "spanish"],
-      ["EPS", "sport"],
-      ["SES", "economics"],
-      ["SVT", "biology"],
-      ["ES SVT", "st-biology"],
-      ["Histoire-géographie", "history-geography"],
-      ["Art-plastique", "arts"],
-    ],
-    []
-  );
-
-  const getSubject = useCallback(
-    (sub: string) => {
-      for (let i = 0; i < subjects.length; i++) {
-        if (subjects[i][1] === sub) {
-          return subjects[i][0];
-        }
-      }
-      return "";
-    },
-    [subjects]
   );
 
   const groupsForSelect = useMemo(
