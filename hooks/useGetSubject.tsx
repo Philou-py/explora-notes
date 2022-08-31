@@ -16,7 +16,7 @@ export const useGetSubject = () => {
       ["SES", "economics"],
       ["SVT", "biology"],
       ["ES SVT", "st-biology"],
-      ["Histoire-géographie", "history-geography"],
+      ["Histoire-géo", "history-geography"],
       ["Art-plastique", "arts"],
     ],
     []

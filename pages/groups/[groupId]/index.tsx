@@ -1,17 +1,10 @@
 import { useRouter } from "next/router";
-import { useState, useEffect, useCallback, useContext, useMemo } from "react";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  CollectionReference,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../../../firebase-config";
+import { useContext, useCallback, useMemo } from "react";
 import { Container, DataTable, SortOrder, Button, BreadCrumbs } from "../../../components";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { BreakpointsContext } from "../../../contexts/BreakpointsContext";
+import { SnackContext } from "../../../contexts/SnackContext";
+import { TeacherContext } from "../../../contexts/TeacherContext";
 import groupDashboardStyles from "../../../pageStyles/GroupDashboard.module.scss";
 import cn from "classnames/bind";
 import { useStudentsTable } from "../../../hooks/useFetchGroup";
@@ -27,123 +20,7 @@ interface TableHeader {
   unitSuffix?: string;
 }
 
-interface Evaluation {
-  id: string;
-  creationDate: string;
-  title: string;
-  totalPoints: number;
-  nbQuestions: number;
-  scale: number[];
-  gradePrecision: number;
-  coefficient: number;
-  associatedGroupIds: string[];
-}
-
-interface Copy {
-  mark: number;
-  pointsObtained: number[];
-  markOutOf20: number;
-  totalPoints: number;
-  coefficient: number;
-  studentId: string;
-  evaluationId: string;
-  groupId: string;
-}
-
-interface Student {
-  id: string;
-  firstName: string;
-  lastName: string;
-  studentMarkSummary: {
-    subjectAverageOutOf20?: number;
-    subjectWeightTotal: number;
-    subjectPointsSum: number;
-  };
-}
-
 const cx = cn.bind(groupDashboardStyles);
-
-const exportOneToXLSX = async (
-  groupId: string,
-  evalId: string,
-  evalTitle: string,
-  groupName: string,
-  students: Student[]
-) => {
-  const copiesSnapshot = await getDocs(
-    query(
-      collection(db, "copies") as CollectionReference<Copy>,
-      where("evaluationId", "==", evalId),
-      where("groupId", "==", groupId)
-    )
-  );
-  const copies = [];
-  copiesSnapshot.forEach((copyRef) => {
-    const copyData = copyRef.data();
-    const pointsPerQuestion = {};
-    copyData.pointsObtained.forEach((point, index) => {
-      pointsPerQuestion[`Question ${index + 1}`] = point;
-    });
-    const student = students.find((st) => st.id === copyData.studentId);
-    copies.push({
-      "Nom de famille": student.lastName,
-      Prénom: student.firstName,
-      [`Note (sur ${copyData.totalPoints})`]: copyData.mark,
-      "Note sur 20": copyData.markOutOf20,
-      ...pointsPerQuestion,
-    });
-  });
-  const worksheet = utils.json_to_sheet(copies);
-  const workbook = utils.book_new();
-  utils.book_append_sheet(workbook, worksheet, "Évaluation");
-  writeFile(workbook, `${evalTitle} - ${groupName}.xlsx`);
-};
-
-const exportAllToXLSX = async (
-  groupId: string,
-  groupName: string,
-  evaluations: Evaluation[],
-  students: Student[]
-) => {
-  const copiesSnapshot = await getDocs(
-    query(collection(db, "copies") as CollectionReference<Copy>, where("groupId", "==", groupId))
-  );
-  const studentMarks = {};
-  const studentMap = {};
-  students.forEach((st) => {
-    studentMap[st.id] = st;
-    if (!studentMarks[st.id]) {
-      studentMarks[st.id] = {};
-    }
-  });
-
-  copiesSnapshot.forEach((copyRef) => {
-    const copyData = copyRef.data();
-    studentMarks[copyData.studentId][copyData.evaluationId] = copyData.markOutOf20;
-  });
-
-  console.log(studentMarks);
-
-  const exportData = [];
-  Object.keys(studentMarks).forEach((studentId) => {
-    const marksOutOf20 = studentMarks[studentId];
-    const { lastName, firstName } = studentMap[studentId];
-    const evalMap = {};
-    evaluations.forEach((e) => {
-      evalMap[e.title] = marksOutOf20[e.id];
-    });
-    exportData.push({
-      "Nom de famille": lastName,
-      Prénom: firstName,
-      ...evalMap,
-    });
-  });
-
-  const worksheet = utils.json_to_sheet(exportData);
-  const workbook = utils.book_new();
-  utils.book_append_sheet(workbook, worksheet, "Évaluation");
-  writeFile(workbook, `Évaluations du groupe ${groupName}.xlsx`);
-};
 
 const roundNum = (value: number, nbDecimals: number) => {
   if (value) {
@@ -156,39 +33,93 @@ const roundNum = (value: number, nbDecimals: number) => {
 export default function GroupDashboard() {
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
   const { isAuthenticated } = useContext(AuthContext);
+  const { haveASnack } = useContext(SnackContext);
+  const { evaluationMap, groupMap } = useContext(TeacherContext);
   const router = useRouter();
   const { groupId } = router.query as { groupId: string };
   const { getSubject } = useGetSubject();
-  const [rawEvaluations, setRawEvaluations] = useState<Evaluation[]>([]);
-  const { groupNotFound, group, studentsTableTemplate, students } = useStudentsTable();
+  const { groupNotFound, group, studentsTableTemplate } = useStudentsTable();
 
-  const getEvaluations = useCallback(() => {
-    const qEvaluations = query(
-      collection(db, "evaluations") as CollectionReference<Evaluation>,
-      where("associatedGroupIds", "array-contains", groupId)
-    );
+  const rawEvaluations = useMemo(
+    () => Object.values(evaluationMap).filter((e) => e.associatedGroupIds.includes(groupId)),
+    [evaluationMap, groupId]
+  );
 
-    const evaluationsUnsub = onSnapshot(qEvaluations, (querySnapshot) => {
-      const rawEvaluations: Evaluation[] = [];
-      querySnapshot.forEach((evaluationSnapshot) => {
-        const evaluationData = evaluationSnapshot.data();
-        rawEvaluations.push({ id: evaluationSnapshot.id, ...evaluationData } as Evaluation);
+  const exportOneToXLSX = useCallback(
+    async (evalId: string) => {
+      const group = groupMap[groupId];
+      const evaluation = evaluationMap[evalId];
+      if (Object.values(evaluation.copies[groupId]).length === 0) {
+        haveASnack(
+          "error",
+          <h6>
+            Impossible d&rsquo;exporter, car aucune copie n&rsquo;a été créée pour cette évaluation
+            !
+          </h6>
+        );
+        return;
+      }
+      const copies = Object.values(evaluation.copies[groupId]).map((copy) => {
+        const pointsPerQuestion = {};
+        copy.pointsObtained.forEach((point, index) => {
+          pointsPerQuestion[`Question ${index + 1}`] = point;
+        });
+        const student = group.studentMap[copy.studentId];
+
+        return {
+          "Nom de famille": student.lastName,
+          Prénom: student.firstName,
+          [`Note (sur ${evaluation.totalPoints})`]: roundNum(copy.mark, 2),
+          "Note sur 20": roundNum(copy.markOutOf20, 2),
+          ...pointsPerQuestion,
+        };
       });
-      setRawEvaluations(rawEvaluations);
+
+      const worksheet = utils.json_to_sheet(copies);
+      const workbook = utils.book_new();
+      utils.book_append_sheet(workbook, worksheet, "Évaluation");
+      writeFile(
+        workbook,
+        `${evaluation.title} - ${group.name} - ${group.actualSubject} - ${group.level} - ${group.schoolYear}.xlsx`
+      );
+    },
+    [evaluationMap, groupId, groupMap, haveASnack]
+  );
+
+  const exportAllToXLSX = useCallback(async () => {
+    const group = groupMap[groupId];
+    if (Object.values(rawEvaluations).length === 0) {
+      haveASnack(
+        "error",
+        <h6>
+          Impossible d&rsquo;exporter, car aucune évaluation n&rsquo;a été créée pour ce groupe !
+        </h6>
+      );
+      return;
+    }
+
+    const exportData = Object.values(group.studentMap).map((student) => {
+      const evalMarks = {};
+      rawEvaluations.forEach((rawEval) => {
+        evalMarks[rawEval.title] =
+          rawEval.copies[groupId][student.id] &&
+          roundNum(rawEval.copies[groupId][student.id].markOutOf20, 2);
+      });
+      return {
+        "Nom de famille": student.lastName,
+        Prénom: student.firstName,
+        ...evalMarks,
+      };
     });
 
-    return evaluationsUnsub;
-  }, [groupId]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const evaluationsUnsub = getEvaluations();
-
-      return () => {
-        evaluationsUnsub();
-      };
-    }
-  }, [isAuthenticated, getEvaluations]);
+    const worksheet = utils.json_to_sheet(exportData);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, "Évaluation");
+    writeFile(
+      workbook,
+      `Évaluations du groupe ${group.name} ${group.actualSubject} ${group.level} ${group.schoolYear}.xlsx`
+    );
+  }, [groupId, groupMap, rawEvaluations, haveASnack]);
 
   const evaluations = useMemo(
     () =>
@@ -266,20 +197,14 @@ export default function GroupDashboard() {
               className="green--text"
               key={`group-${groupId}-eval-${rawEval.id}-export`}
               onClick={() => {
-                exportOneToXLSX(
-                  groupId,
-                  rawEval.id,
-                  rawEval.title,
-                  `${group.name} - ${getSubject(group.subject)} - ${group.schoolYear}`,
-                  students
-                );
+                exportOneToXLSX(rawEval.id);
               }}
               isFlat
             />,
           ],
         },
       })),
-    [rawEvaluations, cbp, groupId, group, students, getSubject]
+    [rawEvaluations, cbp, groupId, group, exportOneToXLSX]
   );
 
   const evaluationsTableHeaders = useMemo<TableHeader[]>(
@@ -336,12 +261,7 @@ export default function GroupDashboard() {
             <Button
               className={cn("blue darken-3 text-center", cx("exportButton"))}
               onClick={() => {
-                exportAllToXLSX(
-                  groupId,
-                  `${group.name} - ${getSubject(group.subject)} - ${group.schoolYear}`,
-                  rawEvaluations,
-                  students
-                );
+                exportAllToXLSX();
               }}
             >
               Exporter tout

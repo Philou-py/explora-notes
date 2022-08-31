@@ -42,7 +42,6 @@ export const AuthContext = createContext<{
 });
 
 export default function AuthProvider({ children }: AuthProviderProps) {
-  console.log("Auth provider rendered!");
   const { haveASnack } = useContext(SnackContext);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | undefined>();
@@ -72,6 +71,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
+    console.log("Auth provider ran useEffect!");
     const authObserver = (user: FirebaseUser) => {
       console.log("Auth observer ran!");
       if (user) {
@@ -108,7 +108,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
         signOut,
       }}
     >
-      <Modal showModal={modalOpen} closeFunc={setModalOpen}>
+      <Modal showModal={modalOpen}>
         {showConnexion ? (
           <ConnexionForm noAccountFunc={swapFormDisplay} onCompleted={onCompleted} />
         ) : (

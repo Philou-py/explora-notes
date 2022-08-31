@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useContext, useMemo } from "react";
+import { useState, useCallback, useContext, useMemo } from "react";
 import { SnackContext } from "../../../contexts/SnackContext";
 import { AuthContext } from "../../../contexts/AuthContext";
+import { TeacherContext } from "../../../contexts/TeacherContext";
 import { useRouter } from "next/router";
 import { useMarksTable } from "../../../hooks/useFetchGroup";
 import { useConfirmation } from "../../../hooks/useConfirmation";
@@ -17,76 +18,29 @@ import {
   BreadCrumbs,
 } from "../../../components";
 import { db } from "../../../firebase-config";
-import {
-  doc,
-  onSnapshot,
-  DocumentReference,
-  addDoc,
-  setDoc,
-  collection,
-  updateDoc,
-  deleteDoc,
-} from "firebase/firestore";
+import { doc, updateDoc, deleteField } from "firebase/firestore";
 import evalForGroupDetailsStyles from "../../../pageStyles/EvalForGroupDetails.module.scss";
 import cn from "classnames/bind";
-
-interface Evaluation {
-  id: string;
-  creationDate: string;
-  title: string;
-  totalPoints: number;
-  nbQuestions: number;
-  scale: number[];
-  markPrecision: number;
-  coefficient: number;
-  associatedGroupIds: string[];
-}
 
 interface Student {
   id: string;
   firstName: string;
   lastName: string;
-  studentMarkSummary: {
-    subjectAverageOutOf20?: number;
-    subjectWeightTotal: number;
-    subjectPointsSum: number;
-  };
+  subjectAverageOutOf20?: number;
+  subjectWeightTotal: number;
+  subjectPointsSum: number;
 }
 
-interface StudentMark {
-  mark?: number;
-  markOutOf20?: number;
-  totalPoints: number;
-  pointsObtained: number[];
-  copyId: string;
-}
-
-interface Group {
+interface Copy {
   id: string;
-  teacher: string;
-  schoolYear: string;
-  name: string;
-  nbStudents: number;
-  subject: string;
-  studentMarkSummaries: {
-    [id: string]: {
-      subjectAverageOutOf20?: number;
-      subjectWeightTotal: number;
-      subjectPointsSum: number;
-    };
-  };
-  evalStatistics: {
-    [id: string]: {
-      average: number;
-      averageOutOf20: number;
-      totalPoints: number;
-      copyNb: number;
-      minMark: number;
-      minMarkOutOf20: number;
-      maxMark: number;
-      maxMarkOutOf20: number;
-    };
-  };
+  mark: number;
+  pointsObtained: number[];
+  markOutOf20: number;
+  totalPoints: number;
+  coefficient: number;
+  studentId: string;
+  evaluationId: string;
+  groupId: string;
 }
 
 const cx = cn.bind(evalForGroupDetailsStyles);
@@ -99,15 +53,20 @@ const roundNum = (value: number, nbDecimals: number) => {
   }
 };
 
+const genId = (idLength?: number) => {
+  const arr = new Uint8Array((idLength || 20) / 2);
+  window.crypto.getRandomValues(arr);
+  return Array.from(arr, (dec) => dec.toString(16).padStart(2, "0")).join("");
+};
+
 export default function EvalForGroupDetails() {
   const router = useRouter();
   const { groupId, evalId } = router.query as { evalId: string; groupId: string };
   const { haveASnack } = useContext(SnackContext);
   const { isAuthenticated } = useContext(AuthContext);
+  const { evaluationMap, groupMap } = useContext(TeacherContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
 
-  const [evaluation, setEvaluation] = useState<Evaluation | undefined>();
-  const [evalNotFound, setEvalNotFound] = useState(false);
   const [showAddCopyModal, setShowAddCopyModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | undefined>();
@@ -117,6 +76,9 @@ export default function EvalForGroupDetails() {
   const [currentPrevMarkOutOf20, setCurrentPrevMarkOutOf20] = useState(0);
   const [currentMinMark, setCurrentMinMark] = useState<number>(Infinity);
   const [currentMaxMark, setCurrentMaxMark] = useState<number>(-Infinity);
+
+  const group = useMemo(() => groupMap[groupId], [groupMap, groupId]);
+  const evaluation = useMemo(() => evaluationMap[evalId], [evaluationMap, evalId]);
 
   const totalPointsObtained = useMemo(
     () =>
@@ -139,25 +101,30 @@ export default function EvalForGroupDetails() {
   }, []);
 
   const deleteCopy = useCallback(
-    (student: Student, studentMark: StudentMark, group: Group, min: number, max: number) => {
+    (student: Student, studentCopy: Copy, min: number, max: number) => {
       promptConfirmation(
         `Confirmez-vous vouloir supprimer la copie de ${student.firstName} ${student.lastName} ?`,
         async () => {
-          await deleteDoc(doc(db, "copies", studentMark.copyId));
-          const oldStudentMarkSummary = student.studentMarkSummary;
-          const oldSubjectPointsSum = oldStudentMarkSummary.subjectPointsSum;
-          const oldSubjectWeightTotal = oldStudentMarkSummary.subjectWeightTotal;
+          await updateDoc(doc(db, "evaluations", studentCopy.evaluationId), {
+            [`copies.${groupId}.${student.id}`]: deleteField(),
+          });
+          // await deleteDoc(doc(db, "copies", studentCopy.id));
 
-          const newSubjectPointsSum = oldSubjectPointsSum - studentMark.markOutOf20;
+          const oldSubjectPointsSum = student.subjectPointsSum;
+          const oldSubjectWeightTotal = student.subjectWeightTotal;
+
+          const newSubjectPointsSum = oldSubjectPointsSum - studentCopy.markOutOf20;
           const newSubjectWeightTotal = oldSubjectWeightTotal - evaluation.coefficient;
           const newSubjectAverageOutOf20 = newSubjectPointsSum / newSubjectWeightTotal;
 
+          const noMoreCopies = newSubjectWeightTotal === 0;
+
           const newStudentMarkSummary = {
-            ...(newSubjectWeightTotal !== 0 && {
-              subjectAverageOutOf20: newSubjectAverageOutOf20,
-              subjectPointsSum: newSubjectPointsSum,
-              subjectWeightTotal: newSubjectWeightTotal,
-            }),
+            [`studentMap.${student.id}.subjectAverageOutOf20`]: noMoreCopies
+              ? null
+              : newSubjectAverageOutOf20,
+            [`studentMap.${student.id}.subjectPointsSum`]: newSubjectPointsSum,
+            [`studentMap.${student.id}.subjectWeightTotal`]: newSubjectWeightTotal,
           };
 
           const oldEvalStatistics = group.evalStatistics[evalId];
@@ -165,7 +132,7 @@ export default function EvalForGroupDetails() {
           const oldTotalPoints = oldEvalStatistics.totalPoints;
 
           const newCopyNb = oldCopyNb - 1;
-          const newTotalPoints = oldTotalPoints - studentMark.mark;
+          const newTotalPoints = oldTotalPoints - studentCopy.mark;
           const newAverage = newTotalPoints / newCopyNb;
           const newAverageOutOf20 = (newAverage * 20) / evaluation.totalPoints;
           const newMinMark = min;
@@ -189,7 +156,7 @@ export default function EvalForGroupDetails() {
           };
 
           await updateDoc(doc(db, "groups", groupId), {
-            [`studentMarkSummaries.${student.id}`]: newStudentMarkSummary,
+            ...newStudentMarkSummary,
             [`evalStatistics.${evalId}`]: newEvalStatistics,
           });
 
@@ -202,21 +169,25 @@ export default function EvalForGroupDetails() {
         }
       );
     },
-    [evaluation, groupId, evalId, haveASnack, promptConfirmation]
+    [evaluation, group, groupId, evalId, haveASnack, promptConfirmation]
   );
 
-  const prefillForm = useCallback((studentMark: StudentMark, copyId: string) => {
+  const prefillForm = useCallback((copy: Copy) => {
     setIsEditing(true);
-    setCurrentCopyId(copyId);
-    setCurrentPointsObtained(studentMark.pointsObtained);
-    setCurrentPrevMark(studentMark.mark);
-    setCurrentPrevMarkOutOf20(studentMark.markOutOf20);
+    setCurrentCopyId(copy.id);
+    setCurrentPointsObtained(copy.pointsObtained);
+    setCurrentPrevMark(copy.mark);
+    setCurrentPrevMarkOutOf20(copy.markOutOf20);
   }, []);
 
-  const { group, marksTableTemplate, evalStatistics, groupNotFound } = useMarksTable(
-    addCopy,
-    deleteCopy,
-    prefillForm
+  const { marksTableTemplate, notFound } = useMarksTable(addCopy, deleteCopy, prefillForm);
+  const evalStatistics = useMemo(
+    () =>
+      !notFound &&
+      !!group.evalStatistics[evalId] &&
+      Object.values(group.evalStatistics[evalId]).length !== 0 &&
+      group.evalStatistics[evalId],
+    [notFound, group, evalId]
   );
 
   const handleAddCopyModalClose = useCallback(() => {
@@ -231,29 +202,9 @@ export default function EvalForGroupDetails() {
     setShowAddCopyModal(false);
   }, []);
 
-  const getEvaluation = useCallback(() => {
-    if (evalId) {
-      const evaluationRef = doc(db, "evaluations", evalId) as DocumentReference<Evaluation>;
-      const evalUnsub = onSnapshot(evaluationRef, (docSnapshot) => {
-        if (docSnapshot.exists) {
-          const docData = docSnapshot.data();
-          if (!groupNotFound && docData.associatedGroupIds.includes(groupId)) {
-            setEvaluation({ id: docSnapshot.id, ...docData });
-            setEvalNotFound(false);
-            return;
-          }
-        }
-        setEvaluation(undefined);
-        setEvalNotFound(true);
-      });
-      return evalUnsub;
-    }
-  }, [evalId, groupId, groupNotFound]);
-
-  useEffect(() => getEvaluation(), [getEvaluation]);
-
   const addCopySubmit = useCallback(async () => {
     const copyToSend = {
+      id: currentCopyId || genId(),
       pointsObtained: currentPointsObtained,
       mark: totalPointsObtained,
       markOutOf20: currentMarkOutOf20,
@@ -264,21 +215,14 @@ export default function EvalForGroupDetails() {
       groupId: groupId,
     };
 
-    if (isEditing) {
-      await setDoc(doc(db, "copies", currentCopyId), copyToSend);
-    } else {
-      await addDoc(collection(db, "copies"), copyToSend);
-    }
+    await updateDoc(doc(db, "evaluations", evalId), {
+      [`copies.${groupId}.${currentStudent.id}`]: copyToSend,
+    });
 
-    const studentMarkSummary = currentStudent.studentMarkSummary;
-    const oldPointsSum =
-      studentMarkSummary && studentMarkSummary.subjectPointsSum
-        ? studentMarkSummary.subjectPointsSum
-        : 0;
-    const oldWeightTotal =
-      studentMarkSummary && studentMarkSummary.subjectWeightTotal
-        ? studentMarkSummary.subjectWeightTotal
-        : 0;
+    const oldPointsSum = currentStudent.subjectPointsSum ? currentStudent.subjectPointsSum : 0;
+    const oldWeightTotal = currentStudent.subjectWeightTotal
+      ? currentStudent.subjectWeightTotal
+      : 0;
 
     const newWeightTotal = oldWeightTotal + (isEditing ? 0 : evaluation.coefficient);
     const newPointsSum =
@@ -288,9 +232,9 @@ export default function EvalForGroupDetails() {
     const newStudentAverage = newPointsSum / newWeightTotal;
 
     const newStudentMarkSummary = {
-      subjectAverageOutOf20: newStudentAverage,
-      subjectWeightTotal: newWeightTotal,
-      subjectPointsSum: newPointsSum,
+      [`studentMap.${currentStudent.id}.subjectAverageOutOf20`]: newStudentAverage,
+      [`studentMap.${currentStudent.id}.subjectPointsSum`]: newPointsSum,
+      [`studentMap.${currentStudent.id}.subjectWeightTotal`]: newWeightTotal,
     };
 
     const oldEvalStatistics = group.evalStatistics[evalId];
@@ -329,7 +273,7 @@ export default function EvalForGroupDetails() {
     };
 
     await updateDoc(doc(db, "groups", groupId), {
-      [`studentMarkSummaries.${currentStudent.id}`]: newStudentMarkSummary,
+      ...newStudentMarkSummary,
       [`evalStatistics.${evalId}`]: evalStatistics,
     });
 
@@ -406,13 +350,13 @@ export default function EvalForGroupDetails() {
 
   return (
     <Container className={cx("evalForGroupDetails")}>
-      {groupNotFound && (
+      {notFound && (
         <h3 className={cx("groupNotFound")}>
-          Oups ! Ce groupe n&rsquo;existe pas, ou bien vous n&rsquo;avez pas la permission de
-          consulter son tableau de bord !
+          Oups ! Le groupe ou l&rsquo;évaluation n&rsquo;existent pas, ou bien vous n&rsquo;avez pas
+          la permission de consulter leurs détails !
         </h3>
       )}
-      {!groupNotFound && !evalNotFound && (
+      {!notFound && (
         <>
           <BreadCrumbs items={breadCrumbItems} namespace="EvaluationDetailsForGroup" />
           <h1 className="pageTitle text-center">

@@ -1,21 +1,11 @@
 import evalStyles from "../pageStyles/Evaluations.module.scss";
 import cn from "classnames/bind";
-import { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import { useState, useContext, useCallback, useMemo } from "react";
 import { db } from "../firebase-config";
-import {
-  query,
-  collection,
-  where,
-  onSnapshot,
-  CollectionReference,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-  orderBy,
-} from "firebase/firestore";
+import { doc, collection, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
+import { TeacherContext } from "../contexts/TeacherContext";
 import {
   Container,
   DataTable,
@@ -32,7 +22,6 @@ import {
   SortOrder,
 } from "../components";
 import { useConfirmation } from "../hooks/useConfirmation";
-import { useGetSubject } from "../hooks/useGetSubject";
 
 interface TableHeader {
   text: string;
@@ -45,54 +34,12 @@ interface TableHeader {
 
 const cx = cn.bind(evalStyles);
 
-interface Evaluation {
-  id: string;
-  creationDate: string;
-  title: string;
-  totalPoints: number;
-  nbQuestions: number;
-  scale: number[];
-  markPrecision: number;
-  coefficient: number;
-  associatedGroupIds: string[];
-}
-
-interface Group {
-  id: string;
-  teacher: string;
-  schoolYear: string;
-  name: string;
-  nbStudents: number;
-  subject: string;
-  studentMarkSummaries: {
-    [id: string]: {
-      subjectAverageOutOf20?: number;
-      subjectWeightTotal: number;
-      subjectPointsSum: number;
-    };
-  };
-  evalStatistics: {
-    [id: string]: {
-      average: number;
-      averageOutOf20: number;
-      totalPoints: number;
-      copyNb: number;
-      minMark: number;
-      minMarkOutOf20: number;
-      maxMark: number;
-      maxMarkOutOf20: number;
-    };
-  };
-}
-
 export default function Evaluations() {
-  const { currentUser, isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
+  const { teacherId, evaluationMap, groupMap } = useContext(TeacherContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
-  const { getSubject } = useGetSubject();
 
-  const [rawEvals, setRawEvals] = useState<Evaluation[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [addEvalModalOpen, setAddEvalModalOpen] = useState(false);
   const [bindToGrModalOpen, setBindToGrModalOpen] = useState(false);
   const [currentEvalToBind, setCurrentEvalToBind] = useState({ id: "", name: "" });
@@ -156,19 +103,11 @@ export default function Evaluations() {
     }
   }, [nbCurrentGroups]);
 
-  const getGroupName = useCallback(
-    (groupId: string) => {
-      return groups.filter((g) => g.id === groupId)[0].name;
-    },
-    [groups]
-  );
-
   const handleDeleteEvaluation = useCallback(
     (evalId: string) => {
       promptConfirmation(
-        "Voulez-vous supprimer cette évaluation de manière définitive ?",
+        "Voulez-vous supprimer cette évaluation de manière définitive ainsi que toutes les copies associées ?",
         async () => {
-          // TODO: Delete associated copies for each student
           await deleteDoc(doc(db, "evaluations", evalId));
           haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
         }
@@ -179,7 +118,7 @@ export default function Evaluations() {
 
   const evaluations = useMemo(
     () =>
-      rawEvals.map((rawEval) => ({
+      Object.values(evaluationMap).map((rawEval) => ({
         key: { rawContent: rawEval.id },
         creationDate: {
           rawContent: rawEval.creationDate,
@@ -193,7 +132,7 @@ export default function Evaluations() {
         nbQuestions: { rawContent: rawEval.nbQuestions },
         coefficient: { rawContent: rawEval.coefficient },
         associatedGroups: {
-          rawContent: rawEval.associatedGroupIds.map((id) => getGroupName(id)).join(", "),
+          rawContent: rawEval.associatedGroupIds.map((id) => groupMap[id].name).join(", "),
           content: rawEval.associatedGroupIds.map((gId) => (
             <Button
               key={gId}
@@ -203,7 +142,9 @@ export default function Evaluations() {
               isLink
               isFlat
             >
-              {getGroupName(gId)}
+              {`${groupMap[gId].name} - ${groupMap[gId].actualSubject.slice(0, 3)} - ${
+                groupMap[gId].shortenedLevel
+              } - ${groupMap[gId].shortenedSchoolYear}`}
             </Button>
           )),
         },
@@ -239,7 +180,7 @@ export default function Evaluations() {
           ],
         },
       })),
-    [getGroupName, handleBindToGrModalOpen, handleDeleteEvaluation, rawEvals]
+    [handleBindToGrModalOpen, handleDeleteEvaluation, evaluationMap, groupMap]
   );
 
   const handleSubmit = useCallback(async () => {
@@ -251,8 +192,9 @@ export default function Evaluations() {
       totalPoints,
       nbQuestions,
       creationDate: new Date().toISOString(),
-      creator: currentUser.id,
+      creator: teacherId,
       associatedGroupIds: [],
+      copies: {},
     };
     await addDoc(collection(db, "evaluations"), evaluationToSend);
     haveASnack(
@@ -260,7 +202,7 @@ export default function Evaluations() {
       <h6>L&rsquo;évaluation &laquo; {newEval.title} &raquo; a bien été créée !</h6>
     );
     handleAddEvalModalClose();
-  }, [newEval, scale, totalPoints, nbQuestions, currentUser, haveASnack, handleAddEvalModalClose]);
+  }, [newEval, scale, totalPoints, nbQuestions, teacherId, haveASnack, handleAddEvalModalClose]);
 
   const handleBindToGrSubmit = useCallback(async () => {
     const evalRef = doc(db, "evaluations", currentEvalToBind.id);
@@ -274,44 +216,6 @@ export default function Evaluations() {
     );
     handleBindToGrModalClose();
   }, [currentGroups, currentEvalToBind, haveASnack, handleBindToGrModalClose]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const qEvals = query(
-        collection(db, "evaluations") as CollectionReference<Evaluation>,
-        where("creator", "==", currentUser.id)
-      );
-
-      const queryUnsub = onSnapshot(qEvals, (querySnapshot) => {
-        const evals = [];
-        querySnapshot.forEach((doc) => {
-          const docData = doc.data();
-          evals.push({ id: doc.id, ...docData });
-        });
-        setRawEvals(evals);
-      });
-
-      const qGroups = query(
-        collection(db, "groups") as CollectionReference<Group>,
-        where("teacher", "==", currentUser.id),
-        orderBy("schoolYear", "desc")
-      );
-
-      const queryGroupUnsub = onSnapshot(qGroups, (querySnapshot) => {
-        const receivedGroups = [];
-        querySnapshot.forEach((doc) => {
-          const docData = doc.data();
-          receivedGroups.push({ id: doc.id, ...docData });
-        });
-        setGroups(receivedGroups);
-      });
-
-      return () => {
-        queryUnsub();
-        queryGroupUnsub();
-      };
-    }
-  }, [currentUser, isAuthenticated]);
 
   const tableHeaders = useMemo<TableHeader[]>(
     () => [
@@ -353,8 +257,12 @@ export default function Evaluations() {
   );
 
   const groupsForSelect = useMemo(
-    () => groups.map((gr) => [`${gr.name} - ${getSubject(gr.subject)} - ${gr.schoolYear}`, gr.id]),
-    [groups, getSubject]
+    () =>
+      Object.values(groupMap).map((gr) => [
+        `${gr.name} - ${gr.actualSubject} - ${gr.shortenedLevel} - ${gr.shortenedSchoolYear}`,
+        gr.id,
+      ]),
+    [groupMap]
   );
 
   const scaleTemplate = [...Array(nbQuestions).keys()]

@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useContext, useMemo } from "react";
+import { useCallback, useState, useContext, useMemo } from "react";
 import groupStyles from "../../pageStyles/Groups.module.scss";
 import cn from "classnames/bind";
 import {
@@ -17,20 +17,11 @@ import {
   useForm,
 } from "../../components";
 import { db } from "../../firebase-config";
-import {
-  doc,
-  setDoc,
-  query,
-  collection,
-  onSnapshot,
-  CollectionReference,
-  where,
-  addDoc,
-  deleteDoc,
-} from "firebase/firestore";
+import { doc, collection, addDoc, updateDoc, deleteField } from "firebase/firestore";
 import { AuthContext } from "../../contexts/AuthContext";
 import { SnackContext } from "../../contexts/SnackContext";
 import { BreakpointsContext } from "../../contexts/BreakpointsContext";
+import { TeacherContext } from "../../contexts/TeacherContext";
 import { useConfirmation } from "../../hooks/useConfirmation";
 import { useGetSubject } from "../../hooks/useGetSubject";
 
@@ -50,12 +41,11 @@ interface Group {
   name: string;
   nbStudents: number;
   subject: string;
-  studentMarkSummaries: {
-    [id: string]: {
-      subjectAverageOutOf20?: number;
-      subjectWeightTotal: number;
-      subjectPointsSum: number;
-    };
+  actualSubject: string;
+  level: string;
+  studentIds: string[];
+  studentMap: {
+    [id: string]: Student;
   };
   evalStatistics: {
     [id: string]: {
@@ -71,21 +61,35 @@ interface Group {
   };
 }
 
+interface Student {
+  id: string;
+  firstName: string;
+  lastName: string;
+  subjectAverageOutOf20?: number;
+  subjectWeightTotal: number;
+  subjectPointsSum: number;
+}
+
 const cx = cn.bind(groupStyles);
 
 // TODO: après le bouton plus, mettre le pointeur sur l'endroit d'écriture
 
 export default function Groups() {
-  const { currentUser, isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
+  const { teacherId, groupMap } = useContext(TeacherContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
-  const { getSubject, subjects } = useGetSubject();
+  const { subjects } = useGetSubject();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [rawGroups, setRawGroups] = useState<Group[]>([]);
-  const { data: newGroup, setData, isValid, register } = useForm({ name: "", subject: "" });
-  const [students, setStudents] = useState<[string, string][]>([["", ""]]);
+  const {
+    data: newGroup,
+    setData,
+    isValid,
+    register,
+  } = useForm({ name: "", level: "", subject: "" });
+  const [students, setStudents] = useState<[string, string, string][]>([["", "", ""]]);
   const [nbStudents, setNbStudents] = useState(1);
   const [nbDeletedStudents, setNbDeletedStudents] = useState(0);
   const actualNbStudents = useMemo(
@@ -106,13 +110,19 @@ export default function Groups() {
     }
     return schoolYear;
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentGroupId, setCurrentGroupId] = useState("");
+  const [currentDeletedStudents, setCurrentDeletedStudents] = useState<string[]>([]);
 
   const resetForm = useCallback(() => {
-    setData({ name: "", subject: "" });
-    setStudents([["", ""]]);
+    setData({ name: "", level: "", subject: "" });
+    setStudents([["", "", ""]]);
     setNbStudents(1);
     setStudentsFilled([false]);
     setNbDeletedStudents(0);
+    setIsEditing(false);
+    setCurrentGroupId("");
+    setCurrentDeletedStudents([]);
   }, [setData]);
 
   const handleModalOpen = useCallback(() => {
@@ -125,7 +135,7 @@ export default function Groups() {
   }, [resetForm]);
 
   const handleAddStudent = useCallback(() => {
-    setStudents((prev) => [...prev, ["", ""]]);
+    setStudents((prev) => [...prev, ["", "", ""]]);
     setStudentsFilled((prev) => [...prev, false]);
     setNbStudents((prev) => prev + 1);
   }, []);
@@ -133,6 +143,11 @@ export default function Groups() {
   const handleRemoveStudent = useCallback(
     (id: number) => {
       if (actualNbStudents > 1) {
+        setCurrentDeletedStudents((prev) => {
+          const c = [...prev];
+          c.push(students[id][2]);
+          return c;
+        });
         setStudents((prev) => {
           const copy = [...prev];
           copy[id] = null;
@@ -146,7 +161,21 @@ export default function Groups() {
         setNbDeletedStudents((prev) => prev + 1);
       }
     },
-    [actualNbStudents]
+    [actualNbStudents, students]
+  );
+
+  const handleEditGroup = useCallback(
+    (group: Group) => {
+      setData({ name: group.name, level: group.level, subject: group.subject });
+      setNbStudents(group.nbStudents);
+      setStudentsFilled(group.studentIds.map(() => true));
+      setStudents(Object.values(group.studentMap).map((st) => [st.lastName, st.firstName, st.id]));
+      setCurrentGroupId(group.id);
+      setCurrentDeletedStudents([]);
+      setIsEditing(true);
+      handleModalOpen();
+    },
+    [handleModalOpen, setData]
   );
 
   const handleSubmit = useCallback(async () => {
@@ -155,33 +184,80 @@ export default function Groups() {
       ...newGroup,
       nbStudents: actualNbStudents,
       schoolYear,
-      teacher: currentUser.id,
+      teacher: teacherId,
       studentIds: [],
-      evalStatistics: {},
-      studentMarkSummaries: {},
+      isDeleted: false,
+      ...(!isEditing && {
+        evalStatistics: {},
+        studentMap: {},
+      }),
     };
+
+    let studentsToDelete = [...new Set(currentDeletedStudents)];
+
     students
       .filter((name) => name !== null)
-      .forEach(async (studentNameParts) => {
-        const docId = studentNameParts.join("-");
-        groupToSend.studentIds.push(docId);
-        const studentRef = doc(db, "students", docId);
-        await setDoc(studentRef, {
-          lastName: studentNameParts[0],
-          firstName: studentNameParts[1],
-        });
+      .forEach(async ([lName, fName, oldId]) => {
+        const stId = `${lName}-${fName}`;
+        groupToSend.studentIds.push(stId);
+        if (!isEditing) {
+          groupToSend.studentMap[stId] = {
+            id: stId,
+            firstName: fName,
+            lastName: lName,
+          };
+        } else {
+          if (!oldId && studentsToDelete.includes(stId)) {
+            studentsToDelete = studentsToDelete.filter((st) => st !== stId);
+          } else {
+            groupToSend[`studentMap.${stId}.id`] = stId;
+            groupToSend[`studentMap.${stId}.firstName`] = fName;
+            groupToSend[`studentMap.${stId}.lastName`] = lName;
+          }
+          // TODO: Update ID in copies
+          if (oldId !== stId) {
+            const oMS = groupMap[currentGroupId].studentMap[oldId];
+            if (oMS.subjectAverageOutOf20)
+              groupToSend[`studentMap.${stId}.subjectAverageOutOf20`] = oMS.subjectAverageOutOf20;
+            if (oMS.subjectPointsSum)
+              groupToSend[`studentMap.${stId}.subjectPointsSum`] = oMS.subjectPointsSum;
+            if (oMS.subjectWeightTotal)
+              groupToSend[`studentMap.${stId}.subjectWeightTotal`] = oMS.subjectWeightTotal;
+            groupToSend[`studentMap.${oldId}`] = deleteField();
+          }
+        }
       });
-    await addDoc(collection(db, "groups"), groupToSend);
-    haveASnack("success", <h6>Le groupe &laquo; {newGroup.name} &raquo; a bien été créée !</h6>);
+
+    if (!isEditing) {
+      await addDoc(collection(db, "groups"), groupToSend);
+    } else {
+      studentsToDelete.forEach((sId) => {
+        groupToSend[`studentMap.${sId}`] = deleteField();
+      });
+      await updateDoc(doc(db, "groups", currentGroupId), groupToSend);
+    }
+
+    haveASnack("success", <h6>Le groupe a bien été enregistrée !</h6>);
     handleModalClose();
     setIsLoading(false);
-  }, [newGroup, actualNbStudents, schoolYear, currentUser, students, haveASnack, handleModalClose]);
+  }, [
+    newGroup,
+    actualNbStudents,
+    schoolYear,
+    teacherId,
+    students,
+    haveASnack,
+    handleModalClose,
+    currentGroupId,
+    currentDeletedStudents,
+    isEditing,
+    groupMap,
+  ]);
 
   const handleDeleteGroup = useCallback(
     (groupId: string) => {
       promptConfirmation("Voulez-vous supprimer ce groupe et ses élèves associés ?", async () => {
-        // TODO: delete group ID in the groupIds property of each student
-        await deleteDoc(doc(db, "groups", groupId));
+        await updateDoc(doc(db, "groups", groupId), { isDeleted: true });
         haveASnack("success", <h6>Le groupe a bien été supprimé !</h6>);
       });
     },
@@ -199,32 +275,32 @@ export default function Groups() {
     []
   );
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const q = query(
-        collection(db, "groups") as CollectionReference<Group>,
-        where("teacher", "==", currentUser.id)
-      );
-
-      const queryUnsub = onSnapshot(q, (querySnapshot) => {
-        const g = [];
-        querySnapshot.forEach((doc) => {
-          const docData = doc.data();
-          g.push({ id: doc.id, ...docData });
-        });
-        setRawGroups(g);
-      });
-
-      return queryUnsub;
-    }
-  }, [isAuthenticated, currentUser, getSubject]);
+  const levelsForSelect = useMemo(
+    () => [
+      ["Sixième", "Sixième"],
+      ["Cinquième", "Cinquième"],
+      ["Quatrième", "Quatrième"],
+      ["Troisième", "Troisième"],
+      ["Seconde", "Seconde"],
+      ["Première", "Première"],
+      ["Terminale", "Terminale"],
+      ["BCPST 1", "BCPST 1"],
+      ["BCPST 2", "BCPST 2"],
+      ["MPSI", "MPSI"],
+      ["MP", "MP"],
+      ["PSI", "PSI"],
+      ["PCSI", "PCSI"],
+      ["PC", "PC"],
+    ],
+    []
+  );
 
   const groups = useMemo(
     () =>
-      rawGroups.map((rawGroup) => ({
+      Object.values(groupMap).map((rawGroup) => ({
         key: { rawContent: rawGroup.id },
         name: { rawContent: rawGroup.name },
-        subject: { rawContent: rawGroup.subject, content: getSubject(rawGroup.subject) },
+        subject: { rawContent: rawGroup.subject, content: rawGroup.actualSubject },
         nbStudents: { rawContent: rawGroup.nbStudents, alignContent: "center" },
         schoolYear: { rawContent: rawGroup.schoolYear, alignContent: "center" },
         actions: {
@@ -249,7 +325,7 @@ export default function Groups() {
               iconName="edit"
               className="orange--text"
               key={`group-${rawGroup.id}-edit`}
-              onClick={() => {}}
+              onClick={() => handleEditGroup(rawGroup)}
               isFlat
             />,
             <Button
@@ -266,7 +342,7 @@ export default function Groups() {
           ],
         },
       })),
-    [rawGroups, getSubject, handleDeleteGroup, cbp]
+    [groupMap, handleDeleteGroup, cbp, handleEditGroup]
   );
 
   const studentsTemplate = [...Array(nbStudents).keys()].map(
@@ -348,7 +424,10 @@ export default function Groups() {
       <Modal showModal={modalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
           <Form onSubmit={handleSubmit}>
-            <CardHeader title={<h2>Ajouter un groupe</h2>} centerTitle />
+            <CardHeader
+              title={<h2>{isEditing ? "Modifier" : "Ajouter"} un groupe</h2>}
+              centerTitle
+            />
             <CardContent>
               <fieldset className={cx("generalInfo")}>
                 <legend>Informations générales</legend>
@@ -357,6 +436,7 @@ export default function Groups() {
                   label="Nom du groupe"
                   prependIcon="face"
                   isRequired
+                  maxLength={10}
                   {...register("name")}
                 />
                 <InputField
@@ -366,6 +446,14 @@ export default function Groups() {
                   selectItems={subjects}
                   isRequired
                   {...register("subject")}
+                />
+                <InputField
+                  type="select"
+                  label="Niveau"
+                  prependIcon="school"
+                  selectItems={levelsForSelect}
+                  isRequired
+                  {...register("level")}
                 />
               </fieldset>
 

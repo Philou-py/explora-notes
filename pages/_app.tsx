@@ -2,15 +2,17 @@ import "../styles/globals.scss";
 import "../styles/typography.scss";
 import "../styles/colours.scss";
 import toccatechLogo from "../public/images/logo.png";
-import BreakpointsProvider, { BreakpointsContext } from "../contexts/BreakpointsContext";
+import BreakpointsProvider from "../contexts/BreakpointsContext";
 import AuthProvider from "../contexts/AuthContext";
 import SnackProvider from "../contexts/SnackContext";
+import TeacherProvider from "../contexts/TeacherContext";
 import Footer from "../layouts/Footer";
 import { NavBar, SideBar } from "../components";
-import { useCallback, useMemo, useState, useContext } from "react";
-import { AppProps } from "next/app";
+import { useCallback, useMemo, useState } from "react";
 
 export default function MyApp({ Component, pageProps }) {
+  const [sideBarOpen, setSideBarOpen] = useState(false);
+
   const breakpointsList = useMemo(
     () => ({
       xs: 600, // xs < 600px : Small to big phones
@@ -21,7 +23,8 @@ export default function MyApp({ Component, pageProps }) {
     }),
     []
   );
-  const [sideBarOpen, setSideBarOpen] = useState(false);
+
+  const navBarHeight = 60;
 
   const handleNavIconClick = useCallback(() => {
     setSideBarOpen((prev) => !prev);
@@ -34,65 +37,79 @@ export default function MyApp({ Component, pageProps }) {
   return (
     <SnackProvider>
       <AuthProvider>
-        <BreakpointsProvider breakpointsList={breakpointsList}>
-          <NavBar
-            title="ExploraNotes"
-            logoPath={toccatechLogo}
-            navLinks={[
-              ["Évaluations", "/evaluations"],
-              ["Groupes", "/groups"],
-            ]}
-            centerNavSmScreens
-            onNavIconClick={handleNavIconClick}
-            handleAuth
-          />
-          <SideBar
-            showSideBar={sideBarOpen}
-            onClose={handleBgClick}
-            navLinks={[
-              ["Évaluations", "/evaluations"],
-              ["Groupes", "/groups"],
-            ]}
-            handleAuth
-          />
-          <RenderComp Component={Component} pageProps={pageProps} sideBarOpen={sideBarOpen} />
-        </BreakpointsProvider>
+        <TeacherProvider>
+          <BreakpointsProvider breakpointsList={breakpointsList}>
+            <NavBar
+              title="ExploraNotes"
+              logoPath={toccatechLogo}
+              navLinks={[
+                ["Évaluations", "/evaluations"],
+                ["Groupes", "/groups"],
+              ]}
+              centerNavSmScreens
+              onNavIconClick={handleNavIconClick}
+              handleAuth
+            />
+            <SideBar
+              showSideBar={sideBarOpen}
+              onClose={handleBgClick}
+              navLinks={[
+                ["Évaluations", "/evaluations"],
+                ["Groupes", "/groups"],
+              ]}
+              handleAuth
+            />
+            <div
+              style={{
+                paddingTop: navBarHeight,
+                display: "grid",
+                gridTemplateRows: "auto min-content",
+                height: "100vh",
+              }}
+            >
+              <div style={{ marginTop: 10, marginBottom: 10 }}>
+                <Component {...pageProps} />
+              </div>
+              <Footer />
+            </div>
+          </BreakpointsProvider>
+        </TeacherProvider>
       </AuthProvider>
     </SnackProvider>
   );
 }
 
-function RenderComp({
-  Component,
-  pageProps,
-  sideBarOpen,
-}: Partial<AppProps> & { sideBarOpen: boolean }) {
-  const navBarHeight = 60;
-  const sideBarWidth = 250;
+// function RenderComp({
+//   Component,
+//   pageProps,
+//   sideBarOpen,
+// }: Partial<AppProps> & { sideBarOpen: boolean }) {
+//   const navBarHeight = 60;
+//   const sideBarWidth = 250;
 
-  // For clipped SideBar
-  // const pushContentStyle =
-  //   cbp !== "xs"
-  //     ? {
-  //         paddingLeft: sideBarOpen ? sideBarWidth : 0,
-  //         transition: "padding-left 300ms ease",
-  //       }
-  //     : {};
+//   // For clipped SideBar
+//   const pushContentStyle =
+//     cbp !== "xs"
+//       ? {
+//           paddingLeft: sideBarOpen ? sideBarWidth : 0,
+//           transition: "padding-left 300ms ease",
+//         }
+//       : {};
 
-  return (
-    <div
-      style={{
-        paddingTop: navBarHeight,
-        display: "grid",
-        gridTemplateRows: "auto min-content",
-        height: "100vh",
-        // ...pushContentStyle,
-      }}
-    >
-      <div style={{ marginTop: 10, marginBottom: 10 }}>
-        <Component {...pageProps} />
-      </div>
-      <Footer />
-    </div>
-  );
-}
+//   return (
+//     <div
+//       style={{
+//         paddingTop: navBarHeight,
+//         display: "grid",
+//         gridTemplateRows: "auto min-content",
+//         height: "100vh",
+//         // ...pushContentStyle,
+//       }}
+//     >
+//       <div style={{ marginTop: 10, marginBottom: 10 }}>
+//         <Component {...pageProps} />
+//       </div>
+//       <Footer />
+//     </div>
+//   );
+// }

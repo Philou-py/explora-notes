@@ -22,8 +22,7 @@ interface ConnexionFormProps {
   className?: string;
 }
 
-// TODO: mot de passe oublié
-// Erreur non identifiée quand on ne saisit pas une adresse email
+// TODO: Recover password when forgotten
 
 function ConnexionForm({ noAccountFunc, onCompleted, className }: ConnexionFormProps) {
   const { setCurrentUser, setIsAuthenticated } = useContext(AuthContext);
@@ -45,7 +44,7 @@ function ConnexionForm({ noAccountFunc, onCompleted, className }: ConnexionFormP
     console.log("Signing in...");
     try {
       const userCredentials = await signInWithEmailAndPassword(auth, user.email, user.pwd);
-      getDoc(doc(db, "users", userCredentials.user.email)).then((userDocSnap) => {
+      getDoc(doc(db, "users", userCredentials.user.uid)).then((userDocSnap) => {
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
           console.log("Successfully logged in!");
@@ -78,7 +77,7 @@ function ConnexionForm({ noAccountFunc, onCompleted, className }: ConnexionFormP
         <CardHeader title={<h3>Connexion</h3>} centerTitle />
         <CardContent>
           <InputField
-            type="text"
+            type="email"
             label="Adresse email"
             prependIcon="account_circle"
             fullWidth
