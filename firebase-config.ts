@@ -3,12 +3,12 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAN3ILAetxZqpWtL3uPW0B5iYD0wKtbx3U",
-  authDomain: "explora-notes-dev.firebaseapp.com",
-  projectId: "explora-notes-dev",
-  storageBucket: "explora-notes-dev.appspot.com",
-  messagingSenderId: "412389402336",
-  appId: "1:412389402336:web:af0db90f57ac7b8e7dd285",
+  apiKey: "AIzaSyCHDji39_QjYHJmkOTLywtbjna-x5s496c",
+  authDomain: "exploranotes-9f012.firebaseapp.com",
+  projectId: "exploranotes-9f012",
+  storageBucket: "exploranotes-9f012.appspot.com",
+  messagingSenderId: "46311163536",
+  appId: "1:46311163536:web:6eb59cbaff9534fe26ba15",
 };
 
 export const app = initializeApp(firebaseConfig);
