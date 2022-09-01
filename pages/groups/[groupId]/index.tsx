@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { useContext, useCallback, useMemo } from "react";
 import { Container, DataTable, SortOrder, Button, BreadCrumbs } from "../../../components";
@@ -239,6 +240,10 @@ export default function GroupDashboard() {
 
   return (
     <Container className={cx("groupDashboard")}>
+      <Head>
+        <title>Tableau de bord de groupe - ExploraNotes</title>
+      </Head>
+
       {!isAuthenticated && (
         <h1 className={cn("pageTitle text-center", cx("groupNotFound"))}>
           Connectez-vous pour accéder au tableau de bord de cette classe !

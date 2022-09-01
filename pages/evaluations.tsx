@@ -1,3 +1,4 @@
+import Head from "next/head";
 import evalStyles from "../pageStyles/Evaluations.module.scss";
 import cn from "classnames/bind";
 import { useState, useContext, useCallback, useMemo } from "react";
@@ -443,6 +444,10 @@ export default function Evaluations() {
 
   return (
     <Container className={cx("evaluations")}>
+      <Head>
+        <title>Gestion des évaluations - ExploraNotes</title>
+      </Head>
+
       {isAuthenticated && (
         <>
           <h1 className="pageTitle text-center">Évaluations</h1>

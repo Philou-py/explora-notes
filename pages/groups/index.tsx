@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useCallback, useState, useContext, useMemo } from "react";
 import groupStyles from "../../pageStyles/Groups.module.scss";
 import cn from "classnames/bind";
@@ -443,6 +444,10 @@ export default function Groups() {
 
   return (
     <Container className={cx("groups")}>
+      <Head>
+        <title>Gestion des groupes - ExploraNotes</title>
+      </Head>
+
       {isAuthenticated && (
         <>
           <h1 className="pageTitle text-center">Groupes et tableaux de bord</h1>

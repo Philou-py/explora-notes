@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useState, useCallback, useContext, useMemo } from "react";
 import { SnackContext } from "../../../contexts/SnackContext";
 import { AuthContext } from "../../../contexts/AuthContext";
@@ -369,6 +370,10 @@ export default function EvalForGroupDetails() {
 
   return (
     <Container className={cx("evalForGroupDetails")}>
+      <Head>
+        <title>Détails de l&rsquo;évaluation - ExploraNotes</title>
+      </Head>
+
       {notFound && (
         <h3 className={cx("groupNotFound")}>
           Oups ! Le groupe ou l&rsquo;évaluation n&rsquo;existent pas, ou bien vous n&rsquo;avez pas
