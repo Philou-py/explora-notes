@@ -78,7 +78,7 @@ export default function Groups() {
   const { isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
-  const { teacherId, groupMap } = useContext(TeacherContext);
+  const { teacherId, groupMap, evaluationMap } = useContext(TeacherContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
   const { subjects } = useGetSubject();
 
@@ -194,6 +194,7 @@ export default function Groups() {
     };
 
     let studentsToDelete = [...new Set(currentDeletedStudents)];
+    let evalsToUpdate = {};
 
     students
       .filter((name) => name !== null)
@@ -214,8 +215,7 @@ export default function Groups() {
             groupToSend[`studentMap.${stId}.firstName`] = fName;
             groupToSend[`studentMap.${stId}.lastName`] = lName;
           }
-          // TODO: Update ID in copies
-          if (oldId !== stId) {
+          if (oldId && oldId !== stId) {
             const oMS = groupMap[currentGroupId].studentMap[oldId];
             if (oMS.subjectAverageOutOf20)
               groupToSend[`studentMap.${stId}.subjectAverageOutOf20`] = oMS.subjectAverageOutOf20;
@@ -224,6 +224,30 @@ export default function Groups() {
             if (oMS.subjectWeightTotal)
               groupToSend[`studentMap.${stId}.subjectWeightTotal`] = oMS.subjectWeightTotal;
             groupToSend[`studentMap.${oldId}`] = deleteField();
+
+            const groupEvals = Object.values(evaluationMap).filter((e) =>
+              e.associatedGroupIds.includes(groupMap[currentGroupId].id)
+            );
+            const studentCopies = [];
+            groupEvals.forEach((e) => {
+              if (e.copies[currentGroupId] && e.copies[currentGroupId][oldId]) {
+                studentCopies.push(e.copies[currentGroupId][oldId]);
+              }
+            });
+            studentCopies.forEach((c) => {
+              if (!evalsToUpdate[c.evaluationId]) {
+                evalsToUpdate[c.evaluationId] = {
+                  [`copies.${currentGroupId}.${stId}`]: { ...c, studentId: stId },
+                  [`copies.${currentGroupId}.${oldId}`]: deleteField(),
+                };
+              } else {
+                evalsToUpdate[c.evaluationId][`copies.${currentGroupId}.${stId}`] = {
+                  ...c,
+                  studentId: stId,
+                };
+                evalsToUpdate[c.evaluationId][`copies.${currentGroupId}.${oldId}`] = deleteField();
+              }
+            });
           }
         }
       });
@@ -235,9 +259,13 @@ export default function Groups() {
         groupToSend[`studentMap.${sId}`] = deleteField();
       });
       await updateDoc(doc(db, "groups", currentGroupId), groupToSend);
+      Object.keys(evalsToUpdate).forEach((eId) => {
+        updateDoc(doc(db, "evaluations", eId), evalsToUpdate[eId]);
+        console.log("Updated evaluation with id", eId);
+      });
     }
 
-    haveASnack("success", <h6>Le groupe a bien été enregistrée !</h6>);
+    haveASnack("success", <h6>Le groupe a bien été enregistré !</h6>);
     handleModalClose();
     setIsLoading(false);
   }, [
@@ -252,6 +280,7 @@ export default function Groups() {
     currentDeletedStudents,
     isEditing,
     groupMap,
+    evaluationMap,
   ]);
 
   const handleDeleteGroup = useCallback(
