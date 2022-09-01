@@ -32,6 +32,35 @@ interface TableHeader {
   unitSuffix?: string;
 }
 
+interface Copy {
+  id: string;
+  mark: number;
+  pointsObtained: number[];
+  markOutOf20: number;
+  bonusPoints: number;
+  penaltyPoints: number;
+  studentId: string;
+  evaluationId: string;
+  groupId: string;
+}
+
+interface Evaluation {
+  id: string;
+  creationDate: string;
+  title: string;
+  totalPoints: number;
+  nbQuestions: number;
+  scale: number[];
+  markPrecision: number;
+  coefficient: number;
+  associatedGroupIds: string[];
+  copies: {
+    [gId: string]: {
+      [sId: string]: Copy;
+    };
+  };
+}
+
 const cx = cn.bind(evalStyles);
 
 export default function Evaluations() {
@@ -42,6 +71,9 @@ export default function Evaluations() {
 
   const [addEvalModalOpen, setAddEvalModalOpen] = useState(false);
   const [bindToGrModalOpen, setBindToGrModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentEvalToEdit, setCurrentEvalToEdit] = useState<Evaluation>();
+  const [detailedEditing, setDetailedEditing] = useState(false);
   const [currentEvalToBind, setCurrentEvalToBind] = useState({ id: "", name: "" });
   const [currentGroups, setCurrentGroups] = useState<string[]>([""]);
   const [nbCurrentGroups, setNbCurrentGroups] = useState(1);
@@ -52,12 +84,15 @@ export default function Evaluations() {
     setData,
     isValid,
     register,
-  } = useForm({ title: "", markPrecision: "0.5", coefficient: "1.0" });
+  } = useForm({ title: "", markPrecision: "0.5", coefficient: "1" });
 
   const resetForm = useCallback(() => {
-    setData({ title: "", markPrecision: "0.5", coefficient: "1.0" });
+    setData({ title: "", markPrecision: "0.5", coefficient: "1" });
     setNbQuestions(1);
     setScale([1]);
+    setCurrentEvalToEdit(undefined);
+    setIsEditing(false);
+    setDetailedEditing(false);
   }, [setData]);
 
   const handleAddEvalModalClose = useCallback(() => {
@@ -76,6 +111,31 @@ export default function Evaluations() {
   const handleBindToGrModalOpen = useCallback(() => {
     setBindToGrModalOpen(true);
   }, []);
+
+  const handleEditEvaluation = useCallback(
+    (rawEval: Evaluation) => {
+      setData({
+        title: rawEval.title,
+        markPrecision: rawEval.markPrecision.toString(),
+        coefficient: rawEval.coefficient.toString(),
+      });
+      setScale(rawEval.scale);
+      setNbQuestions(rawEval.nbQuestions);
+      setCurrentEvalToEdit(rawEval);
+      if (
+        !Object.values(rawEval.copies)
+          .map((copiesForG) => Object.keys(copiesForG).length === 0)
+          .includes(false)
+      ) {
+        console.log("Performing a detailed edit!");
+        // Allow user to modify scale if no copies exist
+        setDetailedEditing(true);
+      }
+      setIsEditing(true);
+      handleAddEvalModalOpen();
+    },
+    [handleAddEvalModalOpen, setData]
+  );
 
   const handleAddQuestion = useCallback(() => {
     setScale((prev) => [...prev, 1]);
@@ -169,6 +229,15 @@ export default function Evaluations() {
             <Button
               type="icon"
               size="small"
+              iconName="edit"
+              className="orange--text"
+              key={`eval-${rawEval.id}-edit`}
+              onClick={() => handleEditEvaluation(rawEval)}
+              isFlat
+            />,
+            <Button
+              type="icon"
+              size="small"
               iconName="delete"
               className="red--text ml-1"
               key={`eval-${rawEval.id}-delete`}
@@ -180,7 +249,7 @@ export default function Evaluations() {
           ],
         },
       })),
-    [handleBindToGrModalOpen, handleDeleteEvaluation, evaluationMap, groupMap]
+    [handleBindToGrModalOpen, handleDeleteEvaluation, evaluationMap, groupMap, handleEditEvaluation]
   );
 
   const handleSubmit = useCallback(async () => {
@@ -191,18 +260,72 @@ export default function Evaluations() {
       scale,
       totalPoints,
       nbQuestions,
-      creationDate: new Date().toISOString(),
+      creationDate: isEditing ? currentEvalToEdit.creationDate : new Date().toISOString(),
       creator: teacherId,
-      associatedGroupIds: [],
-      copies: {},
+      associatedGroupIds: isEditing ? currentEvalToEdit.associatedGroupIds : [],
+      copies: detailedEditing || !isEditing ? {} : currentEvalToEdit.copies,
     };
-    await addDoc(collection(db, "evaluations"), evaluationToSend);
+
+    if (!isEditing) {
+      await addDoc(collection(db, "evaluations"), evaluationToSend);
+    } else {
+      const evalId = currentEvalToEdit.id;
+
+      // Update the students' averages if the coefficient has changed
+      if (!detailedEditing && evaluationToSend.coefficient !== currentEvalToEdit.coefficient) {
+        const oldCoef = currentEvalToEdit.coefficient;
+        const newCoef = evaluationToSend.coefficient;
+        const groupsToEdit = {};
+        const allGroupCopies = evaluationMap[evalId].copies;
+        Object.values(allGroupCopies).forEach((copyMap) => {
+          Object.values(copyMap).forEach((c) => {
+            const oSPS = groupMap[c.groupId].studentMap[c.studentId].subjectPointsSum;
+            const oSWT = groupMap[c.groupId].studentMap[c.studentId].subjectWeightTotal;
+
+            const nSPS = oSPS - c.markOutOf20 * oldCoef + c.markOutOf20 * newCoef;
+            const nSWT = oSWT - oldCoef + newCoef;
+            const nSAOO20 = nSPS / nSWT;
+
+            if (groupsToEdit[c.groupId]) {
+              groupsToEdit[c.groupId][`studentMap.${c.studentId}.subjectPointsSum`] = nSPS;
+              groupsToEdit[c.groupId][`studentMap.${c.studentId}.subjectWeightTotal`] = nSWT;
+              groupsToEdit[c.groupId][`studentMap.${c.studentId}.subjectAverageOutOf20`] = nSAOO20;
+            } else {
+              groupsToEdit[c.groupId] = {
+                [`studentMap.${c.studentId}.subjectPointsSum`]: nSPS,
+                [`studentMap.${c.studentId}.subjectWeightTotal`]: nSWT,
+                [`studentMap.${c.studentId}.subjectAverageOutOf20`]: nSAOO20,
+              };
+            }
+          });
+        });
+
+        Object.keys(groupsToEdit).forEach((gId) => {
+          updateDoc(doc(db, "groups", gId), groupsToEdit[gId]);
+        });
+      }
+      await updateDoc(doc(db, "evaluations", evalId), evaluationToSend);
+    }
+
     haveASnack(
       "success",
-      <h6>L&rsquo;évaluation &laquo; {newEval.title} &raquo; a bien été créée !</h6>
+      <h6>L&rsquo;évaluation &laquo; {newEval.title} &raquo; a bien été enregistrée !</h6>
     );
     handleAddEvalModalClose();
-  }, [newEval, scale, totalPoints, nbQuestions, teacherId, haveASnack, handleAddEvalModalClose]);
+  }, [
+    newEval,
+    scale,
+    totalPoints,
+    nbQuestions,
+    teacherId,
+    haveASnack,
+    handleAddEvalModalClose,
+    isEditing,
+    detailedEditing,
+    currentEvalToEdit,
+    evaluationMap,
+    groupMap,
+  ]);
 
   const handleBindToGrSubmit = useCallback(async () => {
     const evalRef = doc(db, "evaluations", currentEvalToBind.id);
@@ -233,8 +356,8 @@ export default function Evaluations() {
     () => [
       ["0.25", "0.25"],
       ["0.5", "0.5"],
-      ["1.0", "1.0"],
-      ["2.0", "2.0"],
+      ["1.0", "1"],
+      ["2.0", "2"],
     ],
     []
   );
@@ -242,16 +365,16 @@ export default function Evaluations() {
   const coefficientForSelect = useMemo(
     () => [
       ["0.5", "0.5"],
-      ["1.0", "1.0"],
+      ["1.0", "1"],
       ["1.5", "1.5"],
-      ["2.0", "2.0"],
+      ["2.0", "2"],
       ["2.5", "2.5"],
-      ["3.0", "3.0"],
-      ["4.0", "4.0"],
-      ["5.0", "5.0"],
-      ["6.0", "6.0"],
-      ["7.0", "7.0"],
-      ["8.0", "8.0"],
+      ["3.0", "3"],
+      ["4.0", "4"],
+      ["5.0", "5"],
+      ["6.0", "6"],
+      ["7.0", "7"],
+      ["8.0", "8"],
     ],
     []
   );
@@ -381,7 +504,10 @@ export default function Evaluations() {
       <Modal showModal={addEvalModalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
           <Form onSubmit={handleSubmit}>
-            <CardHeader title={<h2>Créer une évaluation</h2>} centerTitle />
+            <CardHeader
+              title={<h2>{isEditing ? "Modifier" : "Créer"} une évaluation</h2>}
+              centerTitle
+            />
             <CardContent>
               <fieldset className={cx("generalInfo")}>
                 <legend>Informations générales</legend>
@@ -398,6 +524,7 @@ export default function Evaluations() {
                   prependIcon="precision_manufacturing"
                   selectItems={precisionsForSelect}
                   isRequired
+                  isDisabled={isEditing && !detailedEditing}
                   {...register("markPrecision")}
                 />
                 <InputField
@@ -411,28 +538,30 @@ export default function Evaluations() {
                 <p>Les notes des copies seront ramenées sur 20 points.</p>
               </fieldset>
 
-              <fieldset className={cx("scale")}>
-                <legend>Barème</legend>
-                <>{scaleTemplate}</>
-                <div className={cx("addIconContainer")}>
-                  <Button
-                    type="icon"
-                    iconName="remove"
-                    className="yellow darken-1 mr-4"
-                    onClick={handleRemoveQuestion}
-                    size="small"
-                  />
-                  <Button
-                    type="icon"
-                    iconName="add"
-                    className="red darken-1"
-                    onClick={handleAddQuestion}
-                  />
-                </div>
-                <p>
-                  Nombre de questions : {nbQuestions} | Total des points : {totalPoints}
-                </p>
-              </fieldset>
+              {(!isEditing || detailedEditing) && (
+                <fieldset className={cx("scale")}>
+                  <legend>Barème</legend>
+                  <>{scaleTemplate}</>
+                  <div className={cx("addIconContainer")}>
+                    <Button
+                      type="icon"
+                      iconName="remove"
+                      className="yellow darken-1 mr-4"
+                      onClick={handleRemoveQuestion}
+                      size="small"
+                    />
+                    <Button
+                      type="icon"
+                      iconName="add"
+                      className="red darken-1"
+                      onClick={handleAddQuestion}
+                    />
+                  </div>
+                  <p>
+                    Nombre de questions : {nbQuestions} | Total des points : {totalPoints}
+                  </p>
+                </fieldset>
+              )}
             </CardContent>
 
             <CardActions>
