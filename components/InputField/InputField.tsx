@@ -131,7 +131,6 @@ function InputField(props: TextInputProps | TextAreaProps | SelectInputProps | F
 
       // Remove event listener on unmount
       return () => {
-        console.log("Body click event listener removed!");
         document.removeEventListener("click", handleClickBody);
       };
     }
