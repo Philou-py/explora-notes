@@ -372,7 +372,7 @@ export default function EvalForGroupDetails() {
       {notFound && (
         <h3 className={cx("groupNotFound")}>
           Oups ! Le groupe ou l&rsquo;évaluation n&rsquo;existent pas, ou bien vous n&rsquo;avez pas
-          la permission de consulter leurs détails !
+          la permission de consulter leurs détails ! Vérifiez que vous êtes bien connecté !
         </h3>
       )}
       {!notFound && (
@@ -480,7 +480,8 @@ export default function EvalForGroupDetails() {
               <Button
                 className="blue darken-3"
                 isDisabled={
-                  !isAuthenticated || currentPointsObtained.length !== evaluation.nbQuestions
+                  !isAuthenticated ||
+                  (evaluation && currentPointsObtained.length !== evaluation.nbQuestions)
                 }
                 formSubmit
               >

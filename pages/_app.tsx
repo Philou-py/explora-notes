@@ -67,7 +67,7 @@ export default function MyApp({ Component, pageProps }) {
                 height: "100vh",
               }}
             >
-              <div style={{ marginTop: 10, marginBottom: 10 }}>
+              <div style={{ marginTop: 10, marginBottom: 30 }}>
                 <Component {...pageProps} />
               </div>
               <Footer />

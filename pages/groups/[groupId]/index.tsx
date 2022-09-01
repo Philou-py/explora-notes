@@ -8,7 +8,6 @@ import { TeacherContext } from "../../../contexts/TeacherContext";
 import groupDashboardStyles from "../../../pageStyles/GroupDashboard.module.scss";
 import cn from "classnames/bind";
 import { useStudentsTable } from "../../../hooks/useFetchGroup";
-import { useGetSubject } from "../../../hooks/useGetSubject";
 import { utils, writeFile } from "xlsx";
 
 interface TableHeader {
@@ -37,7 +36,6 @@ export default function GroupDashboard() {
   const { evaluationMap, groupMap } = useContext(TeacherContext);
   const router = useRouter();
   const { groupId } = router.query as { groupId: string };
-  const { getSubject } = useGetSubject();
   const { groupNotFound, group, studentsTableTemplate } = useStudentsTable();
 
   const rawEvaluations = useMemo(
@@ -242,7 +240,7 @@ export default function GroupDashboard() {
   return (
     <Container className={cx("groupDashboard")}>
       {!isAuthenticated && (
-        <h1 className="pageTitle text-center">
+        <h1 className={cn("pageTitle text-center", cx("groupNotFound"))}>
           Connectez-vous pour accéder au tableau de bord de cette classe !
         </h1>
       )}
@@ -257,9 +255,7 @@ export default function GroupDashboard() {
           <BreadCrumbs items={breadCrumbItems} namespace="GroupDasboard" />
           <h1 className="pageTitle text-center">
             {(group &&
-              `${group.name} - ${getSubject(group.subject)} - ${
-                group.schoolYear
-              } - Tableau de bord`) ||
+              `${group.name} - ${group.actualSubject} - ${group.shortenedLevel} - ${group.shortenedSchoolYear} - Tableau de bord`) ||
               "Détails du groupe - Chargement..."}
           </h1>
 

@@ -143,25 +143,33 @@ export default function Groups() {
   const handleRemoveStudent = useCallback(
     (id: number) => {
       if (actualNbStudents > 1) {
-        setCurrentDeletedStudents((prev) => {
-          const c = [...prev];
-          c.push(students[id][2]);
-          return c;
-        });
-        setStudents((prev) => {
-          const copy = [...prev];
-          copy[id] = null;
-          return copy;
-        });
-        setStudentsFilled((prev) => {
-          const copy = [...prev];
-          copy[id] = null;
-          return copy;
-        });
-        setNbDeletedStudents((prev) => prev + 1);
+        const remove = () => {
+          setCurrentDeletedStudents((prev) => {
+            const c = [...prev];
+            c.push(students[id][2]);
+            return c;
+          });
+          setStudents((prev) => {
+            const copy = [...prev];
+            copy[id] = null;
+            return copy;
+          });
+          setStudentsFilled((prev) => {
+            const copy = [...prev];
+            copy[id] = null;
+            return copy;
+          });
+          setNbDeletedStudents((prev) => prev + 1);
+        };
+        if (isEditing) {
+          promptConfirmation(
+            "Confirmez-vous la suppression de cet élève ainsi que de ses copies ?",
+            remove
+          );
+        } else remove();
       }
     },
-    [actualNbStudents, students]
+    [actualNbStudents, students, promptConfirmation, isEditing]
   );
 
   const handleEditGroup = useCallback(
@@ -435,20 +443,30 @@ export default function Groups() {
 
   return (
     <Container className={cx("groups")}>
-      <h1 className="pageTitle text-center">Groupes et tableaux de bord</h1>
+      {isAuthenticated && (
+        <>
+          <h1 className="pageTitle text-center">Groupes et tableaux de bord</h1>
 
-      <div className={cx("newGroupContainer")}>
-        <Button className="blue darken-3 text-center" onClick={handleModalOpen}>
-          Nouveau groupe
-        </Button>
-      </div>
+          <div className={cx("newGroupContainer")}>
+            <Button className="blue darken-3 text-center" onClick={handleModalOpen}>
+              Nouveau groupe
+            </Button>
+          </div>
 
-      <DataTable
-        headers={tableHeaders}
-        items={groups}
-        sortBy="schoolYear"
-        sortOrder={SortOrder.DESC}
-      />
+          <DataTable
+            headers={tableHeaders}
+            items={groups}
+            sortBy="schoolYear"
+            sortOrder={SortOrder.DESC}
+          />
+        </>
+      )}
+
+      {!isAuthenticated && (
+        <h1 className={cx("notAuthenticated")}>
+          Connectez-vous pour accéder à vos groupes et leur tableau de bord !
+        </h1>
+      )}
 
       <Modal showModal={modalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">

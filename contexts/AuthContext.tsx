@@ -108,7 +108,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
         signOut,
       }}
     >
-      <Modal showModal={modalOpen}>
+      <Modal showModal={modalOpen} closeFunc={setModalOpen}>
         {showConnexion ? (
           <ConnexionForm noAccountFunc={swapFormDisplay} onCompleted={onCompleted} />
         ) : (

@@ -443,21 +443,27 @@ export default function Evaluations() {
 
   return (
     <Container className={cx("evaluations")}>
-      <h1 className="pageTitle text-center">Évaluations</h1>
+      {isAuthenticated && (
+        <>
+          <h1 className="pageTitle text-center">Évaluations</h1>
 
-      <div className={cx("newEvalContainer")}>
-        <Button className="blue darken-3 text-center" onClick={handleAddEvalModalOpen}>
-          Nouvelle Évaluation
-        </Button>
-      </div>
+          <div className={cx("newEvalContainer")}>
+            <Button className="blue darken-3 text-center" onClick={handleAddEvalModalOpen}>
+              Nouvelle Évaluation
+            </Button>
+          </div>
 
-      <DataTable
-        headers={tableHeaders}
-        items={evaluations}
-        sortBy="creationDate"
-        sortOrder={SortOrder.DESC}
-      />
-
+          <DataTable
+            headers={tableHeaders}
+            items={evaluations}
+            sortBy="creationDate"
+            sortOrder={SortOrder.DESC}
+          />
+        </>
+      )}
+      {!isAuthenticated && (
+        <h1 className={cx("notAuthenticated")}>Connectez-vous pour accéder à vos évaluations !</h1>
+      )}
       <Modal showModal={bindToGrModalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
           <Form onSubmit={handleBindToGrSubmit}>
@@ -465,8 +471,11 @@ export default function Evaluations() {
 
             <CardContent>
               <p>Évaluation en question : {currentEvalToBind.name}</p>
+              <p>
+                Attention ! Si vous souhaitez dissocier un groupe, veillez à supprimer au préalable
+                toutes les copies des élèves du groupe !
+              </p>
               {groupInputTemplate}
-
               <div className={cx("addIconContainer")}>
                 <Button
                   type="icon"
