@@ -215,6 +215,11 @@ export default function EvalForGroupDetails() {
     setShowAddCopyModal(false);
   }, []);
 
+  const giveAllPoints = useCallback(() => {
+    const newPoints = [...evaluation.scale];
+    setCurrentPointsObtained(newPoints);
+  }, [evaluation]);
+
   const addCopySubmit = useCallback(async () => {
     const copyToSend = {
       id: currentCopyId || genId(),
@@ -455,11 +460,25 @@ export default function EvalForGroupDetails() {
             </CardContent>
 
             <CardActions>
+              <Button
+                type="text"
+                className="teal--text"
+                prependIcon="done_all"
+                onClick={giveAllPoints}
+              >
+                Note max
+              </Button>
               <Spacer />
               <Button className="red--text mr-4" type="outlined" onClick={handleAddCopyModalClose}>
                 Annuler
               </Button>
-              <Button className="blue darken-3" isDisabled={!isAuthenticated} formSubmit>
+              <Button
+                className="blue darken-3"
+                isDisabled={
+                  !isAuthenticated || currentPointsObtained.length !== evaluation.nbQuestions
+                }
+                formSubmit
+              >
                 Valider
               </Button>
             </CardActions>
