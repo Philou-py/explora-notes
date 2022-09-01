@@ -228,7 +228,12 @@ export default function GroupDashboard() {
       group
         ? [
             ["Groupes", "/groups"],
-            [group.name, `/groups/${group.id}`],
+            [
+              `${group.name} - ${group.actualSubject.slice(0, 3)} - ${group.shortenedLevel} - ${
+                group.shortenedSchoolYear
+              }`,
+              `/groups/${group.id}`,
+            ],
           ]
         : [],
     [group]
