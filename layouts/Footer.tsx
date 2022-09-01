@@ -31,7 +31,7 @@ function Footer() {
     <footer style={footerStyles}>
       <StackedWavesSVG style={bgSVGStyles} />
       <p style={paragraphStyles}>
-        Réalisé par Philippe Schoenhenz pour Mme Bertagnolio — Août 2022
+        Contactez-nous via <a href="mailto:exploranotes@gmail.com">exploranotes@gmail.com</a> !
       </p>
       <p style={paragraphStyles}>
         Ce site est open-source ! Son code est disponible sur&nbsp;
