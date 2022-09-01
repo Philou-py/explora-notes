@@ -27,7 +27,8 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
-  coefficient: number;
+  bonusPoints: number;
+  penaltyPoints: number;
   studentId: string;
   evaluationId: string;
   groupId: string;
@@ -145,9 +146,10 @@ export const useMarksTable = (
         mark: {
           rawContent: copyMapPerStudent[st.id] && copyMapPerStudent[st.id].mark,
           content: copyMapPerStudent[st.id]
-            ? `${roundNum(copyMapPerStudent[st.id].mark, 2)} / ${
-                evaluation.totalPoints
-              } - ${roundNum(copyMapPerStudent[st.id].markOutOf20, 2)} / 20`
+            ? `${roundNum(copyMapPerStudent[st.id].mark, 2)} / ${evaluation.totalPoints}` +
+              (evaluation.totalPoints !== 20
+                ? ` - ${roundNum(copyMapPerStudent[st.id].markOutOf20, 2)} / 20`
+                : "")
             : "Copie non corrigée",
         },
         actions: {

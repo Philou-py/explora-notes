@@ -54,7 +54,8 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
-  coefficient: number;
+  bonusPoints: number;
+  penaltyPoints: number;
   studentId: string;
   evaluationId: string;
   groupId: string;

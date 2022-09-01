@@ -72,6 +72,8 @@ export default function GroupDashboard() {
           [`Note (sur ${evaluation.totalPoints})`]: roundNum(copy.mark, 2),
           "Note sur 20": roundNum(copy.markOutOf20, 2),
           ...pointsPerQuestion,
+          "Points bonus": copy.bonusPoints,
+          "Points malus": copy.penaltyPoints,
         };
       });
 

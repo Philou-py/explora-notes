@@ -38,7 +38,16 @@
     margin: 30px 0;
   }
 
-  li {
+  .evalStatistics li {
     margin-bottom: 5px;
+  }
+
+  .bonusPenalty {
+    margin: 20px 0;
+    display: flex;
+
+    & > div {
+      flex-grow: 1;
+    }
   }
 }

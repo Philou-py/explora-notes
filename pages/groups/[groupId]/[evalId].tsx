@@ -16,6 +16,7 @@ import {
   Form,
   Spacer,
   BreadCrumbs,
+  InputField,
 } from "../../../components";
 import { db } from "../../../firebase-config";
 import { doc, updateDoc, deleteField } from "firebase/firestore";
@@ -36,8 +37,8 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
-  totalPoints: number;
-  coefficient: number;
+  bonusPoints: number;
+  penaltyPoints: number;
   studentId: string;
   evaluationId: string;
   groupId: string;
@@ -76,6 +77,8 @@ export default function EvalForGroupDetails() {
   const [currentPrevMarkOutOf20, setCurrentPrevMarkOutOf20] = useState(0);
   const [currentMinMark, setCurrentMinMark] = useState<number>(Infinity);
   const [currentMaxMark, setCurrentMaxMark] = useState<number>(-Infinity);
+  const [bonusPoints, setBonusPoints] = useState(0);
+  const [penaltyPoints, setPenaltyPoints] = useState(0);
 
   const group = useMemo(() => groupMap[groupId], [groupMap, groupId]);
   const evaluation = useMemo(() => evaluationMap[evalId], [evaluationMap, evalId]);
@@ -88,9 +91,14 @@ export default function EvalForGroupDetails() {
     [currentPointsObtained]
   );
 
+  const currentMark = useMemo(
+    () => totalPointsObtained + bonusPoints - penaltyPoints,
+    [totalPointsObtained, bonusPoints, penaltyPoints]
+  );
+
   const currentMarkOutOf20 = useMemo(
-    () => (evaluation ? (totalPointsObtained * 20) / evaluation.totalPoints : 0),
-    [evaluation, totalPointsObtained]
+    () => (evaluation ? (currentMark * 20) / evaluation.totalPoints : 0),
+    [evaluation, currentMark]
   );
 
   const addCopy = useCallback((student: Student, min: number, max: number) => {
@@ -113,7 +121,8 @@ export default function EvalForGroupDetails() {
           const oldSubjectPointsSum = student.subjectPointsSum;
           const oldSubjectWeightTotal = student.subjectWeightTotal;
 
-          const newSubjectPointsSum = oldSubjectPointsSum - studentCopy.markOutOf20;
+          const newSubjectPointsSum =
+            oldSubjectPointsSum - studentCopy.markOutOf20 * evaluation.coefficient;
           const newSubjectWeightTotal = oldSubjectWeightTotal - evaluation.coefficient;
           const newSubjectAverageOutOf20 = newSubjectPointsSum / newSubjectWeightTotal;
 
@@ -176,6 +185,8 @@ export default function EvalForGroupDetails() {
     setIsEditing(true);
     setCurrentCopyId(copy.id);
     setCurrentPointsObtained(copy.pointsObtained);
+    setBonusPoints(copy.bonusPoints);
+    setPenaltyPoints(copy.penaltyPoints);
     setCurrentPrevMark(copy.mark);
     setCurrentPrevMarkOutOf20(copy.markOutOf20);
   }, []);
@@ -199,6 +210,8 @@ export default function EvalForGroupDetails() {
     setCurrentPrevMarkOutOf20(0);
     setCurrentMinMark(Infinity);
     setCurrentMaxMark(-Infinity);
+    setBonusPoints(0);
+    setPenaltyPoints(0);
     setShowAddCopyModal(false);
   }, []);
 
@@ -206,10 +219,10 @@ export default function EvalForGroupDetails() {
     const copyToSend = {
       id: currentCopyId || genId(),
       pointsObtained: currentPointsObtained,
-      mark: totalPointsObtained,
+      mark: currentMark,
       markOutOf20: currentMarkOutOf20,
-      totalPoints: evaluation.totalPoints,
-      coefficient: evaluation.coefficient,
+      bonusPoints,
+      penaltyPoints,
       studentId: currentStudent.id,
       evaluationId: evalId,
       groupId: groupId,
@@ -246,20 +259,14 @@ export default function EvalForGroupDetails() {
     const oldMaxMark = currentMaxMark;
     const oldMaxMarkOutOf20 = (currentMaxMark * 20) / evaluation.totalPoints;
 
-    const newTotalPoints = oldTotalPoints - (isEditing ? currentPrevMark : 0) + totalPointsObtained;
+    const newTotalPoints = oldTotalPoints - (isEditing ? currentPrevMark : 0) + currentMark;
     const newCopyNb = oldCopyNb + (isEditing ? 0 : 1);
     const newAverage = newTotalPoints / newCopyNb;
     const newAverageOutOf20 = (newAverage * 20) / evaluation.totalPoints;
-    const newMinMark = totalPointsObtained < oldMinMark ? totalPointsObtained : oldMinMark;
-    const newMinMarkOutOf20 =
-      totalPointsObtained < oldMinMark
-        ? (totalPointsObtained * 20) / evaluation.totalPoints
-        : oldMinMarkOutOf20;
-    const newMaxMark = totalPointsObtained > oldMaxMark ? totalPointsObtained : oldMaxMark;
-    const newMaxMarkOutOf20 =
-      totalPointsObtained > oldMaxMark
-        ? (totalPointsObtained * 20) / evaluation.totalPoints
-        : oldMaxMarkOutOf20;
+    const newMinMark = currentMark < oldMinMark ? currentMark : oldMinMark;
+    const newMinMarkOutOf20 = currentMark < oldMinMark ? currentMarkOutOf20 : oldMinMarkOutOf20;
+    const newMaxMark = currentMark > oldMaxMark ? currentMark : oldMaxMark;
+    const newMaxMarkOutOf20 = currentMark > oldMaxMark ? currentMarkOutOf20 : oldMaxMarkOutOf20;
 
     const evalStatistics = {
       average: newAverage,
@@ -289,12 +296,14 @@ export default function EvalForGroupDetails() {
     currentStudent,
     currentCopyId,
     currentPointsObtained,
+    currentMark,
     currentMarkOutOf20,
     currentPrevMark,
     currentPrevMarkOutOf20,
     currentMinMark,
     currentMaxMark,
-    totalPointsObtained,
+    bonusPoints,
+    penaltyPoints,
     evaluation,
     group,
     evalId,
@@ -367,18 +376,21 @@ export default function EvalForGroupDetails() {
           {evalStatistics && <h2>Vue d&rsquo;ensemble des résultats</h2>}
 
           {evaluation && evalStatistics && (
-            <ul>
+            <ul className={cx("evalStatistics")}>
               <li>
-                Moyenne du groupe : {roundNum(evalStatistics.average, 2)} / {evaluation.totalPoints}{" "}
-                - {roundNum(evalStatistics.averageOutOf20, 2)} / 20
+                Moyenne du groupe : {roundNum(evalStatistics.average, 2)} / {evaluation.totalPoints}
+                {evaluation.totalPoints !== 20 &&
+                  ` - ${roundNum(evalStatistics.averageOutOf20, 2)} / 20`}
               </li>
               <li>
-                Note minimale : {roundNum(evalStatistics.minMark, 2)} / {evaluation.totalPoints} -{" "}
-                {roundNum(evalStatistics.minMarkOutOf20, 2)} / 20
+                Note minimale : {roundNum(evalStatistics.minMark, 2)} / {evaluation.totalPoints}
+                {evaluation.totalPoints !== 20 &&
+                  ` - ${roundNum(evalStatistics.minMarkOutOf20, 2)} / 20`}
               </li>
               <li>
-                Note maximale : {roundNum(evalStatistics.maxMark, 2)} / {evaluation.totalPoints} -{" "}
-                {roundNum(evalStatistics.maxMarkOutOf20, 2)} / 20
+                Note maximale : {roundNum(evalStatistics.maxMark, 2)} / {evaluation.totalPoints}
+                {evaluation.totalPoints !== 20 &&
+                  ` - ${roundNum(evalStatistics.maxMarkOutOf20, 2)} / 20`}
               </li>
             </ul>
           )}
@@ -402,10 +414,42 @@ export default function EvalForGroupDetails() {
                 Élève : {currentStudent && `${currentStudent.firstName} ${currentStudent.lastName}`}
               </p>
               {resultsTemplate}
+              <div className={cx("bonusPenalty")}>
+                <InputField
+                  type="select"
+                  label="Points bonus"
+                  prependIcon="add_circle"
+                  selectItems={[
+                    ["0", "0"],
+                    ["0.5", "0.5"],
+                    ["1", "1"],
+                    ["1.5", "1.5"],
+                    ["2", "2"],
+                  ]}
+                  setValue={(newVal) => setBonusPoints(Number(newVal))}
+                  value={bonusPoints.toString()}
+                />
+                <InputField
+                  type="select"
+                  label="Points malus"
+                  prependIcon="cancel"
+                  selectItems={[
+                    ["0", "0"],
+                    ["0.5", "0.5"],
+                    ["1", "1"],
+                    ["1.5", "1.5"],
+                    ["2", "2"],
+                  ]}
+                  setValue={(newVal) => setPenaltyPoints(Number(newVal))}
+                  value={penaltyPoints.toString()}
+                />
+              </div>
               {evaluation && (
                 <p>
-                  Points obtenus : {totalPointsObtained} / {evaluation.totalPoints} | Note sur 20 :{" "}
-                  {roundNum(currentMarkOutOf20, 2)} / 20
+                  Note : {totalPointsObtained} {bonusPoints !== 0 && `+ ${bonusPoints} `}
+                  {penaltyPoints !== 0 && `- ${penaltyPoints} `}/ {evaluation.totalPoints}
+                  {evaluation.totalPoints !== 20 &&
+                    ` | Note sur 20 : ${roundNum(currentMarkOutOf20, 2)} / 20`}
                 </p>
               )}
             </CardContent>
