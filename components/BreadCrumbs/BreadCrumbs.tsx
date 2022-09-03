@@ -18,7 +18,7 @@ function BreadCrumbs({ items, namespace }: BreadCrumbsProps) {
           <Button
             type={index !== items.length - 1 ? "outlined" : "raised"}
             href={href}
-            className={cn({
+            className={cn("mb-2", {
               "cyan--text text--darken-2": index !== items.length - 1,
               "cyan darken-2": index === items.length - 1,
             })}
@@ -29,7 +29,7 @@ function BreadCrumbs({ items, namespace }: BreadCrumbsProps) {
           </Button>
         </li>,
         index !== items.length - 1 && (
-          <li key={`${namespace}-${href}-divider`} className={cx("divider")}>
+          <li key={`${namespace}-${href}-divider`} className={cn("mb-2", cx("divider"))}>
             <Icon iconName="chevron_right" />
           </li>
         ),
