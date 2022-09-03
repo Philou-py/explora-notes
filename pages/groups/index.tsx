@@ -171,8 +171,7 @@ export default function Groups() {
               .filter((e) => e.associatedGroupIds.includes(currentGroupId))
               .some((evaluation) => {
                 return Object.values(evaluation.copies).some((g) => {
-                  if (!hasCopies && g && g[students[id][2]]) {
-                    console.log("Has copies!");
+                  if (g && g[students[id][2]]) {
                     return true;
                   }
                   return false;
@@ -311,10 +310,13 @@ export default function Groups() {
 
   const handleDeleteGroup = useCallback(
     (groupId: string) => {
-      promptConfirmation("Voulez-vous supprimer ce groupe et ses élèves associés ?", async () => {
-        await updateDoc(doc(db, "groups", groupId), { isDeleted: true });
-        haveASnack("success", <h6>Le groupe a bien été supprimé !</h6>);
-      });
+      promptConfirmation(
+        "Voulez-vous supprimer ce groupe, ses élèves associés et toutes leurs copies ?",
+        async () => {
+          await updateDoc(doc(db, "groups", groupId), { isDeleted: true });
+          haveASnack("success", <h6>Le groupe a bien été supprimé !</h6>);
+        }
+      );
     },
     [haveASnack, promptConfirmation]
   );
@@ -323,6 +325,7 @@ export default function Groups() {
     () => [
       { text: "Nom du groupe", value: "name" },
       { text: "Matière", value: "subject" },
+      { text: "Niveau", value: "level" },
       { text: "Nb d’élèves", value: "nbStudents", alignContent: "center" },
       { text: "Année scolaire", value: "schoolYear", alignContent: "center" },
       { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
@@ -356,6 +359,7 @@ export default function Groups() {
         key: { rawContent: rawGroup.id },
         name: { rawContent: rawGroup.name },
         subject: { rawContent: rawGroup.subject, content: rawGroup.actualSubject },
+        level: { rawContent: rawGroup.level },
         nbStudents: { rawContent: rawGroup.nbStudents, alignContent: "center" },
         schoolYear: { rawContent: rawGroup.schoolYear, alignContent: "center" },
         actions: {

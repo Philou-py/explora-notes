@@ -82,4 +82,19 @@
     text-align: center;
     margin-top: 25%;
   }
+
+  .groupDisplayContainer {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    & > .xs {
+      justify-content: flex-end;
+    }
+
+    .groupBtn {
+      margin-bottom: 5px;
+      margin-right: 5px;
+    }
+  }
 }

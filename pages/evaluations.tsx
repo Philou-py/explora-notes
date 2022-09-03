@@ -6,6 +6,7 @@ import { db } from "../firebase-config";
 import { doc, collection, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
+import { BreakpointsContext } from "../contexts/BreakpointsContext";
 import { TeacherContext } from "../contexts/TeacherContext";
 import {
   Container,
@@ -68,8 +69,10 @@ export default function Evaluations() {
   const { isAuthenticated } = useContext(AuthContext);
   const { haveASnack } = useContext(SnackContext);
   const { teacherId, evaluationMap, groupMap } = useContext(TeacherContext);
+  const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
   const { confirmModalTemplate, promptConfirmation } = useConfirmation();
 
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [addEvalModalOpen, setAddEvalModalOpen] = useState(false);
   const [bindToGrModalOpen, setBindToGrModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -123,11 +126,8 @@ export default function Evaluations() {
       setScale(rawEval.scale);
       setNbQuestions(rawEval.nbQuestions);
       setCurrentEvalToEdit(rawEval);
-      if (
-        !Object.values(rawEval.copies)
-          .map((copiesForG) => Object.keys(copiesForG).length === 0)
-          .includes(false)
-      ) {
+      const hasCopies = Object.values(rawEval.copies).some((g) => Object.values(g).length !== 0);
+      if (!hasCopies) {
         console.log("Performing a detailed edit!");
         // Allow user to modify scale if no copies exist
         setDetailedEditing(true);
@@ -166,15 +166,22 @@ export default function Evaluations() {
 
   const handleDeleteEvaluation = useCallback(
     (evalId: string) => {
-      promptConfirmation(
-        "Voulez-vous supprimer cette évaluation de manière définitive ainsi que toutes les copies associées ?",
-        async () => {
-          await deleteDoc(doc(db, "evaluations", evalId));
-          haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
-        }
+      const hasCopies = Object.values(evaluationMap[evalId].copies).some(
+        (g) => Object.values(g).length !== 0
       );
+      if (hasCopies) {
+        setErrorModalOpen(true);
+      } else {
+        promptConfirmation(
+          "Voulez-vous supprimer cette évaluation de manière définitive ?",
+          async () => {
+            await deleteDoc(doc(db, "evaluations", evalId));
+            haveASnack("success", <h6>L&rsquo;évaluation a bien été supprimée !</h6>);
+          }
+        );
+      }
     },
-    [haveASnack, promptConfirmation]
+    [haveASnack, promptConfirmation, evaluationMap]
   );
 
   const evaluations = useMemo(
@@ -194,20 +201,24 @@ export default function Evaluations() {
         coefficient: { rawContent: rawEval.coefficient },
         associatedGroups: {
           rawContent: rawEval.associatedGroupIds.map((id) => groupMap[id].name).join(", "),
-          content: rawEval.associatedGroupIds.map((gId) => (
-            <Button
-              key={gId}
-              type="outlined"
-              href={`/groups/${gId}/${rawEval.id}`}
-              className="cyan--text mr-2"
-              isLink
-              isFlat
-            >
-              {`${groupMap[gId].name} - ${groupMap[gId].actualSubject.slice(0, 3)} - ${
-                groupMap[gId].shortenedLevel
-              } - ${groupMap[gId].shortenedSchoolYear}`}
-            </Button>
-          )),
+          content: (
+            <div className={cx("groupDisplayContainer", cbp)}>
+              {rawEval.associatedGroupIds.map((gId) => (
+                <Button
+                  key={gId}
+                  type="outlined"
+                  href={`/groups/${gId}/${rawEval.id}`}
+                  className={cn("cyan--text", cx("groupBtn"))}
+                  isLink
+                  isFlat
+                >
+                  {`${groupMap[gId].name} - ${groupMap[gId].actualSubject.slice(0, 3)} - ${
+                    groupMap[gId].shortenedLevel
+                  } - ${groupMap[gId].shortenedSchoolYear}`}
+                </Button>
+              ))}
+            </div>
+          ),
         },
         actions: {
           rawContent: "",
@@ -250,7 +261,14 @@ export default function Evaluations() {
           ],
         },
       })),
-    [handleBindToGrModalOpen, handleDeleteEvaluation, evaluationMap, groupMap, handleEditEvaluation]
+    [
+      handleBindToGrModalOpen,
+      handleDeleteEvaluation,
+      evaluationMap,
+      groupMap,
+      handleEditEvaluation,
+      cbp,
+    ]
   );
 
   const handleSubmit = useCallback(async () => {
@@ -365,6 +383,7 @@ export default function Evaluations() {
 
   const coefficientForSelect = useMemo(
     () => [
+      ["0", "0"],
       ["0.5", "0.5"],
       ["1.0", "1"],
       ["1.5", "1.5"],
@@ -476,7 +495,7 @@ export default function Evaluations() {
 
             <CardContent>
               <p>Évaluation en question : {currentEvalToBind.name}</p>
-              <p>
+              <p className="red--text">
                 Attention ! Si vous souhaitez dissocier un groupe, veillez à supprimer au préalable
                 toutes les copies des élèves du groupe !
               </p>
@@ -598,6 +617,36 @@ export default function Evaluations() {
       </Modal>
 
       {confirmModalTemplate}
+
+      <Modal showModal={errorModalOpen}>
+        <Card cssWidth="clamp(50px, 510px, 95%)">
+          <CardHeader
+            title={
+              <h5>
+                Attention ! Des copies ont déjà été corrigées pour l&rsquo;évaluation que vous
+                tentez de retirer ! Pour la supprimer définitivement, veuillez d&rsquo;abord
+                supprimer chaque copie individuellement. Vous pouvez sinon mettre le coefficient à
+                zéro.
+              </h5>
+            }
+            centerTitle
+          />
+          <CardContent />
+          <CardActions>
+            <Spacer />
+            <Button
+              className="cyan darken-1"
+              onClick={() => {
+                setErrorModalOpen(false);
+              }}
+              prependIcon="thumb_up"
+            >
+              D&rsquo;accord !
+            </Button>
+            <Spacer />
+          </CardActions>
+        </Card>
+      </Modal>
     </Container>
   );
 }

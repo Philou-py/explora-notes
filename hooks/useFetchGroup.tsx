@@ -216,6 +216,7 @@ export const useMarksTable = (
                   )
                 );
               }}
+              isDisabled={!copyMapPerStudent[st.id]}
               isFlat
             />,
           ],
