@@ -48,7 +48,7 @@ interface Copy {
 const cx = cn.bind(evalForGroupDetailsStyles);
 
 const roundNum = (value: number, nbDecimals: number) => {
-  if (value) {
+  if (value !== undefined) {
     return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
   } else {
     return "";
@@ -130,9 +130,9 @@ export default function EvalForGroupDetails() {
           const noMoreCopies = newSubjectWeightTotal === 0;
 
           const newStudentMarkSummary = {
-            [`studentMap.${student.id}.subjectAverageOutOf20`]: noMoreCopies
-              ? null
-              : newSubjectAverageOutOf20,
+            ...(noMoreCopies
+              ? { [`studentMap.${student.id}.subjectAverageOutOf20`]: deleteField() }
+              : { [`studentMap.${student.id}.subjectAverageOutOf20`]: newSubjectAverageOutOf20 }),
             [`studentMap.${student.id}.subjectPointsSum`]: newSubjectPointsSum,
             [`studentMap.${student.id}.subjectWeightTotal`]: newSubjectWeightTotal,
           };

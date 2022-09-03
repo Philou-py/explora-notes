@@ -23,7 +23,7 @@ interface TableHeader {
 const cx = cn.bind(groupDashboardStyles);
 
 const roundNum = (value: number, nbDecimals: number) => {
-  if (value) {
+  if (value !== undefined) {
     return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
   } else {
     return "";
@@ -138,31 +138,43 @@ export default function GroupDashboard() {
         coefficient: { rawContent: rawEval.coefficient },
         groupAverage: {
           rawContent:
-            group && group.evalStatistics[rawEval.id]
+            group &&
+            group.evalStatistics[rawEval.id] &&
+            group.evalStatistics[rawEval.id].average !== undefined
               ? group.evalStatistics[rawEval.id].average
               : "",
           content:
-            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].average
+            group &&
+            group.evalStatistics[rawEval.id] &&
+            group.evalStatistics[rawEval.id].average !== undefined
               ? roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)
               : "Aucune note !",
         },
         minMark: {
           rawContent:
-            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].minMark
+            group &&
+            group.evalStatistics[rawEval.id] &&
+            group.evalStatistics[rawEval.id].minMark !== undefined
               ? group.evalStatistics[rawEval.id].minMark
               : "",
           content:
-            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].minMark
+            group &&
+            group.evalStatistics[rawEval.id] &&
+            group.evalStatistics[rawEval.id].minMark !== undefined
               ? roundNum(group.evalStatistics[rawEval.id].minMarkOutOf20, 2)
               : "",
         },
         maxMark: {
           rawContent:
-            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].maxMark
+            group &&
+            group.evalStatistics[rawEval.id] &&
+            group.evalStatistics[rawEval.id].maxMark !== undefined
               ? group.evalStatistics[rawEval.id].maxMark
               : "",
           content:
-            group && group.evalStatistics[rawEval.id] && group.evalStatistics[rawEval.id].maxMark
+            group &&
+            group.evalStatistics[rawEval.id] &&
+            group.evalStatistics[rawEval.id].maxMark !== undefined
               ? roundNum(group.evalStatistics[rawEval.id].maxMarkOutOf20, 2)
               : "",
         },

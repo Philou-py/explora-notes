@@ -114,6 +114,7 @@ export default function Groups() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentGroupId, setCurrentGroupId] = useState("");
   const [currentDeletedStudents, setCurrentDeletedStudents] = useState<string[]>([]);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
 
   const resetForm = useCallback(() => {
     setData({ name: "", level: "", subject: "" });
@@ -162,15 +163,31 @@ export default function Groups() {
           });
           setNbDeletedStudents((prev) => prev + 1);
         };
+
         if (isEditing) {
-          promptConfirmation(
-            "Confirmez-vous la suppression de cet élève ainsi que de ses copies ?",
-            remove
-          );
+          let hasCopies = false;
+          if (students[id][2] !== "") {
+            hasCopies = Object.values(evaluationMap)
+              .filter((e) => e.associatedGroupIds.includes(currentGroupId))
+              .some((evaluation) => {
+                return Object.values(evaluation.copies).some((g) => {
+                  if (!hasCopies && g && g[students[id][2]]) {
+                    console.log("Has copies!");
+                    return true;
+                  }
+                  return false;
+                });
+              });
+          }
+          if (hasCopies) {
+            setErrorModalOpen(true);
+          } else {
+            promptConfirmation("Confirmez-vous la suppression de cet élève de ce groupe ?", remove);
+          }
         } else remove();
       }
     },
-    [actualNbStudents, students, promptConfirmation, isEditing]
+    [actualNbStudents, students, promptConfirmation, isEditing, evaluationMap, currentGroupId]
   );
 
   const handleEditGroup = useCallback(
@@ -546,6 +563,35 @@ export default function Groups() {
       </Modal>
 
       {confirmModalTemplate}
+
+      <Modal showModal={errorModalOpen}>
+        <Card cssWidth="clamp(50px, 510px, 95%)">
+          <CardHeader
+            title={
+              <h4>
+                Attention ! L&rsquo;élève que vous tentez de retirer de ce groupe possède des copies
+                corrigées ! Pour le supprimer définitivement, veuillez d&rsquo;abord supprimer
+                chaque copie individuellement.
+              </h4>
+            }
+            centerTitle
+          />
+          <CardContent />
+          <CardActions>
+            <Spacer />
+            <Button
+              className="cyan darken-1"
+              onClick={() => {
+                setErrorModalOpen(false);
+              }}
+              prependIcon="thumb_up"
+            >
+              D&rsquo;accord !
+            </Button>
+            <Spacer />
+          </CardActions>
+        </Card>
+      </Modal>
     </Container>
   );
 }

@@ -35,7 +35,7 @@ interface Copy {
 }
 
 const roundNum = (value: number, nbDecimals: number) => {
-  if (value) {
+  if (value !== undefined) {
     return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
   } else {
     return "";
@@ -74,10 +74,12 @@ export const useStudentsTable = () => {
         lastName: { rawContent: student.lastName },
         firstName: { rawContent: student.firstName },
         subjectAverageOutOf20: {
-          rawContent: student.subjectAverageOutOf20 ? student.subjectAverageOutOf20 : "",
-          content: student.subjectAverageOutOf20
-            ? roundNum(student.subjectAverageOutOf20, 2)
-            : "Pas encore de notes !",
+          rawContent:
+            student.subjectAverageOutOf20 !== undefined ? student.subjectAverageOutOf20 : "",
+          content:
+            student.subjectAverageOutOf20 !== undefined
+              ? roundNum(student.subjectAverageOutOf20, 2)
+              : "Pas encore de notes !",
         },
       })),
     [students]

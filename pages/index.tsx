@@ -11,7 +11,7 @@ export default function Home() {
       <h1 className="pageTitle text-center">Bienvenue dans ExploraNotes!</h1>
       <p className="text-justify">
         Cette application s&rsquo;adresse aux professeurs à la recherche d&rsquo;un outil
-        informatique de saisie, de synthèse et d&rsquo;archivage des notes de ses élèves. Elle
+        informatique de saisie, de synthèse et d&rsquo;archivage des notes de leurs élèves. Elle
         permet de créer ses groupes d&rsquo;élèves, définir le barème de ses évaluations, saisir les
         résultats détaillés de chaque copie, consulter les moyennes de classes et les moyennes
         individuelles.
