@@ -61,7 +61,11 @@ export default function GroupDashboard() {
       const copies = Object.values(evaluation.copies[groupId]).map((copy) => {
         const pointsPerQuestion = {};
         copy.pointsObtained.forEach((point, index) => {
-          pointsPerQuestion[`Question ${index + 1}`] = point;
+          pointsPerQuestion[`Question ${index + 1} (${evaluation.scale[index]} pts)`] = point;
+        });
+        const pointsByEx = {};
+        copy.pointsByEx.forEach((pts, index) => {
+          pointsByEx[`Exercice ${index + 1} (${evaluation.exerciseScale[index]} pts)`] = pts;
         });
         const student = group.studentMap[copy.studentId];
 
@@ -70,6 +74,7 @@ export default function GroupDashboard() {
           Prénom: student.firstName,
           [`Note (sur ${evaluation.totalPoints})`]: roundNum(copy.mark, 2),
           "Note sur 20": roundNum(copy.markOutOf20, 2),
+          ...pointsByEx,
           ...pointsPerQuestion,
           "Points bonus": copy.bonusPoints,
           "Points malus": copy.penaltyPoints,
@@ -162,7 +167,7 @@ export default function GroupDashboard() {
             group.evalStatistics[rawEval.id] &&
             group.evalStatistics[rawEval.id].minMark !== undefined
               ? roundNum(group.evalStatistics[rawEval.id].minMarkOutOf20, 2)
-              : "",
+              : "-",
         },
         maxMark: {
           rawContent:
@@ -176,7 +181,7 @@ export default function GroupDashboard() {
             group.evalStatistics[rawEval.id] &&
             group.evalStatistics[rawEval.id].maxMark !== undefined
               ? roundNum(group.evalStatistics[rawEval.id].maxMarkOutOf20, 2)
-              : "",
+              : "-",
         },
         nbCorrectedCopies: {
           rawContent:

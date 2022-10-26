@@ -132,20 +132,28 @@ export const useMarksTable = (
 
   const studentsTableHeaders = useMemo<TableHeader[]>(
     () => [
-      { text: "Nom de famille", value: "lastName" },
-      { text: "Prénom", value: "firstName" },
+      { text: "Nom", value: "name" },
       { text: "Note de l’élève", value: "mark", alignContent: "center" },
+      ...(evaluation
+        ? evaluation.exerciseScale.map(
+            (exPts, exId) =>
+              ({
+                text: `Ex ${exId + 1} (${exPts} pts)`,
+                value: `ex${exId}`,
+                alignContent: "center",
+              } as TableHeader)
+          )
+        : []),
       { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
     ],
-    []
+    [evaluation]
   );
 
   const studentsTableItems = useMemo(
     () =>
       Object.values(studentMap).map((st) => ({
         key: { rawContent: st.id },
-        lastName: { rawContent: st.lastName },
-        firstName: { rawContent: st.firstName },
+        name: { rawContent: st.lastName + " " + st.firstName },
         mark: {
           rawContent: copyMapPerStudent[st.id] ? copyMapPerStudent[st.id].mark : 0,
           content: copyMapPerStudent[st.id]
@@ -155,6 +163,21 @@ export const useMarksTable = (
                 : "")
             : "Copie non corrigée",
         },
+        ...(copyMapPerStudent[st.id]
+          ? copyMapPerStudent[st.id].pointsByEx.reduce(
+              (prevVal, currVal, index) => ({
+                ...prevVal,
+                [`ex${index}`]: { rawContent: currVal },
+              }),
+              {}
+            )
+          : evaluation.exerciseScale.reduce(
+              (prevVal, _, index) => ({
+                ...prevVal,
+                [`ex${index}`]: { rawContent: "-" },
+              }),
+              {}
+            )),
         actions: {
           rawContent: "",
           content: [
@@ -235,7 +258,7 @@ export const useMarksTable = (
   );
 
   const marksTableTemplate = !notFound && (
-    <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="lastName" />
+    <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="name" />
   );
 
   const exTableHeaders = useMemo<TableHeader[]>(
@@ -250,7 +273,9 @@ export const useMarksTable = (
 
   const exAvs = useMemo(
     () =>
-      !notFound && groupMap[groupId].evalStatistics[evalId]
+      !notFound &&
+      groupMap[groupId].evalStatistics[evalId] &&
+      groupMap[groupId].evalStatistics[evalId].exerciseAverages
         ? groupMap[groupId].evalStatistics[evalId].exerciseAverages
         : [],
     [evalId, groupId, groupMap, notFound]
