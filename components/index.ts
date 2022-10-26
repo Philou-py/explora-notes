@@ -12,4 +12,5 @@ export { default as SideBar } from "./SideBar";
 export { default as Spacer } from "./Spacer";
 export { default as SnackBar } from "./SnackBar";
 export { default as DataTable, SortOrder } from "./DataTable";
+export type { TableHeader } from "./DataTable";
 export { default as BreadCrumbs } from "./BreadCrumbs";

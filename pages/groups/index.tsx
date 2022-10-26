@@ -8,6 +8,7 @@ import {
   InputField,
   DataTable,
   SortOrder,
+  TableHeader,
   Modal,
   Card,
   CardHeader,
@@ -22,56 +23,9 @@ import { doc, collection, addDoc, updateDoc, deleteField } from "firebase/firest
 import { AuthContext } from "../../contexts/AuthContext";
 import { SnackContext } from "../../contexts/SnackContext";
 import { BreakpointsContext } from "../../contexts/BreakpointsContext";
-import { TeacherContext } from "../../contexts/TeacherContext";
+import { TeacherContext, Group } from "../../contexts/TeacherContext";
 import { useConfirmation } from "../../hooks/useConfirmation";
 import { useGetSubject } from "../../hooks/useGetSubject";
-
-interface TableHeader {
-  text: string;
-  value: string;
-  isSortable?: boolean;
-  align?: "start" | "center" | "end";
-  alignContent?: "start" | "center" | "end";
-  unitSuffix?: string;
-}
-
-interface Group {
-  id: string;
-  teacher: string;
-  schoolYear: string;
-  name: string;
-  nbStudents: number;
-  subject: string;
-  actualSubject: string;
-  level: string;
-  studentIds: string[];
-  studentMap: {
-    [id: string]: Student;
-  };
-  evalStatistics: {
-    [id: string]: {
-      average: number;
-      averageOutOf20: number;
-      totalPoints: number;
-      copyNb: number;
-      minMark: number;
-      minMarkOutOf20: number;
-      maxMark: number;
-      maxMarkOutOf20: number;
-      exerciseAverages: number[];
-      exerciseTotalPoints: number[];
-    };
-  };
-}
-
-interface Student {
-  id: string;
-  firstName: string;
-  lastName: string;
-  subjectAverageOutOf20?: number;
-  subjectWeightTotal: number;
-  subjectPointsSum: number;
-}
 
 const cx = cn.bind(groupStyles);
 

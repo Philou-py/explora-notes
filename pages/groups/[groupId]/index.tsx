@@ -1,34 +1,25 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useContext, useCallback, useMemo } from "react";
-import { Container, DataTable, SortOrder, Button, BreadCrumbs } from "../../../components";
+import {
+  Container,
+  DataTable,
+  SortOrder,
+  TableHeader,
+  Button,
+  BreadCrumbs,
+} from "../../../components";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { BreakpointsContext } from "../../../contexts/BreakpointsContext";
 import { SnackContext } from "../../../contexts/SnackContext";
 import { TeacherContext } from "../../../contexts/TeacherContext";
 import groupDashboardStyles from "../../../pageStyles/GroupDashboard.module.scss";
 import cn from "classnames/bind";
-import { useStudentsTable } from "../../../hooks/useFetchGroup";
+import StudentsTable from "../../../layouts/StudentsTable";
 import { utils, writeFile } from "xlsx";
-
-interface TableHeader {
-  text: string;
-  value: string;
-  isSortable?: boolean;
-  align?: "start" | "center" | "end";
-  alignContent?: "start" | "center" | "end";
-  unitSuffix?: string;
-}
+import { roundNum } from "../../../helpers/roundNum";
 
 const cx = cn.bind(groupDashboardStyles);
-
-const roundNum = (value: number, nbDecimals: number) => {
-  if (value !== undefined) {
-    return Math.round((value + Number.EPSILON) * 10 ** nbDecimals) / 10 ** nbDecimals;
-  } else {
-    return "";
-  }
-};
 
 export default function GroupDashboard() {
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
@@ -37,7 +28,8 @@ export default function GroupDashboard() {
   const { evaluationMap, groupMap } = useContext(TeacherContext);
   const router = useRouter();
   const { groupId } = router.query as { groupId: string };
-  const { groupNotFound, group, studentsTableTemplate } = useStudentsTable();
+  const group = useMemo(() => groupMap[groupId], [groupMap, groupId]);
+  const groupNotFound = useMemo(() => group === undefined, [group]);
 
   const rawEvaluations = useMemo(
     () => Object.values(evaluationMap).filter((e) => e.associatedGroupIds.includes(groupId)),
@@ -107,7 +99,7 @@ export default function GroupDashboard() {
     const exportData = Object.values(group.studentMap).map((student) => {
       const evalMarks = {};
       rawEvaluations.forEach((rawEval) => {
-        evalMarks[rawEval.title] =
+        evalMarks[`${rawEval.title} (coef ${rawEval.coefficient})`] =
           rawEval.copies[groupId][student.id] &&
           roundNum(rawEval.copies[groupId][student.id].markOutOf20, 2);
       });
@@ -310,7 +302,7 @@ export default function GroupDashboard() {
             Les notes de ce tableau sont exprimées sur 20 points.
           </p>
 
-          {studentsTableTemplate}
+          <StudentsTable />
         </>
       )}
     </Container>

@@ -11,7 +11,7 @@ import { AuthContext } from "./AuthContext";
 import { db } from "../firebase-config";
 import { collection, where, onSnapshot, query, orderBy } from "firebase/firestore";
 
-interface Student {
+export interface Student {
   id: string;
   firstName: string;
   lastName: string;
@@ -20,7 +20,7 @@ interface Student {
   subjectPointsSum: number;
 }
 
-interface Group {
+export interface Group {
   id: string;
   teacher: string;
   schoolYear: string;
@@ -51,7 +51,7 @@ interface Group {
   };
 }
 
-interface Copy {
+export interface Copy {
   id: string;
   mark: number;
   pointsObtained: number[];
@@ -64,7 +64,7 @@ interface Copy {
   groupId: string;
 }
 
-interface Evaluation {
+export interface Evaluation {
   id: string;
   creationDate: string;
   title: string;

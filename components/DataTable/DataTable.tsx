@@ -4,7 +4,7 @@ import { Icon, InputField } from "..";
 import dtStyles from "./DataTable.module.scss";
 import cn from "classnames/bind";
 
-interface TableHeader {
+export interface TableHeader {
   text: string;
   value: string;
   isSortable?: boolean;

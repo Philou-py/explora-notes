@@ -7,7 +7,7 @@ import { doc, collection, addDoc, deleteDoc, updateDoc } from "firebase/firestor
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
 import { BreakpointsContext } from "../contexts/BreakpointsContext";
-import { TeacherContext } from "../contexts/TeacherContext";
+import { TeacherContext, Evaluation } from "../contexts/TeacherContext";
 import {
   Container,
   DataTable,
@@ -22,49 +22,9 @@ import {
   Spacer,
   Form,
   SortOrder,
+  TableHeader,
 } from "../components";
 import { useConfirmation } from "../hooks/useConfirmation";
-
-interface TableHeader {
-  text: string;
-  value: string;
-  isSortable?: boolean;
-  align?: "start" | "center" | "end";
-  alignContent?: "start" | "center" | "end";
-  unitSuffix?: string;
-}
-
-interface Copy {
-  id: string;
-  mark: number;
-  pointsObtained: number[];
-  markOutOf20: number;
-  pointsByEx: number[];
-  bonusPoints: number;
-  penaltyPoints: number;
-  studentId: string;
-  evaluationId: string;
-  groupId: string;
-}
-
-interface Evaluation {
-  id: string;
-  creationDate: string;
-  title: string;
-  totalPoints: number;
-  nbQuestions: number;
-  scale: number[];
-  exercises: number[];
-  exerciseScale: number[];
-  markPrecision: number;
-  coefficient: number;
-  associatedGroupIds: string[];
-  copies: {
-    [gId: string]: {
-      [sId: string]: Copy;
-    };
-  };
-}
 
 const cx = cn.bind(evalStyles);
 
