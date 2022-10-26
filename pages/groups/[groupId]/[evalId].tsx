@@ -38,6 +38,7 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
+  pointsByEx: number[];
   bonusPoints: number;
   penaltyPoints: number;
   studentId: string;
@@ -76,6 +77,7 @@ export default function EvalForGroupDetails() {
   const [currentPointsObtained, setCurrentPointsObtained] = useState<number[]>([]);
   const [currentPrevMark, setCurrentPrevMark] = useState(0);
   const [currentPrevMarkOutOf20, setCurrentPrevMarkOutOf20] = useState(0);
+  const [currentPrevPointsByEx, setCurrentPrevPointsByEx] = useState<number[]>([]);
   const [currentMinMark, setCurrentMinMark] = useState<number>(Infinity);
   const [currentMaxMark, setCurrentMaxMark] = useState<number>(-Infinity);
   const [bonusPoints, setBonusPoints] = useState(0);
@@ -91,6 +93,22 @@ export default function EvalForGroupDetails() {
       }, 0),
     [currentPointsObtained]
   );
+
+  const currentPointsByEx = useMemo(() => {
+    if (!evaluation) return [];
+    const pointsByEx = evaluation.exercises.map((_) => 0);
+    for (let exIndex = 0; exIndex < evaluation.exercises.length; exIndex++) {
+      let startQIndex = evaluation.exercises[exIndex];
+      let endQIndex =
+        exIndex === evaluation.exercises.length - 1
+          ? evaluation.nbQuestions
+          : evaluation.exercises[exIndex + 1];
+      for (let qIndex = startQIndex; qIndex < endQIndex; qIndex++) {
+        pointsByEx[exIndex] += currentPointsObtained[qIndex];
+      }
+    }
+    return pointsByEx;
+  }, [currentPointsObtained, evaluation]);
 
   const currentMark = useMemo(
     () => totalPointsObtained + bonusPoints - penaltyPoints,
@@ -140,6 +158,7 @@ export default function EvalForGroupDetails() {
           const oldEvalStatistics = group.evalStatistics[evalId];
           const oldCopyNb = oldEvalStatistics.copyNb;
           const oldTotalPoints = oldEvalStatistics.totalPoints;
+          const oldExTotPts = oldEvalStatistics.exerciseTotalPoints;
 
           const newCopyNb = oldCopyNb - 1;
           const newTotalPoints = oldTotalPoints - studentCopy.mark;
@@ -149,6 +168,10 @@ export default function EvalForGroupDetails() {
           const newMinMarkOutOf20 = (newMinMark * 20) / evaluation.totalPoints;
           const newMaxMark = max;
           const newMaxMarkOutOf20 = (newMaxMark * 20) / evaluation.totalPoints;
+          const newExTotPts = oldExTotPts.map(
+            (oldExPoints, exIndex) => oldExPoints - studentCopy.pointsByEx[exIndex]
+          );
+          const newExAvs = newExTotPts.map((exTotPts) => exTotPts / newCopyNb);
 
           const newEvalStatistics = {
             ...(newCopyNb !== 0
@@ -161,6 +184,8 @@ export default function EvalForGroupDetails() {
                   minMark: newMinMark,
                   minMarkOutOf20: newMinMarkOutOf20,
                   totalPoints: newTotalPoints,
+                  exerciseAverages: newExAvs,
+                  exerciseTotalPoints: newExTotPts,
                 }
               : {}),
           };
@@ -190,9 +215,14 @@ export default function EvalForGroupDetails() {
     setPenaltyPoints(copy.penaltyPoints);
     setCurrentPrevMark(copy.mark);
     setCurrentPrevMarkOutOf20(copy.markOutOf20);
+    setCurrentPrevPointsByEx(copy.pointsByEx);
   }, []);
 
-  const { marksTableTemplate, notFound } = useMarksTable(addCopy, deleteCopy, prefillForm);
+  const { marksTableTemplate, exTableTemplate, notFound } = useMarksTable(
+    addCopy,
+    deleteCopy,
+    prefillForm
+  );
   const evalStatistics = useMemo(
     () =>
       !notFound &&
@@ -209,6 +239,7 @@ export default function EvalForGroupDetails() {
     setCurrentPointsObtained([]);
     setCurrentPrevMark(0);
     setCurrentPrevMarkOutOf20(0);
+    setCurrentPrevPointsByEx([]);
     setCurrentMinMark(Infinity);
     setCurrentMaxMark(-Infinity);
     setBonusPoints(0);
@@ -225,6 +256,7 @@ export default function EvalForGroupDetails() {
     const copyToSend = {
       id: currentCopyId || genId(),
       pointsObtained: currentPointsObtained,
+      pointsByEx: currentPointsByEx,
       mark: currentMark,
       markOutOf20: currentMarkOutOf20,
       bonusPoints,
@@ -264,6 +296,10 @@ export default function EvalForGroupDetails() {
     const oldMinMarkOutOf20 = (currentMinMark * 20) / evaluation.totalPoints;
     const oldMaxMark = currentMaxMark;
     const oldMaxMarkOutOf20 = (currentMaxMark * 20) / evaluation.totalPoints;
+    const oldExTotPts =
+      oldEvalStatistics && oldEvalStatistics.exerciseTotalPoints
+        ? oldEvalStatistics.exerciseTotalPoints
+        : evaluation.exercises.map((_) => 0);
 
     const newTotalPoints = oldTotalPoints - (isEditing ? currentPrevMark : 0) + currentMark;
     const newCopyNb = oldCopyNb + (isEditing ? 0 : 1);
@@ -273,6 +309,11 @@ export default function EvalForGroupDetails() {
     const newMinMarkOutOf20 = currentMark < oldMinMark ? currentMarkOutOf20 : oldMinMarkOutOf20;
     const newMaxMark = currentMark > oldMaxMark ? currentMark : oldMaxMark;
     const newMaxMarkOutOf20 = currentMark > oldMaxMark ? currentMarkOutOf20 : oldMaxMarkOutOf20;
+    const newExTotPts = oldExTotPts.map(
+      (oldExPoints, exIndex) =>
+        oldExPoints - (isEditing ? currentPrevPointsByEx[exIndex] : 0) + currentPointsByEx[exIndex]
+    );
+    const newExAvs = newExTotPts.map((exTotPts) => exTotPts / newCopyNb);
 
     const evalStatistics = {
       average: newAverage,
@@ -283,6 +324,8 @@ export default function EvalForGroupDetails() {
       minMarkOutOf20: newMinMarkOutOf20,
       maxMark: newMaxMark,
       maxMarkOutOf20: newMaxMarkOutOf20,
+      exerciseAverages: newExAvs,
+      exerciseTotalPoints: newExTotPts,
     };
 
     await updateDoc(doc(db, "groups", groupId), {
@@ -302,10 +345,12 @@ export default function EvalForGroupDetails() {
     currentStudent,
     currentCopyId,
     currentPointsObtained,
+    currentPointsByEx,
     currentMark,
     currentMarkOutOf20,
     currentPrevMark,
     currentPrevMarkOutOf20,
+    currentPrevPointsByEx,
     currentMinMark,
     currentMaxMark,
     bonusPoints,
@@ -322,7 +367,15 @@ export default function EvalForGroupDetails() {
     evaluation &&
     [...Array(evaluation.nbQuestions).keys()].map((qNb) => (
       <div key={`question-${qNb}-container`} className={cx("questionInput")}>
-        <p className={cx("questionText")}>Question {qNb + 1} :</p>
+        {evaluation.exercises.includes(qNb) && (
+          <p className={cx("exerciseText", { noMargin: qNb === 0 })}>
+            Exercice {evaluation.exercises.indexOf(qNb) + 1}
+          </p>
+        )}
+        <p className={cx("questionText")}>
+          Question{" "}
+          {evaluation.exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)} :
+        </p>
         <div className={cx("radioButtonsContainer")}>
           {[...Array(evaluation.scale[qNb] / evaluation.markPrecision + 1).keys()]
             .map((i) => i * evaluation.markPrecision)
@@ -410,6 +463,8 @@ export default function EvalForGroupDetails() {
             </ul>
           )}
 
+          {evaluation && evalStatistics && exTableTemplate}
+
           <h2>Liste des notes par élève</h2>
 
           {marksTableTemplate}
@@ -486,7 +541,9 @@ export default function EvalForGroupDetails() {
                 className="blue darken-3"
                 isDisabled={
                   !isAuthenticated ||
-                  (evaluation && currentPointsObtained.length !== evaluation.nbQuestions)
+                  (evaluation &&
+                    (currentPointsObtained.length !== evaluation.nbQuestions ||
+                      currentPointsObtained.includes(undefined)))
                 }
                 formSubmit
               >

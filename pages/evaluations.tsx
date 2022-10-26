@@ -39,6 +39,7 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
+  pointsByEx: number[];
   bonusPoints: number;
   penaltyPoints: number;
   studentId: string;
@@ -53,6 +54,8 @@ interface Evaluation {
   totalPoints: number;
   nbQuestions: number;
   scale: number[];
+  exercises: number[];
+  exerciseScale: number[];
   markPrecision: number;
   coefficient: number;
   associatedGroupIds: string[];
@@ -83,6 +86,7 @@ export default function Evaluations() {
   const [nbCurrentGroups, setNbCurrentGroups] = useState(1);
   const [nbQuestions, setNbQuestions] = useState(1);
   const [scale, setScale] = useState([1]);
+  const [exercises, setExercises] = useState([0]);
   const {
     data: newEval,
     setData,
@@ -94,6 +98,7 @@ export default function Evaluations() {
     setData({ title: "", markPrecision: "0.5", coefficient: "1" });
     setNbQuestions(1);
     setScale([1]);
+    setExercises([0]);
     setCurrentEvalToEdit(undefined);
     setIsEditing(false);
     setDetailedEditing(false);
@@ -125,6 +130,7 @@ export default function Evaluations() {
       });
       setScale(rawEval.scale);
       setNbQuestions(rawEval.nbQuestions);
+      setExercises(rawEval.exercises || [0]);
       setCurrentEvalToEdit(rawEval);
       const hasCopies = Object.values(rawEval.copies).some((g) => Object.values(g).length !== 0);
       if (!hasCopies) {
@@ -147,10 +153,25 @@ export default function Evaluations() {
     if (nbQuestions > 1) {
       setScale((prev) => prev.slice(0, -1));
       setNbQuestions((prev) => prev - 1);
+      if (exercises[exercises.length - 1] === nbQuestions - 1) {
+        setExercises((prev) => prev.slice(0, -1));
+      }
     }
-  }, [nbQuestions]);
+  }, [nbQuestions, exercises]);
 
   const totalPoints = useMemo(() => scale.reduce((total, newVal) => total + newVal, 0), [scale]);
+
+  const exerciseScale = useMemo(() => {
+    const pointsByEx = exercises.map((_) => 0);
+    for (let exIndex = 0; exIndex < exercises.length; exIndex++) {
+      let startQIndex = exercises[exIndex];
+      let endQIndex = exIndex === exercises.length - 1 ? nbQuestions : exercises[exIndex + 1];
+      for (let qIndex = startQIndex; qIndex < endQIndex; qIndex++) {
+        pointsByEx[exIndex] += scale[qIndex];
+      }
+    }
+    return pointsByEx;
+  }, [exercises, nbQuestions, scale]);
 
   const handleAddCurrentGroup = useCallback(() => {
     setCurrentGroups((prev) => [...prev, ""]);
@@ -182,6 +203,39 @@ export default function Evaluations() {
       }
     },
     [haveASnack, promptConfirmation, evaluationMap]
+  );
+
+  const handleAddExercise = useCallback(() => {
+    handleAddQuestion();
+    setExercises((prev) => [...prev, nbQuestions]);
+  }, [nbQuestions, handleAddQuestion]);
+
+  const handleExerciseUp = useCallback((exNb: number) => {
+    setExercises((prev) => {
+      const newExs = [...prev];
+      if (newExs[exNb] - 1 === newExs[exNb - 1]) {
+        return newExs;
+      }
+      newExs[exNb] -= 1;
+      return newExs;
+    });
+  }, []);
+
+  const handleExerciseDown = useCallback(
+    (exNb: number) => {
+      setExercises((prev) => {
+        const newExs = [...prev];
+        if (newExs[exNb] + 1 === nbQuestions) {
+          return newExs;
+        }
+        if (exNb !== newExs.length && newExs[exNb] + 1 === newExs[exNb + 1]) {
+          return newExs;
+        }
+        newExs[exNb] += 1;
+        return newExs;
+      });
+    },
+    [nbQuestions]
   );
 
   const evaluations = useMemo(
@@ -279,6 +333,8 @@ export default function Evaluations() {
       scale,
       totalPoints,
       nbQuestions,
+      exercises,
+      exerciseScale,
       creationDate: isEditing ? currentEvalToEdit.creationDate : new Date().toISOString(),
       creator: teacherId,
       associatedGroupIds: isEditing ? currentEvalToEdit.associatedGroupIds : [],
@@ -344,6 +400,8 @@ export default function Evaluations() {
     currentEvalToEdit,
     evaluationMap,
     groupMap,
+    exercises,
+    exerciseScale,
   ]);
 
   const handleBindToGrSubmit = useCallback(async () => {
@@ -408,38 +466,63 @@ export default function Evaluations() {
     [groupMap]
   );
 
-  const scaleTemplate = [...Array(nbQuestions).keys()]
-    .map((n) => n + 1)
-    .map((qNb: number) => (
-      <div key={`question-${qNb}-container`} className={cx("questionInput")}>
-        <p className={cx("questionText")}>Question {qNb} :</p>
-        <div className={cx("radioButtonsContainer")}>
-          {[...Array(20).keys()]
-            .map((i) => (i + 1) * Number(newEval.markPrecision))
-            .map((i) => (
-              <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
-                <label>
-                  <input
-                    type="radio"
-                    name={`question-${qNb}`}
-                    value={i}
-                    checked={i === scale[qNb - 1]}
-                    onChange={() => {
-                      setScale((prev) => {
-                        let copy = [...prev];
-                        copy[qNb - 1] = i;
-                        return copy;
-                      });
-                    }}
-                    required
-                  />
-                  {i}
-                </label>
-              </div>
-            ))}
+  const scaleTemplate = [...Array(nbQuestions).keys()].map((qNb: number) => (
+    <div key={`question-${qNb}-container`} className={cx("questionInput")}>
+      {exercises.includes(qNb) && (
+        <div className={cx("exerciseWrapper", { noMargin: qNb === 0 })}>
+          <p className={cx("exerciseText")}>Exercice {exercises.indexOf(qNb) + 1} :</p>
+          {qNb !== 0 && (
+            <div className={cx("exerciseUpDown")}>
+              <Button
+                type="icon"
+                iconName="keyboard_arrow_down"
+                className="purple darken-1 mr-4"
+                onClick={() => handleExerciseDown(exercises.indexOf(qNb))}
+                size="small"
+              />
+              <Button
+                type="icon"
+                iconName="keyboard_arrow_up"
+                className="blue darken-1"
+                onClick={() => {
+                  handleExerciseUp(exercises.indexOf(qNb));
+                }}
+                size="small"
+              />
+            </div>
+          )}
         </div>
+      )}
+      <p className={cx("questionText")}>
+        Question {exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)} :
+      </p>
+      <div className={cx("radioButtonsContainer")}>
+        {[...Array(20).keys()]
+          .map((i) => (i + 1) * Number(newEval.markPrecision))
+          .map((i) => (
+            <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
+              <label>
+                <input
+                  type="radio"
+                  name={`question-${qNb}`}
+                  value={i}
+                  checked={i === scale[qNb]}
+                  onChange={() => {
+                    setScale((prev) => {
+                      let copy = [...prev];
+                      copy[qNb] = i;
+                      return copy;
+                    });
+                  }}
+                  required
+                />
+                {i}
+              </label>
+            </div>
+          ))}
       </div>
-    ));
+    </div>
+  ));
 
   const groupInputTemplate = [...Array(nbCurrentGroups).keys()].map((i) => (
     <InputField
@@ -589,6 +672,16 @@ export default function Evaluations() {
                       className="red darken-1"
                       onClick={handleAddQuestion}
                     />
+                  </div>
+                  <div className={cx("addExerciseContainer")}>
+                    <Button
+                      type="outlined"
+                      prependIcon="add_box"
+                      className="green--text"
+                      onClick={handleAddExercise}
+                    >
+                      Exercice
+                    </Button>
                   </div>
                   <p>
                     Nombre de questions : {nbQuestions} | Total des points : {totalPoints}

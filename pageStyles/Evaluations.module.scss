@@ -42,6 +42,28 @@
     }
   }
 
+  .exerciseWrapper {
+    display: flex;
+    justify-content: space-between;
+
+    &:not(.noMargin) {
+      margin-top: 30px;
+    }
+
+    .exerciseUpDown {
+      display: flex;
+      text-decoration: none;
+    }
+
+    .exerciseText {
+      margin: 0;
+      text-align: left;
+      text-decoration: underline red 2px;
+      font-weight: bold;
+      font-size: 22px;
+    }
+  }
+
   .radioButtonsContainer {
     margin-bottom: 5px;
 
@@ -54,7 +76,8 @@
     }
   }
 
-  .addIconContainer {
+  .addIconContainer,
+  .addExerciseContainer {
     margin-top: 20px;
     display: flex;
     justify-content: center;

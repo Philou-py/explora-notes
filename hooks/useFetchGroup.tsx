@@ -27,6 +27,7 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
+  pointsByEx: number[];
   bonusPoints: number;
   penaltyPoints: number;
   studentId: string;
@@ -146,7 +147,7 @@ export const useMarksTable = (
         lastName: { rawContent: st.lastName },
         firstName: { rawContent: st.firstName },
         mark: {
-          rawContent: copyMapPerStudent[st.id] && copyMapPerStudent[st.id].mark,
+          rawContent: copyMapPerStudent[st.id] ? copyMapPerStudent[st.id].mark : 0,
           content: copyMapPerStudent[st.id]
             ? `${roundNum(copyMapPerStudent[st.id].mark, 2)} / ${evaluation.totalPoints}` +
               (evaluation.totalPoints !== 20
@@ -237,5 +238,56 @@ export const useMarksTable = (
     <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="lastName" />
   );
 
-  return { marksTableTemplate, notFound };
+  const exTableHeaders = useMemo<TableHeader[]>(
+    () => [
+      { text: "Exercice", value: "exId" },
+      { text: "Moyenne", value: "avMarkForEx", alignContent: "center" },
+      { text: "Note min", value: "minMarkForEx", alignContent: "center" },
+      { text: "Note max", value: "maxMarkForEx", alignContent: "center" },
+    ],
+    []
+  );
+
+  const exAvs = useMemo(
+    () =>
+      !notFound && groupMap[groupId].evalStatistics[evalId]
+        ? groupMap[groupId].evalStatistics[evalId].exerciseAverages
+        : [],
+    [evalId, groupId, groupMap, notFound]
+  );
+
+  const exTableItems = useMemo(
+    () =>
+      exAvs.map((avOfEx, exIndex) => ({
+        key: { rawContent: exIndex },
+        exId: {
+          rawContent: `Exercice ${exIndex + 1} (${
+            evaluationMap[evalId].exerciseScale[exIndex]
+          } pts)`,
+        },
+        avMarkForEx: {
+          rawContent: avOfEx,
+          content: roundNum(avOfEx, 2),
+        },
+        minMarkForEx: {
+          rawContent: Math.min(
+            ...Object.values(copyMapPerStudent).map((c) => c.pointsByEx[exIndex])
+          ),
+          content: Math.min(...Object.values(copyMapPerStudent).map((c) => c.pointsByEx[exIndex])),
+        },
+        maxMarkForEx: {
+          rawContent: Math.max(
+            ...Object.values(copyMapPerStudent).map((c) => c.pointsByEx[exIndex])
+          ),
+          content: Math.max(...Object.values(copyMapPerStudent).map((c) => c.pointsByEx[exIndex])),
+        },
+      })),
+    [evalId, evaluationMap, copyMapPerStudent, exAvs]
+  );
+
+  const exTableTemplate = !notFound && (
+    <DataTable headers={exTableHeaders} items={exTableItems} sortBy="exId" />
+  );
+
+  return { marksTableTemplate, exTableTemplate, notFound };
 };

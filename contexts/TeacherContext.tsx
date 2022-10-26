@@ -45,6 +45,8 @@ interface Group {
       minMarkOutOf20: number;
       maxMark: number;
       maxMarkOutOf20: number;
+      exerciseAverages: number[];
+      exerciseTotalPoints: number[];
     };
   };
 }
@@ -54,6 +56,7 @@ interface Copy {
   mark: number;
   pointsObtained: number[];
   markOutOf20: number;
+  pointsByEx: number[];
   bonusPoints: number;
   penaltyPoints: number;
   studentId: string;
@@ -68,6 +71,8 @@ interface Evaluation {
   totalPoints: number;
   nbQuestions: number;
   scale: number[];
+  exercises: number[];
+  exerciseScale: number[];
   markPrecision: number;
   coefficient: number;
   associatedGroupIds: string[];

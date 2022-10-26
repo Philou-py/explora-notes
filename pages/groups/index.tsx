@@ -58,6 +58,8 @@ interface Group {
       minMarkOutOf20: number;
       maxMark: number;
       maxMarkOutOf20: number;
+      exerciseAverages: number[];
+      exerciseTotalPoints: number[];
     };
   };
 }

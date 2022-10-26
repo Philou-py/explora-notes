@@ -17,6 +17,18 @@
     }
   }
 
+  .exerciseText {
+    margin: 0;
+    text-align: center;
+    text-decoration: underline red 2px;
+    font-weight: bold;
+    font-size: 22px;
+
+    &:not(.noMargin) {
+      margin-top: 30px !important;
+    }
+  }
+
   .radioButtonsContainer {
     margin-bottom: 5px;
 
