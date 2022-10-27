@@ -426,6 +426,9 @@ export default function Evaluations() {
     [groupMap]
   );
 
+  const currEx = (qNb: number) =>
+    exercises.reduce((prev, curr) => (curr <= qNb ? prev + 1 : prev), -1);
+
   const scaleTemplate = [...Array(nbQuestions).keys()].map((qNb: number) => (
     <div key={`question-${qNb}-container`} className={cx("questionInput")}>
       {exercises.includes(qNb) && (
@@ -481,6 +484,11 @@ export default function Evaluations() {
             </div>
           ))}
       </div>
+      {(qNb === nbQuestions - 1 || exercises.includes(qNb + 1)) && (
+        <p className={cx("exerciseSummaryText")}>
+          Total de points de l&rsquo;exercice {currEx(qNb) + 1} : {exerciseScale[currEx(qNb)]}
+        </p>
+      )}
     </div>
   ));
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useContext, useEffect, useMemo } from "react";
+import { useState, useCallback, useContext, useEffect, useMemo, memo } from "react";
 import { SnackContext } from "../contexts/SnackContext";
 import { AuthContext } from "../contexts/AuthContext";
 import { TeacherContext, Student, Copy } from "../contexts/TeacherContext";
@@ -228,14 +228,15 @@ function ManageCopyModal({
     setModalOpen,
   ]);
 
+  const currEx = (qNb: number) =>
+    evaluation.exercises.reduce((prev, curr) => (curr <= qNb ? prev + 1 : prev), -1);
+
   const resultsTemplate =
     evaluation &&
     [...Array(evaluation.nbQuestions).keys()].map((qNb) => (
       <div key={`question-${qNb}-container`} className={cx("questionInput")}>
         {evaluation.exercises.includes(qNb) && (
-          <p className={cx("exerciseText", { noMargin: qNb === 0 })}>
-            Exercice {evaluation.exercises.indexOf(qNb) + 1}
-          </p>
+          <p className={cx("exerciseText")}>Exercice {evaluation.exercises.indexOf(qNb) + 1}</p>
         )}
         <p className={cx("questionText")}>
           Question{" "}
@@ -266,6 +267,12 @@ function ManageCopyModal({
               </div>
             ))}
         </div>
+        {(qNb === evaluation.nbQuestions - 1 || evaluation.exercises.includes(qNb + 1)) && (
+          <p className={cx("exerciseSummaryText")}>
+            Points obtenus à l&rsquo;exercice {currEx(qNb) + 1} : {currentPointsByEx[currEx(qNb)]} /{" "}
+            {evaluation.exerciseScale[currEx(qNb)]}
+          </p>
+        )}
       </div>
     ));
 
@@ -355,4 +362,4 @@ function ManageCopyModal({
   );
 }
 
-export default ManageCopyModal;
+export default memo(ManageCopyModal);

@@ -76,7 +76,7 @@ function ExerciseTable() {
     [evalId, evaluationMap, copyMapPerStudent, exAvs]
   );
 
-  return <DataTable headers={exTableHeaders} items={exTableItems} sortBy="exId" />;
+  return <DataTable headers={exTableHeaders} items={exTableItems} />;
 }
 
 export default memo(ExerciseTable);
