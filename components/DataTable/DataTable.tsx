@@ -24,6 +24,7 @@ interface DataTableProps<TableItem> {
   sortBy?: string;
   sortOrder?: SortOrder;
   className?: string;
+  lineNumbering?: boolean;
 }
 
 let cx = cn.bind(dtStyles);
@@ -41,6 +42,7 @@ function DataTable<
   sortBy = "key",
   sortOrder = SortOrder.ASC,
   className,
+  lineNumbering,
 }: DataTableProps<TableItem>) {
   const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
   const [sortedBy, setSortedBy] = useState(sortBy);
@@ -77,6 +79,8 @@ function DataTable<
 
   const headersTemplate = (
     <tr className={cx("headers")}>
+      {lineNumbering && <th className={cx("center", "noSorting")}></th>}
+
       {headers.map(({ value, text, align = "center", isSortable }) => (
         <th
           key={value}
@@ -99,8 +103,17 @@ function DataTable<
     </tr>
   );
 
-  const itemsTemplate = sortedItems.map((item) => (
+  const itemsTemplate = sortedItems.map((item, lineNumber) => (
     <tr key={item.key.rawContent}>
+      {lineNumbering && (
+        <td className={cx(cbp === "xs" ? "mobileDisplay" : "desktopDisplay")}>
+          <div className={cx("tdContent")}>
+            {cbp === "xs" && <div className={cx("tdHeader")}>Numéro de ligne</div>}
+            <div className={cx("valDisplay", "center")}>{lineNumber + 1}</div>
+          </div>
+        </td>
+      )}
+
       {headers.map(({ value: headerVal, text: headerText, alignContent = "start", unitSuffix }) => (
         <td
           key={`${headerVal}-${item.key}`}
