@@ -407,7 +407,7 @@ export default function Evaluations() {
   const handleSubmitWithConfirm = useCallback(() => {
     if (isEditing && !detailedEditing && touchedQuestions.length !== 0) {
       promptConfirmation(
-        "La modification du barème d'une évaluation implique la révision des questions modifiées dans chacune des copies déjà corrigées. Souhaitez-vous continuer ?",
+        "La modification du barème d'une évaluation implique la révision des questions modifiées dans chacune des copies déjà corrigées de tous les groupes. Souhaitez-vous continuer ?",
         handleSubmit
       );
     } else handleSubmit();
@@ -511,7 +511,7 @@ export default function Evaluations() {
         </p>
         <div className={cx("radioButtonsContainer")}>
           {[...Array(20).keys()]
-            .map((i) => (i + 1) * Number(newEval.markPrecision))
+            .map((i) => i * Number(newEval.markPrecision))
             .map((i) => (
               <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
                 <label>
@@ -726,7 +726,7 @@ export default function Evaluations() {
               <Button
                 className="blue darken-3"
                 isDisabled={
-                  !isAuthenticated || !isValid || scale.includes(undefined) || nbQuestions === 0
+                  !isAuthenticated || !isValid || scale.includes(undefined) || totalPoints === 0
                 }
                 formSubmit
               >
