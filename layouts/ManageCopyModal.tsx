@@ -15,7 +15,7 @@ import {
   InputField,
 } from "../components";
 import { db } from "../firebase-config";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, deleteField } from "firebase/firestore";
 import manageCopyModalStyles from "../layoutStyles/ManageCopyModal.module.scss";
 import cn from "classnames/bind";
 import { roundNum } from "../helpers/roundNum";
@@ -96,7 +96,7 @@ function ManageCopyModal({
           ? evaluation.nbQuestions
           : evaluation.exercises[exIndex + 1];
       for (let qIndex = startQIndex; qIndex < endQIndex; qIndex++) {
-        pointsByEx[exIndex] += currentPointsObtained[qIndex];
+        if (currentPointsObtained[qIndex]) pointsByEx[exIndex] += currentPointsObtained[qIndex];
       }
     }
     return pointsByEx;
@@ -133,12 +133,11 @@ function ManageCopyModal({
 
     await updateDoc(doc(db, "evaluations", evalId), {
       [`copies.${groupId}.${currentStudent.id}`]: copyToSend,
+      [`copies.${groupId}.${currentStudent.id}.modifiedQuestions`]: deleteField(),
     });
 
-    const oldPointsSum = currentStudent.subjectPointsSum ? currentStudent.subjectPointsSum : 0;
-    const oldWeightTotal = currentStudent.subjectWeightTotal
-      ? currentStudent.subjectWeightTotal
-      : 0;
+    const oldPointsSum = currentStudent.subjectPointsSum || 0;
+    const oldWeightTotal = currentStudent.subjectWeightTotal || 0;
 
     const newWeightTotal = oldWeightTotal + (isEditing ? 0 : evaluation.coefficient);
     const newPointsSum =
@@ -147,11 +146,14 @@ function ManageCopyModal({
       currentMarkOutOf20 * evaluation.coefficient;
     const newStudentAverage = newPointsSum / newWeightTotal;
 
-    const newStudentMarkSummary = {
-      [`studentMap.${currentStudent.id}.subjectAverageOutOf20`]: newStudentAverage,
-      [`studentMap.${currentStudent.id}.subjectPointsSum`]: newPointsSum,
-      [`studentMap.${currentStudent.id}.subjectWeightTotal`]: newWeightTotal,
-    };
+    const newStudentMarkSummary =
+      evaluation.coefficient !== 0
+        ? {
+            [`studentMap.${currentStudent.id}.subjectAverageOutOf20`]: newStudentAverage,
+            [`studentMap.${currentStudent.id}.subjectPointsSum`]: newPointsSum,
+            [`studentMap.${currentStudent.id}.subjectWeightTotal`]: newWeightTotal,
+          }
+        : {};
 
     const oldEvalStatistics = group.evalStatistics[evalId];
     const oldTotalPoints =
@@ -180,6 +182,12 @@ function ManageCopyModal({
     );
     const newExAvs = newExTotPts.map((exTotPts) => exTotPts / newCopyNb);
 
+    const stillConflicts =
+      !!evaluation.copies[groupId] &&
+      Object.values(evaluation.copies[groupId]).some(
+        (c) => c.studentId !== currentStudent.id && c.modifiedQuestions
+      );
+
     const evalStatistics = {
       average: newAverage,
       averageOutOf20: newAverageOutOf20,
@@ -196,6 +204,7 @@ function ManageCopyModal({
     await updateDoc(doc(db, "groups", groupId), {
       ...newStudentMarkSummary,
       [`evalStatistics.${evalId}`]: evalStatistics,
+      [`evalStatistics.${evalId}.scaleConflicts`]: stillConflicts ? true : deleteField(),
     });
 
     haveASnack(
@@ -231,50 +240,62 @@ function ManageCopyModal({
   const currEx = (qNb: number) =>
     evaluation.exercises.reduce((prev, curr) => (curr <= qNb ? prev + 1 : prev), -1);
 
-  const resultsTemplate =
-    evaluation &&
-    [...Array(evaluation.nbQuestions).keys()].map((qNb) => (
-      <div key={`question-${qNb}-container`} className={cx("questionInput")}>
-        {evaluation.exercises.includes(qNb) && (
-          <p className={cx("exerciseText")}>Exercice {evaluation.exercises.indexOf(qNb) + 1}</p>
-        )}
-        <p className={cx("questionText")}>
-          Question{" "}
-          {evaluation.exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)} :
-        </p>
-        <div className={cx("radioButtonsContainer")}>
-          {[...Array(evaluation.scale[qNb] / evaluation.markPrecision + 1).keys()]
-            .map((i) => i * evaluation.markPrecision)
-            .map((i) => (
-              <div key={`question-${qNb}-result-${i}`} className={cx("radioButton")}>
-                <label>
-                  <input
-                    type="radio"
-                    name={`question-${qNb}`}
-                    value={i}
-                    checked={i === currentPointsObtained[qNb]}
-                    onChange={() => {
-                      setCurrentPointsObtained((prev) => {
-                        let copy = [...prev];
-                        copy[qNb] = i;
-                        return copy;
-                      });
-                    }}
-                    required
-                  />
-                  {i}
-                </label>
-              </div>
-            ))}
-        </div>
-        {(qNb === evaluation.nbQuestions - 1 || evaluation.exercises.includes(qNb + 1)) && (
-          <p className={cx("exerciseSummaryText")}>
-            Points obtenus à l&rsquo;exercice {currEx(qNb) + 1} : {currentPointsByEx[currEx(qNb)]} /{" "}
-            {evaluation.exerciseScale[currEx(qNb)]}
+  const questionsToShow: [number, boolean][] = evaluation
+    ? [...Array(evaluation.nbQuestions).keys()].map((qNb) => {
+        if (currentCopy && currentCopy.modifiedQuestions) {
+          return [qNb, currentCopy.modifiedQuestions.includes(qNb)];
+        }
+        return [qNb, true];
+      })
+    : [];
+
+  const resultsTemplate = questionsToShow.map(([qNb, showQ]) => (
+    <div key={`question-${qNb}-container`} className={cx("questionInput")}>
+      {evaluation.exercises.includes(qNb) && (
+        <p className={cx("exerciseText")}>Exercice {evaluation.exercises.indexOf(qNb) + 1}</p>
+      )}
+      {showQ && (
+        <>
+          <p className={cx("questionText")}>
+            Question{" "}
+            {evaluation.exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)}{" "}
+            :
           </p>
-        )}
-      </div>
-    ));
+          <div className={cx("radioButtonsContainer")}>
+            {[...Array(evaluation.scale[qNb] / evaluation.markPrecision + 1).keys()]
+              .map((i) => i * evaluation.markPrecision)
+              .map((i) => (
+                <div key={`question-${qNb}-result-${i}`} className={cx("radioButton")}>
+                  <label>
+                    <input
+                      type="radio"
+                      name={`question-${qNb}`}
+                      value={i}
+                      checked={i === currentPointsObtained[qNb]}
+                      onChange={() => {
+                        setCurrentPointsObtained((prev) => {
+                          let copy = [...prev];
+                          copy[qNb] = i;
+                          return copy;
+                        });
+                      }}
+                      required
+                    />
+                    {i}
+                  </label>
+                </div>
+              ))}
+          </div>
+        </>
+      )}
+      {(qNb === evaluation.nbQuestions - 1 || evaluation.exercises.includes(qNb + 1)) && (
+        <p className={cx("exerciseSummaryText")}>
+          Points obtenus à l&rsquo;exercice {currEx(qNb) + 1} : {currentPointsByEx[currEx(qNb)]} /{" "}
+          {evaluation.exerciseScale[currEx(qNb)]}
+        </p>
+      )}
+    </div>
+  ));
 
   return (
     <Modal showModal={modalOpen}>
@@ -331,14 +352,16 @@ function ManageCopyModal({
           </CardContent>
 
           <CardActions>
-            <Button
-              type="text"
-              className="teal--text"
-              prependIcon="done_all"
-              onClick={giveAllPoints}
-            >
-              Note max
-            </Button>
+            {((currentCopy && !currentCopy.modifiedQuestions) || !isEditing) && (
+              <Button
+                type="text"
+                className="teal--text"
+                prependIcon="done_all"
+                onClick={giveAllPoints}
+              >
+                Note max
+              </Button>
+            )}
             <Spacer />
             <Button className="red--text mr-4" type="outlined" onClick={() => setModalOpen(false)}>
               Annuler

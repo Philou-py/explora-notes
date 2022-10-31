@@ -73,29 +73,30 @@ export default function EvalForGroupDetails() {
             {group && ` pour ${group.name} ${group.schoolYear}`}
           </h1>
 
-          {evalStatistics && <h2>Vue d&rsquo;ensemble des résultats</h2>}
-
-          {evaluation && evalStatistics && (
-            <ul className={cx("evalStatistics")}>
-              <li>
-                Moyenne du groupe : {roundNum(evalStatistics.average, 2)} / {evaluation.totalPoints}
-                {evaluation.totalPoints !== 20 &&
-                  ` - ${roundNum(evalStatistics.averageOutOf20, 2)} / 20`}
-              </li>
-              <li>
-                Note minimale : {roundNum(evalStatistics.minMark, 2)} / {evaluation.totalPoints}
-                {evaluation.totalPoints !== 20 &&
-                  ` - ${roundNum(evalStatistics.minMarkOutOf20, 2)} / 20`}
-              </li>
-              <li>
-                Note maximale : {roundNum(evalStatistics.maxMark, 2)} / {evaluation.totalPoints}
-                {evaluation.totalPoints !== 20 &&
-                  ` - ${roundNum(evalStatistics.maxMarkOutOf20, 2)} / 20`}
-              </li>
-            </ul>
+          {evaluation && evalStatistics && !evalStatistics.scaleConflicts && (
+            <>
+              <h2>Vue d&rsquo;ensemble des résultats</h2>
+              <ul className={cx("evalStatistics")}>
+                <li>
+                  Moyenne du groupe : {roundNum(evalStatistics.average, 2)} /{" "}
+                  {evaluation.totalPoints}
+                  {evaluation.totalPoints !== 20 &&
+                    ` - ${roundNum(evalStatistics.averageOutOf20, 2)} / 20`}
+                </li>
+                <li>
+                  Note minimale : {roundNum(evalStatistics.minMark, 2)} / {evaluation.totalPoints}
+                  {evaluation.totalPoints !== 20 &&
+                    ` - ${roundNum(evalStatistics.minMarkOutOf20, 2)} / 20`}
+                </li>
+                <li>
+                  Note maximale : {roundNum(evalStatistics.maxMark, 2)} / {evaluation.totalPoints}
+                  {evaluation.totalPoints !== 20 &&
+                    ` - ${roundNum(evalStatistics.maxMarkOutOf20, 2)} / 20`}
+                </li>
+              </ul>
+              <ExerciseTable />
+            </>
           )}
-
-          {evaluation && evalStatistics && <ExerciseTable />}
 
           <h2>Liste des notes par élève</h2>
 

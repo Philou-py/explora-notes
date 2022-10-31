@@ -161,14 +161,19 @@ function MarksTable() {
         key: { rawContent: st.id },
         name: { rawContent: st.lastName + " " + st.firstName },
         mark: {
-          rawContent: copyMapPerStudent[st.id] ? copyMapPerStudent[st.id].mark : 0,
+          rawContent:
+            copyMapPerStudent[st.id] && !copyMapPerStudent[st.id].modifiedQuestions
+              ? copyMapPerStudent[st.id].mark
+              : 0,
           content: copyMapPerStudent[st.id]
-            ? roundNum(copyMapPerStudent[st.id].mark, 2) +
-              " / " +
-              evaluation.totalPoints +
-              (evaluation.totalPoints !== 20
-                ? ` - ${roundNum(copyMapPerStudent[st.id].markOutOf20, 2)} / 20`
-                : "")
+            ? !copyMapPerStudent[st.id].modifiedQuestions
+              ? roundNum(copyMapPerStudent[st.id].mark, 2) +
+                " / " +
+                evaluation.totalPoints +
+                (evaluation.totalPoints !== 20
+                  ? ` - ${roundNum(copyMapPerStudent[st.id].markOutOf20, 2)} / 20`
+                  : "")
+              : "Ajustement des points..."
             : "Copie non corrigée",
         },
         ...(copyMapPerStudent[st.id]
@@ -225,7 +230,9 @@ function MarksTable() {
               {cbp === "sm"
                 ? undefined
                 : copyMapPerStudent[st.id]
-                ? "Modifier la copie"
+                ? copyMapPerStudent[st.id].modifiedQuestions
+                  ? "Ajuster les points"
+                  : "Modifier la copie"
                 : "Ajouter une copie"}
             </Button>,
             <Button

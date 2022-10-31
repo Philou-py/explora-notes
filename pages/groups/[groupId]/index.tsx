@@ -75,7 +75,7 @@ export default function GroupDashboard() {
 
       const worksheet = utils.json_to_sheet(copies);
       const workbook = utils.book_new();
-      utils.book_append_sheet(workbook, worksheet, "Évaluation");
+      utils.book_append_sheet(workbook, worksheet, evaluation.title);
       writeFile(
         workbook,
         `${evaluation.title} - ${group.name} - ${group.actualSubject} - ${group.level} - ${group.schoolYear}.xlsx`
@@ -98,11 +98,16 @@ export default function GroupDashboard() {
 
     const exportData = Object.values(group.studentMap).map((student) => {
       const evalMarks = {};
-      rawEvaluations.forEach((rawEval) => {
-        evalMarks[`${rawEval.title} (coef ${rawEval.coefficient})`] =
-          rawEval.copies[groupId][student.id] &&
-          roundNum(rawEval.copies[groupId][student.id].markOutOf20, 2);
-      });
+      rawEvaluations
+        .filter(
+          (rawEval) =>
+            !!rawEval.copies[groupId] && Object.values(rawEval.copies[groupId]).length !== 0
+        )
+        .forEach((rawEval) => {
+          evalMarks[`${rawEval.title} (coef ${rawEval.coefficient})`] =
+            rawEval.copies[groupId][student.id] &&
+            roundNum(rawEval.copies[groupId][student.id].markOutOf20, 2);
+        });
       return {
         "Nom de famille": student.lastName,
         Prénom: student.firstName,
@@ -137,27 +142,32 @@ export default function GroupDashboard() {
           rawContent:
             group &&
             group.evalStatistics[rawEval.id] &&
-            group.evalStatistics[rawEval.id].average !== undefined
+            group.evalStatistics[rawEval.id].averageOutOf20 !== undefined &&
+            !group.evalStatistics[rawEval.id].scaleConflicts
               ? group.evalStatistics[rawEval.id].average
               : "",
           content:
             group &&
             group.evalStatistics[rawEval.id] &&
-            group.evalStatistics[rawEval.id].average !== undefined
-              ? roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)
+            group.evalStatistics[rawEval.id].averageOutOf20
+              ? group.evalStatistics[rawEval.id].scaleConflicts
+                ? "Modif barème en cours..."
+                : roundNum(group.evalStatistics[rawEval.id].averageOutOf20, 2)
               : "Aucune note !",
         },
         minMark: {
           rawContent:
             group &&
             group.evalStatistics[rawEval.id] &&
-            group.evalStatistics[rawEval.id].minMark !== undefined
+            group.evalStatistics[rawEval.id].minMarkOutOf20 !== undefined &&
+            !group.evalStatistics[rawEval.id].scaleConflicts
               ? group.evalStatistics[rawEval.id].minMark
               : "",
           content:
             group &&
             group.evalStatistics[rawEval.id] &&
-            group.evalStatistics[rawEval.id].minMark !== undefined
+            group.evalStatistics[rawEval.id].minMarkOutOf20 !== undefined &&
+            !group.evalStatistics[rawEval.id].scaleConflicts
               ? roundNum(group.evalStatistics[rawEval.id].minMarkOutOf20, 2)
               : "-",
         },
@@ -165,13 +175,15 @@ export default function GroupDashboard() {
           rawContent:
             group &&
             group.evalStatistics[rawEval.id] &&
-            group.evalStatistics[rawEval.id].maxMark !== undefined
+            group.evalStatistics[rawEval.id].maxMarkOutOf20 !== undefined &&
+            !group.evalStatistics[rawEval.id].scaleConflicts
               ? group.evalStatistics[rawEval.id].maxMark
               : "",
           content:
             group &&
             group.evalStatistics[rawEval.id] &&
-            group.evalStatistics[rawEval.id].maxMark !== undefined
+            group.evalStatistics[rawEval.id].maxMarkOutOf20 !== undefined &&
+            !group.evalStatistics[rawEval.id].scaleConflicts
               ? roundNum(group.evalStatistics[rawEval.id].maxMarkOutOf20, 2)
               : "-",
         },

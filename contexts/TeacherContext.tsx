@@ -47,6 +47,7 @@ export interface Group {
       maxMarkOutOf20: number;
       exerciseAverages: number[];
       exerciseTotalPoints: number[];
+      scaleConflicts: boolean;
     };
   };
 }
@@ -62,6 +63,7 @@ export interface Copy {
   studentId: string;
   evaluationId: string;
   groupId: string;
+  modifiedQuestions?: number[];
 }
 
 export interface Evaluation {

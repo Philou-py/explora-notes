@@ -26,6 +26,14 @@ function StudentsTable() {
     []
   );
 
+  const hasConflicts = useMemo(() => {
+    if (groupMap[groupId]) {
+      const allStatistics = groupMap[groupId].evalStatistics;
+      return Object.values(allStatistics).some((stat) => stat.scaleConflicts);
+    }
+    return false;
+  }, [groupMap, groupId]);
+
   const studentsTableItems = useMemo(
     () =>
       students.map((student) => ({
@@ -34,14 +42,17 @@ function StudentsTable() {
         firstName: { rawContent: student.firstName },
         subjectAverageOutOf20: {
           rawContent:
-            student.subjectAverageOutOf20 !== undefined ? student.subjectAverageOutOf20 : "",
-          content:
-            student.subjectAverageOutOf20 !== undefined
-              ? roundNum(student.subjectAverageOutOf20, 2)
-              : "Pas encore de notes !",
+            student.subjectAverageOutOf20 !== undefined && !hasConflicts
+              ? student.subjectAverageOutOf20
+              : "",
+          content: hasConflicts
+            ? "Modif barèmes en cours..."
+            : student.subjectAverageOutOf20 !== undefined
+            ? roundNum(student.subjectAverageOutOf20, 2)
+            : "Pas encore de notes !",
         },
       })),
-    [students]
+    [students, hasConflicts]
   );
 
   return <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="lastName" />;

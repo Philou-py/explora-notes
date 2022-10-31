@@ -3,7 +3,7 @@ import evalStyles from "../pageStyles/Evaluations.module.scss";
 import cn from "classnames/bind";
 import { useState, useContext, useCallback, useMemo } from "react";
 import { db } from "../firebase-config";
-import { doc, collection, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { doc, collection, addDoc, deleteDoc, updateDoc, deleteField } from "firebase/firestore";
 import { AuthContext } from "../contexts/AuthContext";
 import { SnackContext } from "../contexts/SnackContext";
 import { BreakpointsContext } from "../contexts/BreakpointsContext";
@@ -47,6 +47,7 @@ export default function Evaluations() {
   const [nbQuestions, setNbQuestions] = useState(1);
   const [scale, setScale] = useState([1]);
   const [exercises, setExercises] = useState([0]);
+  const [touchedQuestions, setTouchedQuestions] = useState<boolean[]>([]);
   const {
     data: newEval,
     setData,
@@ -60,6 +61,7 @@ export default function Evaluations() {
     setScale([1]);
     setExercises([0]);
     setCurrentEvalToEdit(undefined);
+    setTouchedQuestions([]);
     setIsEditing(false);
     setDetailedEditing(false);
   }, [setData]);
@@ -95,7 +97,6 @@ export default function Evaluations() {
       const hasCopies = Object.values(rawEval.copies).some((g) => Object.values(g).length !== 0);
       if (!hasCopies) {
         console.log("Performing a detailed edit!");
-        // Allow user to modify scale if no copies exist
         setDetailedEditing(true);
       }
       setIsEditing(true);
@@ -198,6 +199,18 @@ export default function Evaluations() {
     [nbQuestions]
   );
 
+  const hasScaleConflicts = useCallback(
+    (evalId: string) => {
+      const evaluation = evaluationMap[evalId];
+      return evaluation.associatedGroupIds.some((gId) =>
+        groupMap[gId].evalStatistics[evalId]
+          ? groupMap[gId].evalStatistics[evalId].scaleConflicts
+          : false
+      );
+    },
+    [evaluationMap, groupMap]
+  );
+
   const evaluations = useMemo(
     () =>
       Object.values(evaluationMap).map((rawEval) => ({
@@ -259,6 +272,7 @@ export default function Evaluations() {
               className="orange--text"
               key={`eval-${rawEval.id}-edit`}
               onClick={() => handleEditEvaluation(rawEval)}
+              isDisabled={hasScaleConflicts(rawEval.id)}
               isFlat
             />,
             <Button
@@ -282,6 +296,7 @@ export default function Evaluations() {
       groupMap,
       handleEditEvaluation,
       cbp,
+      hasScaleConflicts,
     ]
   );
 
@@ -298,7 +313,7 @@ export default function Evaluations() {
       creationDate: isEditing ? currentEvalToEdit.creationDate : new Date().toISOString(),
       creator: teacherId,
       associatedGroupIds: isEditing ? currentEvalToEdit.associatedGroupIds : [],
-      copies: detailedEditing || !isEditing ? {} : currentEvalToEdit.copies,
+      ...(!isEditing ? { copies: {} } : {}),
     };
 
     if (!isEditing) {
@@ -319,7 +334,7 @@ export default function Evaluations() {
 
             const nSPS = oSPS - c.markOutOf20 * oldCoef + c.markOutOf20 * newCoef;
             const nSWT = oSWT - oldCoef + newCoef;
-            const nSAOO20 = nSPS / nSWT;
+            const nSAOO20 = newCoef === 0 ? deleteField() : nSPS / nSWT;
 
             if (groupsToEdit[c.groupId]) {
               groupsToEdit[c.groupId][`studentMap.${c.studentId}.subjectPointsSum`] = nSPS;
@@ -339,6 +354,30 @@ export default function Evaluations() {
           updateDoc(doc(db, "groups", gId), groupsToEdit[gId]);
         });
       }
+
+      if (!detailedEditing && touchedQuestions.length !== 0) {
+        // Update of all copies to indicate which questions were modified
+        const allGroupCopies = evaluationMap[evalId].copies;
+        const modifiedQuestions = touchedQuestions
+          .map((v, i) => v && i)
+          .filter((e) => e !== undefined);
+        const groupsToEdit = {};
+        Object.keys(allGroupCopies).forEach((groupId) => {
+          Object.values(allGroupCopies[groupId]).forEach((c) => {
+            evaluationToSend[`copies.${c.groupId}.${c.studentId}.modifiedQuestions`] =
+              modifiedQuestions;
+          });
+
+          groupsToEdit[groupId] = {
+            [`evalStatistics.${evalId}.scaleConflicts`]: true,
+          };
+        });
+
+        Object.keys(groupsToEdit).forEach((gId) => {
+          updateDoc(doc(db, "groups", gId), groupsToEdit[gId]);
+        });
+      }
+
       await updateDoc(doc(db, "evaluations", evalId), evaluationToSend);
     }
 
@@ -362,7 +401,17 @@ export default function Evaluations() {
     groupMap,
     exercises,
     exerciseScale,
+    touchedQuestions,
   ]);
+
+  const handleSubmitWithConfirm = useCallback(() => {
+    if (isEditing && !detailedEditing && touchedQuestions.length !== 0) {
+      promptConfirmation(
+        "La modification du barème d'une évaluation implique la révision des questions modifiées dans chacune des copies déjà corrigées. Souhaitez-vous continuer ?",
+        handleSubmit
+      );
+    } else handleSubmit();
+  }, [promptConfirmation, handleSubmit, detailedEditing, touchedQuestions, isEditing]);
 
   const handleBindToGrSubmit = useCallback(async () => {
     const evalRef = doc(db, "evaluations", currentEvalToBind.id);
@@ -430,11 +479,11 @@ export default function Evaluations() {
     exercises.reduce((prev, curr) => (curr <= qNb ? prev + 1 : prev), -1);
 
   const scaleTemplate = [...Array(nbQuestions).keys()].map((qNb: number) => (
-    <div key={`question-${qNb}-container`} className={cx("questionInput")}>
+    <div className={cx("questionBlock")} key={`question-${qNb}-container`}>
       {exercises.includes(qNb) && (
-        <div className={cx("exerciseWrapper", { noMargin: qNb === 0 })}>
+        <div className={cx("exerciseWrapper")}>
           <p className={cx("exerciseText")}>Exercice {exercises.indexOf(qNb) + 1} :</p>
-          {qNb !== 0 && (
+          {!isEditing && qNb !== 0 && (
             <div className={cx("exerciseUpDown")}>
               <Button
                 type="icon"
@@ -456,33 +505,42 @@ export default function Evaluations() {
           )}
         </div>
       )}
-      <p className={cx("questionText")}>
-        Question {exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)} :
-      </p>
-      <div className={cx("radioButtonsContainer")}>
-        {[...Array(20).keys()]
-          .map((i) => (i + 1) * Number(newEval.markPrecision))
-          .map((i) => (
-            <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
-              <label>
-                <input
-                  type="radio"
-                  name={`question-${qNb}`}
-                  value={i}
-                  checked={i === scale[qNb]}
-                  onChange={() => {
-                    setScale((prev) => {
-                      let copy = [...prev];
-                      copy[qNb] = i;
-                      return copy;
-                    });
-                  }}
-                  required
-                />
-                {i}
-              </label>
-            </div>
-          ))}
+      <div className={cx("questionInput", { isModified: touchedQuestions[qNb] })}>
+        <p className={cx("questionText")}>
+          Question {exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)} :
+        </p>
+        <div className={cx("radioButtonsContainer")}>
+          {[...Array(20).keys()]
+            .map((i) => (i + 1) * Number(newEval.markPrecision))
+            .map((i) => (
+              <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
+                <label>
+                  <input
+                    type="radio"
+                    name={`question-${qNb}`}
+                    value={i}
+                    checked={i === scale[qNb]}
+                    onChange={() => {
+                      setScale((prev) => {
+                        let copy = [...prev];
+                        copy[qNb] = i;
+                        return copy;
+                      });
+                      if (isEditing && !detailedEditing && !touchedQuestions[qNb]) {
+                        setTouchedQuestions((prev) => {
+                          let copy = [...prev];
+                          copy[qNb] = true;
+                          return copy;
+                        });
+                      }
+                    }}
+                    required
+                  />
+                  {i}
+                </label>
+              </div>
+            ))}
+        </div>
       </div>
       {(qNb === nbQuestions - 1 || exercises.includes(qNb + 1)) && (
         <p className={cx("exerciseSummaryText")}>
@@ -587,7 +645,7 @@ export default function Evaluations() {
 
       <Modal showModal={addEvalModalOpen}>
         <Card cssWidth="clamp(50px, 500px, 95%)">
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmitWithConfirm}>
             <CardHeader
               title={<h2>{isEditing ? "Modifier" : "Créer"} une évaluation</h2>}
               centerTitle
@@ -622,40 +680,42 @@ export default function Evaluations() {
                 <p>Les notes des copies seront ramenées sur 20 points.</p>
               </fieldset>
 
-              {(!isEditing || detailedEditing) && (
-                <fieldset className={cx("scale")}>
-                  <legend>Barème</legend>
-                  <>{scaleTemplate}</>
-                  <div className={cx("addIconContainer")}>
-                    <Button
-                      type="icon"
-                      iconName="remove"
-                      className="yellow darken-1 mr-4"
-                      onClick={handleRemoveQuestion}
-                      size="small"
-                    />
-                    <Button
-                      type="icon"
-                      iconName="add"
-                      className="red darken-1"
-                      onClick={handleAddQuestion}
-                    />
-                  </div>
-                  <div className={cx("addExerciseContainer")}>
-                    <Button
-                      type="outlined"
-                      prependIcon="add_box"
-                      className="green--text"
-                      onClick={handleAddExercise}
-                    >
-                      Exercice
-                    </Button>
-                  </div>
-                  <p>
-                    Nombre de questions : {nbQuestions} | Total des points : {totalPoints}
-                  </p>
-                </fieldset>
-              )}
+              <fieldset className={cx("scale")}>
+                <legend>Barème</legend>
+                {scaleTemplate}
+                {(!isEditing || detailedEditing) && (
+                  <>
+                    <div className={cx("addIconContainer")}>
+                      <Button
+                        type="icon"
+                        iconName="remove"
+                        className="yellow darken-1 mr-4"
+                        onClick={handleRemoveQuestion}
+                        size="small"
+                      />
+                      <Button
+                        type="icon"
+                        iconName="add"
+                        className="red darken-1"
+                        onClick={handleAddQuestion}
+                      />
+                    </div>
+                    <div className={cx("addExerciseContainer")}>
+                      <Button
+                        type="outlined"
+                        prependIcon="add_box"
+                        className="green--text"
+                        onClick={handleAddExercise}
+                      >
+                        Exercice
+                      </Button>
+                    </div>
+                  </>
+                )}
+                <p>
+                  Nombre de questions : {nbQuestions} | Total des points : {totalPoints}
+                </p>
+              </fieldset>
             </CardContent>
 
             <CardActions>
