@@ -268,7 +268,7 @@ function MarksTable() {
 
   return (
     <>
-      <DataTable headers={marksTableHeaders} items={marksTableItems} sortBy="name" />
+      <DataTable headers={marksTableHeaders} items={marksTableItems} sortBy="name" lineNumbering />
       <ManageCopyModal modalOpen={modalOpen} setModalOpen={setModalOpen} {...formProps} />
       {confirmModalTemplate}
     </>

@@ -55,7 +55,14 @@ function StudentsTable() {
     [students, hasConflicts]
   );
 
-  return <DataTable headers={studentsTableHeaders} items={studentsTableItems} sortBy="lastName" />;
+  return (
+    <DataTable
+      headers={studentsTableHeaders}
+      items={studentsTableItems}
+      sortBy="lastName"
+      lineNumbering
+    />
+  );
 }
 
 export default memo(StudentsTable);
