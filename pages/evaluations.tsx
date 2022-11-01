@@ -510,7 +510,7 @@ export default function Evaluations() {
           Question {exercises.reduce((prev, curr) => (curr <= qNb ? qNb - curr + 1 : prev), 0)} :
         </p>
         <div className={cx("radioButtonsContainer")}>
-          {[...Array(20).keys()]
+          {[...Array(21).keys()]
             .map((i) => i * Number(newEval.markPrecision))
             .map((i) => (
               <div key={`question-${qNb}-precision-${i}`} className={cx("radioButton")}>
