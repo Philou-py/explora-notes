@@ -483,7 +483,7 @@ export default function Evaluations() {
       {exercises.includes(qNb) && (
         <div className={cx("exerciseWrapper")}>
           <p className={cx("exerciseText")}>Exercice {exercises.indexOf(qNb) + 1} :</p>
-          {!isEditing && qNb !== 0 && (
+          {(!isEditing || detailedEditing) && qNb !== 0 && (
             <div className={cx("exerciseUpDown")}>
               <Button
                 type="icon"
