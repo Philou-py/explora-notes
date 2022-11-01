@@ -53,7 +53,8 @@ export default function GroupDashboard() {
       const copies = Object.values(evaluation.copies[groupId]).map((copy) => {
         const pointsPerQuestion = {};
         copy.pointsObtained.forEach((point, index) => {
-          pointsPerQuestion[`Question ${index + 1} (${evaluation.scale[index]} pts)`] = point;
+          pointsPerQuestion[`Question ${index + 1} (${evaluation.scale[index]} pts)`] =
+            point || "Non traité";
         });
         const pointsByEx = {};
         copy.pointsByEx.forEach((pts, index) => {

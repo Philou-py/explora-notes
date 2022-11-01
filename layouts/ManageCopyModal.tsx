@@ -48,7 +48,7 @@ function ManageCopyModal({
   const { isAuthenticated } = useContext(AuthContext);
   const { evaluationMap, groupMap } = useContext(TeacherContext);
 
-  const [currentPointsObtained, setCurrentPointsObtained] = useState<number[]>([]);
+  const [currentPointsObtained, setCurrentPointsObtained] = useState<(number | null)[]>([]);
   const [currentPrevMark, setCurrentPrevMark] = useState(0);
   const [currentPrevMarkOutOf20, setCurrentPrevMarkOutOf20] = useState(0);
   const [currentPrevPointsByEx, setCurrentPrevPointsByEx] = useState<number[]>([]);
@@ -114,6 +114,11 @@ function ManageCopyModal({
 
   const giveAllPoints = useCallback(() => {
     const newPoints = [...evaluation.scale];
+    setCurrentPointsObtained(newPoints);
+  }, [evaluation]);
+
+  const giveNoPoints = useCallback(() => {
+    const newPoints = evaluation.scale.map((_) => null);
     setCurrentPointsObtained(newPoints);
   }, [evaluation]);
 
@@ -262,6 +267,25 @@ function ManageCopyModal({
             :
           </p>
           <div className={cx("radioButtonsContainer")}>
+            <div className={cx("radioButton")}>
+              <label>
+                <input
+                  type="radio"
+                  name={`question-${qNb}`}
+                  value=""
+                  checked={currentPointsObtained[qNb] === null}
+                  onChange={() => {
+                    setCurrentPointsObtained((prev) => {
+                      let copy = [...prev];
+                      copy[qNb] = null;
+                      return copy;
+                    });
+                  }}
+                  required
+                />
+                N/T
+              </label>
+            </div>
             {[...Array(evaluation.scale[qNb] / evaluation.markPrecision + 1).keys()]
               .map((i) => i * evaluation.markPrecision)
               .map((i) => (
@@ -310,6 +334,27 @@ function ManageCopyModal({
             <p className={cx("studentInQuestion")}>
               Élève : {currentStudent && `${currentStudent.firstName} ${currentStudent.lastName}`}
             </p>
+            {((currentCopy && !currentCopy.modifiedQuestions) || !isEditing) && (
+              <div className={cx("preselectControls")}>
+                <Button
+                  type="text"
+                  className="teal--text"
+                  prependIcon="done_all"
+                  onClick={giveAllPoints}
+                >
+                  Note max
+                </Button>
+                <Button
+                  type="text"
+                  className="purple--text text--lighten-1"
+                  prependIcon="block"
+                  onClick={giveNoPoints}
+                >
+                  Copie blanche
+                </Button>
+              </div>
+            )}
+            <Spacer />
             {resultsTemplate}
             <div className={cx("bonusPenalty")}>
               <InputField
@@ -352,16 +397,6 @@ function ManageCopyModal({
           </CardContent>
 
           <CardActions>
-            {((currentCopy && !currentCopy.modifiedQuestions) || !isEditing) && (
-              <Button
-                type="text"
-                className="teal--text"
-                prependIcon="done_all"
-                onClick={giveAllPoints}
-              >
-                Note max
-              </Button>
-            )}
             <Spacer />
             <Button className="red--text mr-4" type="outlined" onClick={() => setModalOpen(false)}>
               Annuler
