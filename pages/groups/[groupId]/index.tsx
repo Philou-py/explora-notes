@@ -40,7 +40,7 @@ export default function GroupDashboard() {
     async (evalId: string) => {
       const group = groupMap[groupId];
       const evaluation = evaluationMap[evalId];
-      if (Object.values(evaluation.copies[groupId]).length === 0) {
+      if (!evaluation.copies[groupId] || Object.values(evaluation.copies[groupId]).length === 0) {
         haveASnack(
           "error",
           <h6>
@@ -50,28 +50,58 @@ export default function GroupDashboard() {
         );
         return;
       }
+
+      const questionTitles = [];
+      let exNb = 0;
+      let qNb = 0;
+      for (let qI = 0; qI < evaluation.nbQuestions; qI++) {
+        const newEx = exNb < evaluation.exercises.length && evaluation.exercises[exNb] === qI;
+        if (newEx) {
+          exNb += 1;
+          qNb = 1;
+        }
+        questionTitles.push([`${exNb}.${qNb})`, newEx && exNb]);
+        qNb += 1;
+      }
+
       const copies = Object.values(evaluation.copies[groupId]).map((copy) => {
         const pointsPerQuestion = {};
         copy.pointsObtained.forEach((point, index) => {
-          pointsPerQuestion[`Question ${index + 1} (${evaluation.scale[index]} pts)`] =
-            point || "Non traité";
-        });
-        const pointsByEx = {};
-        copy.pointsByEx.forEach((pts, index) => {
-          pointsByEx[`Exercice ${index + 1} (${evaluation.exerciseScale[index]} pts)`] = pts;
+          const qTitle = questionTitles[index];
+          if (qTitle[1]) {
+            pointsPerQuestion[`Ex ${qTitle[1]}`] = copy.pointsByEx[qTitle[1] - 1];
+          }
+          pointsPerQuestion[qTitle[0]] = point !== null ? point : "N/T";
         });
         const student = group.studentMap[copy.studentId];
 
         return {
           "Nom de famille": student.lastName,
           Prénom: student.firstName,
-          [`Note (sur ${evaluation.totalPoints})`]: roundNum(copy.mark, 2),
+          Note: roundNum(copy.mark, 2),
           "Note sur 20": roundNum(copy.markOutOf20, 2),
-          ...pointsByEx,
           ...pointsPerQuestion,
-          "Points bonus": copy.bonusPoints,
-          "Points malus": copy.penaltyPoints,
+          Bonus: copy.bonusPoints,
+          Malus: copy.penaltyPoints,
         };
+      });
+
+      const qScaleMap = {};
+      evaluation.scale.forEach((pts, index) => {
+        const qTitle = questionTitles[index];
+        if (qTitle[1]) {
+          qScaleMap[`Ex ${qTitle[1]}`] = evaluation.exerciseScale[qTitle[1] - 1];
+        }
+        qScaleMap[qTitle[0]] = pts;
+      });
+      copies.unshift({
+        "Nom de famille": "Barème",
+        Prénom: "Barème",
+        Note: evaluation.totalPoints,
+        "Note sur 20": 20,
+        ...qScaleMap,
+        Bonus: 0,
+        Malus: 0,
       });
 
       const worksheet = utils.json_to_sheet(copies);
