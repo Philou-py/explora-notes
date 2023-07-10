@@ -1,5 +1,5 @@
 import { useContext, useCallback } from "react";
-import Image, { StaticImageData } from "next/image";
+import Image, { StaticImageData } from "next/legacy/image";
 import Link from "next/link";
 import navBarStyles from "./NavBar.module.scss";
 import cn from "classnames";
@@ -45,7 +45,7 @@ export default function NavBar({
     <nav className={navBarStyles.navMenu}>
       {navLinks.map(([name, url]) => (
         <Link href={url} key={name}>
-          <a>{name}</a>
+          {name}
         </Link>
       ))}
       {handleAuth && (
@@ -78,22 +78,21 @@ export default function NavBar({
               isFlat
             />
           )}
-          <Link href="/">
-            <a
-              style={{
-                textDecoration: "none",
-                position: "relative",
-                left: ["xs", "sm"].includes(cbp) ? "-28px" : "0",
-                margin: "0 auto",
-              }}
-            >
-              <div className={navBarStyles.logoAndTitle}>
-                <div className={navBarStyles.logoContainer}>
-                  <Image src={logoPath} alt="Logo" width={50} height={50} />
-                </div>
-                <h4 className={navBarStyles.title}>{title}</h4>
+          <Link
+            href="/"
+            style={{
+              textDecoration: "none",
+              position: "relative",
+              left: ["xs", "sm"].includes(cbp) ? "-28px" : "0",
+              margin: "0 auto",
+            }}
+          >
+            <div className={navBarStyles.logoAndTitle}>
+              <div className={navBarStyles.logoContainer}>
+                <Image src={logoPath} alt="Logo" width={50} height={50} />
               </div>
-            </a>
+              <h4 className={navBarStyles.title}>{title}</h4>
+            </div>
           </Link>
         </div>
         {["md", "lg", "xl"].includes(cbp) && navMenu}

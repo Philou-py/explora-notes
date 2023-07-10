@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useCallback, useState, useContext, useMemo } from "react";
 import groupStyles from "../../pageStyles/Groups.module.scss";
-import cn from "classnames/bind";
+import cn, { Binding } from "classnames/bind";
 import {
   Container,
   Button,

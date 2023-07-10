@@ -1,5 +1,5 @@
 import { CSSProperties, memo, useState } from "react";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import avatarStyles from "./Avatar.module.scss";
 import cn from "classnames";
 

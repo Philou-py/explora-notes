@@ -56,10 +56,8 @@ function SideBar({
       ref={refForTransition2}
     >
       {!isAuthenticated && (
-        <Link href="/">
-          <a style={{ textDecoration: "none" }}>
-            <h3 className={sideBarStyles.title}>ExploraNotes</h3>
-          </a>
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <h3 className={sideBarStyles.title}>ExploraNotes</h3>
         </Link>
       )}
       {isAuthenticated && (
@@ -78,7 +76,7 @@ function SideBar({
       <nav className={sideBarStyles.navList}>
         {navLinks.map(([name, url]) => (
           <Link href={url} key={name}>
-            <a>{name}</a>
+            {name}
           </Link>
         ))}
       </nav>

@@ -77,10 +77,13 @@ function Button(props: ButtonProps) {
 
   return props.isLink ? (
     !props.isDisabled ? (
-      <Link href={props.href!}>
-        <a className={buttonClassNames} title={props.title} onMouseDown={createRipple}>
-          {buttonContent}
-        </a>
+      <Link
+        href={props.href!}
+        className={buttonClassNames}
+        title={props.title}
+        onMouseDown={createRipple}
+      >
+        {buttonContent}
       </Link>
     ) : (
       <a className={buttonClassNames} title={props.title} tabIndex={props.noKeyboardFocus ? -1 : 0}>
