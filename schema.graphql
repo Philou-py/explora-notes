@@ -1,0 +1,84 @@
+interface User @secret(field: "password") {
+  id: ID!
+  email: String! @search(by: [exact])
+  firstName: String! @search(by: [exact])
+  lastName: String! @search(by: [exact])
+  fullName: String! @search(by: [exact, fulltext])
+}
+
+type Teacher implements User {
+  groups: [Group!]! @hasInverse(field: "teacher")
+}
+
+type Student implements User {
+  groupStudents: [GroupStudent!]! @hasInverse(field: "studentAccount")
+}
+
+type GroupStudent {
+  id: ID!
+  firstName: String! @search(by: [exact])
+  lastName: String! @search(by: [exact])
+  fullName: String! @search(by: [exact, fulltext])
+  copies: [Copy!]! @hasInverse(field: "groupStudent")
+  studentPoints: Float! @search
+  studentCoefs: Float! @search
+  studentAverage: Float @search
+  group: Group! @hasInverse(field: "groupStudents")
+  studentAccount: Student @hasInverse(field: "groupStudents")
+}
+
+type Group {
+  id: ID!
+  name: String! @search(by: [fulltext, exact])
+  teacher: Teacher!
+  schoolYear: Int! @search
+  subject: String! @search(by: [exact, fulltext])
+  evaluations: [Evaluation!]! @hasInverse(field: "group")
+  groupStudents: [GroupStudent!]! @hasInverse(field: "group")
+}
+
+type Evaluation {
+  id: ID!
+  title: String! @search(by: [exact, fulltext])
+  level: String! @search(by: [exact, fulltext])
+  group: Group! @hasInverse(field: "evaluations")
+  exercises: [Exercise!]! @hasInverse(field: "evaluation")
+  coefficient: Float! @search
+  copies: [Copy!]! @hasInverse(field: "evaluation")
+  evalPoints: Float! @search
+}
+
+type Exercise {
+  id: ID!
+  rank: Int!
+  label: String! @search(by: [exact, fulltext])
+  questions: [Question!]! @hasInverse(field: "exercise")
+  evaluation: Evaluation! @hasInverse(field: "exercises")
+}
+
+type Question {
+  id: ID!
+  rank: Int!
+  maxPoints: Float!
+  isBonus: Boolean!
+  exercise: Exercise! @hasInverse(field: "questions")
+  answers: [Answer!]! @hasInverse(field: "question")
+}
+
+type Copy {
+  id: ID!
+  groupStudent: GroupStudent! @hasInverse(field: "copies")
+  totalPoints: Float! @search
+  mark: Float! @search
+  bonusPoints: Float! @search
+  penaltyPoints: Float! @search
+  answers: [Answer!]! @hasInverse(field: "copy")
+  evaluation: Evaluation! @hasInverse(field: "copies")
+}
+
+type Answer {
+  id: ID!
+  points: Float! @search
+  copy: Copy! @hasInverse(field: "answers")
+  question: Question! @hasInverse(field: "answers")
+}
