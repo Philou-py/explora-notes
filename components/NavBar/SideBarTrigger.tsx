@@ -1,40 +1,26 @@
 "use client";
 
-import { useState, useCallback, ReactNode } from "react";
+import { useCallback, ReactNode, useContext } from "react";
 import nBStyles from "./NavBar.module.scss";
 import cn from "classnames/bind";
 import Button from "../Button";
-import { SideBarWrapper } from "../SideBar";
+import { SideBarContext } from "@/contexts/SideBarContext";
 
 const cx = cn.bind(nBStyles);
 
-interface SideBarTriggerProps {
-  hasClippedSideBar: boolean;
-  children: ReactNode;
-}
-
-export default function SideBarTrigger({ hasClippedSideBar, children }: SideBarTriggerProps) {
-  const [sideBarOpen, setSideBarOpen] = useState(false);
-  const closeSideBar = useCallback(() => {
-    setSideBarOpen(false);
-  }, []);
+export default function SideBarTrigger() {
+  const { clippedSideBar, setSideBarOpen } = useContext(SideBarContext);
+  const toggleSideBar = useCallback(() => {
+    setSideBarOpen((prev) => !prev);
+  }, [setSideBarOpen]);
 
   return (
-    <>
-      <Button
-        className={cn(cx("navIconButton", { showAlways: hasClippedSideBar }), "white--text")}
-        type="icon"
-        iconName="menu"
-        onClick={() => setSideBarOpen((prev) => !prev)}
-        isFlat
-      />
-      <SideBarWrapper
-        showSideBar={sideBarOpen}
-        closeSideBar={closeSideBar}
-        hasClippedSideBar={hasClippedSideBar}
-      >
-        {children}
-      </SideBarWrapper>
-    </>
+    <Button
+      className={cn(cx("navIconButton", { showAlways: clippedSideBar }), "white--text")}
+      type="icon"
+      iconName="menu"
+      onClick={toggleSideBar}
+      isFlat
+    />
   );
 }

@@ -1,20 +1,15 @@
-"use client";
-
-import { useCallback, useContext, memo } from "react";
 import Link from "next/link";
 import sideBarStyles from "./SideBar.module.scss";
 import cn from "classnames/bind";
-import { Button, Avatar } from "..";
+import Avatar from "../Avatar";
 
-interface SideBarProps {
-  navLinks: [string, string][];
-  handleAuth?: boolean;
-}
+interface SideBarProps {}
 
 let cx = cn.bind(sideBarStyles);
 
-function SideBar({ navLinks, handleAuth }: SideBarProps) {
+export default function SideBar({}: SideBarProps) {
   const isAuthenticated = false;
+  const navLinks = [];
 
   return (
     <div className={cx("content")}>
@@ -47,5 +42,3 @@ function SideBar({ navLinks, handleAuth }: SideBarProps) {
     </div>
   );
 }
-
-export default memo(SideBar);

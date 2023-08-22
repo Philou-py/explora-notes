@@ -10,6 +10,9 @@ import { Metadata } from "next";
 import { Cormorant_Upright } from "next/font/google";
 import localFont from "next/font/local";
 import { ReactNode } from "react";
+import SideBar, { SideBarWrapper } from "@/components/SideBar";
+import SideBarProvider from "@/contexts/SideBarContext";
+import Main from "./Main";
 
 const cormorantUpright = Cormorant_Upright({
   subsets: ["latin"],
@@ -34,19 +37,22 @@ export const metadata: Metadata = {
 };
 
 export default function AppLayout({ children, auth }: { children: ReactNode; auth: ReactNode }) {
-  const navBarHeight = 60;
-
   return (
     <html lang="fr" className={cormorantUpright.className}>
       <body style={{ "--material-symbols": materialSymbols.style.fontFamily } as any}>
-        <NavBar hasClippedSideBar />
-        <div style={{ paddingTop: navBarHeight }}>
-          <SnackProvider>
-            {children}
-            {auth}
-          </SnackProvider>
-          <Footer />
-        </div>
+        <SideBarProvider clippedSideBar={true}>
+          <NavBar />
+          <SideBarWrapper>
+            <SideBar />
+          </SideBarWrapper>
+          <Main>
+            <SnackProvider>
+              {children}
+              {auth}
+            </SnackProvider>
+            <Footer />
+          </Main>
+        </SideBarProvider>
       </body>
     </html>
   );

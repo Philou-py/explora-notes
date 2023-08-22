@@ -3,16 +3,17 @@ import Image from "next/legacy/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import nBStyles from "./NavBar.module.scss";
-import cn from "classnames";
+import cn from "classnames/bind";
 import Container from "../Container";
 import Avatar from "../Avatar";
-import SideBar from "../SideBar";
 import SideBarTrigger from "./SideBarTrigger";
 import exploraNotesLogo from "@/public/images/logo.png";
 import { dgraphQuery } from "@/app/dgraphQuery";
 import { verify } from "jsonwebtoken";
 import { readFileSync } from "fs";
 import SignOutButton from "@/app/@auth/signOutButton";
+
+const cx = cn.bind(nBStyles);
 
 const publicKey = readFileSync("public.key");
 
@@ -42,14 +43,12 @@ interface NavBarProps {
   onNavIconClick?: () => void;
   fixed?: boolean;
   flat?: boolean;
-  hasClippedSideBar?: boolean;
 }
 
 export default async function NavBar({
   centerNavSmScreens = true,
   fixed = true,
   flat,
-  hasClippedSideBar,
 }: NavBarProps) {
   const currentUser = await getCurrentUser();
 
@@ -72,31 +71,16 @@ export default async function NavBar({
 
   return (
     <>
-      <div
-        className={cn(nBStyles.navBar, {
-          [nBStyles.flat]: flat,
-          [nBStyles.fixed]: fixed,
-        })}
-      >
-        <Container className={nBStyles.navBarContainer}>
-          <div
-            className={cn(nBStyles.presentation, {
-              [nBStyles.centerNavSmScreens]: centerNavSmScreens,
-            })}
-          >
-            <SideBarTrigger hasClippedSideBar={hasClippedSideBar}>
-              <SideBar navLinks={navLinks} handleAuth />
-            </SideBarTrigger>
-            <Link href="/" className={cn(nBStyles.logoAndTitle)}>
-              <div className={nBStyles.logoContainer}>
-                <Image src={exploraNotesLogo} alt="Logo" width={50} height={50} />
-              </div>
-              <h4 className={nBStyles.title}>ExploraNotes</h4>
-            </Link>
-          </div>
+      <div className={cx("navBar", { flat, fixed })}>
+        <Container className={cx("navBarContainer")}>
+          <SideBarTrigger />
+          <Link href="/" className={cx("logoAndTitle", { centerNavSmScreens })}>
+            <Image src={exploraNotesLogo} alt="Logo" width={50} height={50} />
+            <h4 className={nBStyles.title}>ExploraNotes</h4>
+          </Link>
           {navMenu}
           {!!currentUser && (
-            <div className={cn(nBStyles.avatarContainer)}>
+            <div className={cx("avatarContainer")}>
               <Avatar
                 type="initials-avatar"
                 initials={currentUser.displayName

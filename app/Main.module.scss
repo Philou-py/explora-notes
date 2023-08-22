@@ -1,0 +1,14 @@
+$sm: 960px;
+$sideBarWidth: 250px;
+$navBarHeight: 60px;
+
+.main {
+  padding-top: $navBarHeight;
+  transition: margin-left 0.3s ease;
+
+  @media (min-width: $sm) {
+    &.shiftContent {
+      margin-left: $sideBarWidth;
+    }
+  }
+}

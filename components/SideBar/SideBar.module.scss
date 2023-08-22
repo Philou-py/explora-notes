@@ -1,6 +1,6 @@
 $navBarHeight: 60px;
 
-.bg {
+.wrapper {
   top: 0;
   left: 0;
   position: fixed;
@@ -8,7 +8,7 @@ $navBarHeight: 60px;
   height: 100%;
   background-color: rgba(black, 0.5);
   opacity: 0;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
   z-index: 9999;
   visibility: hidden;
 
@@ -22,9 +22,16 @@ $navBarHeight: 60px;
     }
   }
 
-  &.clippedSideBar .content {
-    margin-top: $navBarHeight;
-    position: fixed;
+  &.clippedSideBar {
+    top: $navBarHeight;
+    width: auto;
+    height: calc(100% - $navBarHeight);
+    transform: translateX(-250px);
+
+    &.show,
+    .content {
+      transform: translateX(0);
+    }
   }
 }
 
