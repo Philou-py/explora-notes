@@ -55,7 +55,7 @@ export default async function NavBar({
   const navLinks = [
     ["Évaluations", "/evaluations"],
     ["Groupes", "/groups"],
-    [...(!!currentUser ? ["Déconnexion", "/api/signout"] : ["Connexion", "/login"])],
+    [...(!!currentUser ? ["Déconnexion", "/api/signout"] : ["Connexion", "/signin"])],
   ] as [string, string][];
 
   const navMenu = (

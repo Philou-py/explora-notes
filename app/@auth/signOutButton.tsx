@@ -9,8 +9,7 @@ export default function SignOutButton() {
   return (
     <Button
       onClick={async () => {
-        const response = await fetch("/api/signout");
-        console.log(await response.json());
+        await fetch("/api/signout");
         router.refresh();
         router.push("/");
       }}

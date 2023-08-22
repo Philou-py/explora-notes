@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useCallback, useState, ChangeEventHandler } from "react";
 import Link from "next/link";
 import {
@@ -13,12 +15,12 @@ import {
   Icon,
 } from "@/components";
 import cn from "classnames/bind";
-import loginFormStyles from "./LoginForm.module.scss";
+import signInFormStyles from "./SignInForm.module.scss";
 import { useAuthAction } from "../useAuthAction";
 
-const cx = cn.bind(loginFormStyles);
+const cx = cn.bind(signInFormStyles);
 
-export default function LoginForm() {
+export default function SignInForm() {
   const [isLoading] = useState(false);
   const { submitAction } = useAuthAction();
 
@@ -47,7 +49,7 @@ export default function LoginForm() {
 
   return (
     <Card cssWidth="clamp(300px, 40%, 600px)">
-      <Form onSubmit={() => submitAction("/api/login", { ...user, accountType })}>
+      <Form onSubmit={() => submitAction("/api/signin", { ...user, accountType })}>
         <CardHeader title={<h3>Connexion</h3>} centerTitle />
         <CardContent>
           <div className={cx("accountType")}>
