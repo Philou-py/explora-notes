@@ -1,3 +1,5 @@
+"use client";
+
 import { ReactNode, useContext } from "react";
 import containerStyles from "./Container.module.scss";
 import cn from "classnames";

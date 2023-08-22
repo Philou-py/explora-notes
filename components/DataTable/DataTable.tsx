@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useMemo, useState, useCallback, ReactNode, memo } from "react";
 import { BreakpointsContext } from "../../contexts/BreakpointsContext";
 import { Icon, InputField } from "..";

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { memo, MouseEvent } from "react";
 import buttonStyles from "./Button.module.scss";

@@ -1,0 +1,29 @@
+.accountType {
+  font-size: 20px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  color: rgba(0, 0, 0, 0.7);
+
+  .label .icon {
+    vertical-align: bottom;
+    margin-right: 5px;
+  }
+
+  .radioGroup {
+    margin: 0 0 0 auto;
+
+    input {
+      margin-right: 5px;
+    }
+  }
+}
+
+.additionalFields {
+  display: none;
+
+  &.show {
+    display: block;
+  }
+}

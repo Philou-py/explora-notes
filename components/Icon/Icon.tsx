@@ -1,5 +1,4 @@
-import { memo } from "react";
-import cn from "classnames/bind";
+import cn from "classnames";
 
 interface IconProps {
   iconName: string;
@@ -7,12 +6,14 @@ interface IconProps {
   [prop: string]: any;
 }
 
-function Icon({ iconName, className, ...otherAttributes }: IconProps) {
+export default function Icon({ iconName, className, ...otherAttributes }: IconProps) {
   return (
-    <span className={cn("material-symbols-rounded", className)} {...otherAttributes}>
+    <span
+      className={cn("icon", className)}
+      style={{ fontFamily: "var(--material-symbols)", fontSize: 24 }}
+      {...otherAttributes}
+    >
       {iconName}
     </span>
   );
 }
-
-export default memo(Icon);

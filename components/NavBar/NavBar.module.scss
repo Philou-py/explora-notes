@@ -1,4 +1,16 @@
-$navMenuHeight: 60px;
+$navBarHeight: 60px;
+$xs: 600px;
+$sm: 960px;
+$md: 1264px;
+$lg: 1904px;
+
+@mixin centerNav {
+  flex-grow: 1;
+
+  .logoAndTitle {
+    margin: 0 auto;
+  }
+}
 
 .navBar {
   background-color: #9e1030;
@@ -17,28 +29,37 @@ $navMenuHeight: 60px;
 
   .navBarContainer {
     display: flex;
-    height: $navMenuHeight;
+    height: $navBarHeight;
   }
 
   .presentation {
     display: flex;
     align-items: center;
 
-    * {
-      cursor: pointer;
-    }
-
     .navIconButton {
       margin: 0 20px 0 8px;
+      display: none;
 
       &:hover {
         background-color: #755139 !important;
+      }
+
+      &.showAlways {
+        display: inline-block;
+      }
+
+      @media (max-width: $sm) {
+        display: inline-block;
       }
     }
 
     .logoAndTitle {
       display: flex;
       align-items: center;
+      text-decoration: none;
+      position: relative;
+      margin: 0 auto;
+      cursor: pointer;
 
       .logoContainer {
         height: 100%;
@@ -50,19 +71,21 @@ $navMenuHeight: 60px;
       .title {
         color: white;
       }
+
+      @media (max-width: $sm) {
+        left: -28px;
+      }
     }
 
-    &.centerNav {
-      flex-grow: 1;
-
-      .logoAndTitle {
-        margin: 0 auto;
+    &.centerNavSmScreens {
+      @media (max-width: $sm) {
+        @include centerNav;
       }
     }
   }
 
   nav.navMenu {
-    display: flex;
+    display: none;
     justify-content: flex-end;
     align-items: center;
     flex-grow: 1;
@@ -71,8 +94,8 @@ $navMenuHeight: 60px;
 
     a,
     .authTrigger {
-      height: $navMenuHeight;
-      line-height: $navMenuHeight;
+      height: $navBarHeight;
+      line-height: $navBarHeight;
       padding: 0 15px;
       text-align: center;
       text-decoration: none;
@@ -88,12 +111,20 @@ $navMenuHeight: 60px;
       font-size: 20px;
       cursor: pointer;
     }
+
+    @media (min-width: $sm) {
+      display: flex;
+    }
   }
 
   .avatarContainer {
+    display: none;
     height: 100%;
     margin-left: 10px;
-    display: flex;
     align-items: center;
+
+    @media (min-width: $sm) {
+      display: flex;
+    }
   }
 }

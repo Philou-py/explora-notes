@@ -99,6 +99,7 @@ $zFile: 3;
 
   input,
   textarea {
+    font-family: inherit;
     position: relative;
     width: 100%;
     z-index: $zTextInput;

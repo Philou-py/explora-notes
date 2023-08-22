@@ -1,4 +1,4 @@
-import { CSSProperties, memo, useState } from "react";
+import { CSSProperties, memo } from "react";
 import Image from "next/legacy/image";
 import avatarStyles from "./Avatar.module.scss";
 import cn from "classnames";
@@ -32,7 +32,7 @@ function Avatar(props: AvatarProps) {
   if (props.borderColour) style["--border-colour"] = props.borderColour;
   style["--size"] = props.size ? props.size + "px" : "50px";
 
-  const [initialsAvatarBgColour] = useState(() => {
+  const initialsAvatarBgColour = (() => {
     if (!("src" in props)) {
       if (props.bgColour) {
         return props.bgColour;
@@ -40,7 +40,7 @@ function Avatar(props: AvatarProps) {
         return "#" + Math.floor(Math.random() * 0xffffff).toString(16);
       }
     }
-  });
+  })();
 
   if ("src" in props) {
     // The next/image component can't be the direct child of a flex container

@@ -6,7 +6,7 @@ export { default as Form, useForm } from "./Form";
 export { default as Icon } from "./Icon";
 export { default as InputField } from "./InputField";
 export { default as Modal } from "./Modal";
-export { default as NavBar } from "./NavBar";
+// export { default as NavBar } from "./NavBar";
 export { default as Ripple } from "./Ripple";
 export { default as SideBar } from "./SideBar";
 export { default as Spacer } from "./Spacer";

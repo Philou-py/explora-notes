@@ -9,6 +9,7 @@ a.btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
   height: $defaultSize;
   line-height: $defaultSize;
   padding: 0 16px;
@@ -90,7 +91,7 @@ a.btn {
     min-width: 0; // Reset min-width
     border-radius: 50%;
 
-    span.material-icons {
+    span.icon {
       font-size: 22px;
     }
 
@@ -99,7 +100,7 @@ a.btn {
       height: 26px;
       padding: 4px;
 
-      span.material-symbols {
+      span.icon {
         font-size: 18px;
       }
     }
@@ -109,7 +110,7 @@ a.btn {
       height: 45px;
       padding: 10px;
 
-      span.material-symbols {
+      span.icon {
         font-size: 25px;
       }
     }
