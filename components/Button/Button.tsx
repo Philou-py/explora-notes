@@ -21,6 +21,7 @@ interface ButtonProps {
   trailingIcon?: string;
   className?: string;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+  isLoading?: boolean;
   noKeyboardFocus?: boolean;
   children?: string;
 }
@@ -51,11 +52,11 @@ function Button(props: ButtonProps) {
   );
 
   const childrenWithIcons = (
-    <>
+    <span>
       {props.prependIcon && makeIconTemplate(props.prependIcon, "prependIcon")}
       {props.children}
       {props.trailingIcon && makeIconTemplate(props.trailingIcon, "trailingIcon")}
-    </>
+    </span>
   );
 
   const buttonContent =
@@ -74,6 +75,7 @@ function Button(props: ButtonProps) {
       [buttonStyles.fullWidth]: props.isFullWidth,
       [buttonStyles[props.size!]]: props.size,
       [props.className!]: props.className && !props.isDisabled,
+      [buttonStyles.isLoading]: props.isLoading,
     }
   );
 
@@ -97,7 +99,7 @@ function Button(props: ButtonProps) {
       type={props.formSubmit ? "submit" : "button"}
       onClick={props.onClick}
       className={buttonClassNames}
-      disabled={props.isDisabled}
+      disabled={props.isDisabled || props.isLoading}
       title={props.title}
       onMouseDown={createRipple}
       tabIndex={props.noKeyboardFocus ? -1 : 0}

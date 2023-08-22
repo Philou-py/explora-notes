@@ -1,14 +1,16 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SnackContext } from "@/contexts/SnackContext";
 
 export function useAuthAction() {
   const { haveASnack } = useContext(SnackContext);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const submitAction = useCallback(
     async (url: string, reqBody: object) => {
       try {
+        setIsLoading(true);
         const response = await fetch(url, {
           method: "POST",
           headers: {
@@ -30,5 +32,5 @@ export function useAuthAction() {
     [haveASnack, router]
   );
 
-  return { submitAction };
+  return { isLoading, submitAction };
 }

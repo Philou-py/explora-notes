@@ -6,9 +6,6 @@ $xLargeSize: 55px;
 button.btn,
 a.btn {
   box-sizing: content-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-family: inherit;
   height: $defaultSize;
   line-height: $defaultSize;
@@ -29,6 +26,12 @@ a.btn {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   &:hover {
     background-color: #dadada;
@@ -121,6 +124,38 @@ a.btn {
     background-color: rgba(black, 0.12) !important;
     color: rgba(black, 0.26) !important;
     cursor: not-allowed !important;
+  }
+
+  &.isLoading {
+    span {
+      visibility: hidden;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      border: 4px solid transparent;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: button-loading-spinner 1s ease infinite;
+    }
+
+    @keyframes button-loading-spinner {
+      from {
+        transform: rotate(0turn);
+      }
+
+      to {
+        transform: rotate(1turn);
+      }
+    }
   }
 }
 

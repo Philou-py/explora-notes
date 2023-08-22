@@ -21,8 +21,7 @@ import { useAuthAction } from "../useAuthAction";
 const cx = cn.bind(signInFormStyles);
 
 export default function SignInForm() {
-  const [isLoading] = useState(false);
-  const { submitAction } = useAuthAction();
+  const { isLoading, submitAction } = useAuthAction();
 
   const [accountType, setAccountType] = useState<"student" | "teacher">("student");
   const {
@@ -103,11 +102,13 @@ export default function SignInForm() {
           <Spacer />
           <Button
             className="blue darken-3"
-            isDisabled={!isValid || isLoading}
+            isDisabled={!isValid}
             title={buttonTitle}
+            isLoading={isLoading}
+            trailingIcon="send"
             formSubmit
           >
-            {isLoading ? "Chargement..." : "Valider"}
+            Valider
           </Button>
         </CardActions>
       </Form>

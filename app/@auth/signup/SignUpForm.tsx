@@ -21,9 +21,7 @@ import cn from "classnames/bind";
 const cx = cn.bind(signUpFormStyles);
 
 export default function SignUpForm() {
-  const { submitAction } = useAuthAction();
-
-  const [isLoading] = useState(false);
+  const { isLoading, submitAction } = useAuthAction();
 
   const [accountType, setAccountType] = useState<"student" | "teacher">("student");
   const {
@@ -130,17 +128,19 @@ export default function SignUpForm() {
           </div>
         </CardContent>
         <CardActions>
-          <Link href="/login" replace>
+          <Link href="/signin" replace>
             Déjà un compte ?
           </Link>
           <Spacer />
           <Button
             className="blue darken-3"
-            isDisabled={!isFormValid || isLoading}
+            isDisabled={!isFormValid}
             title={buttonTitle}
+            isLoading={isLoading}
+            trailingIcon="send"
             formSubmit
           >
-            {isLoading ? "Chargement..." : "Valider"}
+            Valider
           </Button>
         </CardActions>
       </Form>
