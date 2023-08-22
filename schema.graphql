@@ -1,16 +1,15 @@
-interface User @secret(field: "password") {
-  id: ID!
-  email: String! @search(by: [exact])
+type Teacher @secret(field: "password") {
+  email: String! @id
   firstName: String! @search(by: [exact])
   lastName: String! @search(by: [exact])
   fullName: String! @search(by: [exact, fulltext])
-}
-
-type Teacher implements User {
   groups: [Group!]! @hasInverse(field: "teacher")
+  evaluations: [Evaluation!]! @hasInverse(field: "teacher")
 }
 
-type Student implements User {
+type Student @secret(field: "password") {
+  email: String! @id
+  username: String! @search(by: [exact, fulltext])
   groupStudents: [GroupStudent!]! @hasInverse(field: "studentAccount")
 }
 
@@ -32,37 +31,66 @@ type Group {
   name: String! @search(by: [fulltext, exact])
   teacher: Teacher!
   schoolYear: Int! @search
+  level: String! @search(by: [exact, fulltext])
   subject: String! @search(by: [exact, fulltext])
   evaluations: [Evaluation!]! @hasInverse(field: "group")
   groupStudents: [GroupStudent!]! @hasInverse(field: "group")
 }
 
+type EvalTemplate {
+  id: ID!
+  title: String! @search(by: [exact, fulltext])
+  teacher: Teacher!
+  categories: [Category!]!
+  criteria: [Criterion!]!
+  coefficient: Float!
+}
+
+type TemplateCategory {
+  id: ID!
+  rank: Int!
+  label: String!
+  criteria: [Criterion!]!
+}
+
+type TemplateCriterion {
+  id: ID!
+  rank: Int!
+  label: String!
+  maxPoints: Float!
+  isBonus: Boolean!
+}
+
 type Evaluation {
   id: ID!
   title: String! @search(by: [exact, fulltext])
-  level: String! @search(by: [exact, fulltext])
   group: Group! @hasInverse(field: "evaluations")
-  exercises: [Exercise!]! @hasInverse(field: "evaluation")
+  categories: [Category!]! @hasInverse(field: "evaluation")
+  criteria: [Criterion!]! @hasInverse(field: "evaluation")
   coefficient: Float! @search
   copies: [Copy!]! @hasInverse(field: "evaluation")
-  evalPoints: Float! @search
+  average: Float! @search
+  teacher: Teacher!
 }
 
-type Exercise {
+type Category {
   id: ID!
   rank: Int!
   label: String! @search(by: [exact, fulltext])
-  questions: [Question!]! @hasInverse(field: "exercise")
-  evaluation: Evaluation! @hasInverse(field: "exercises")
+  criteria: [Criterion!]! @hasInverse(field: "category")
+  categoryResults: [CategoryResult!]! @hasInverse(field: "category")
+  evaluation: Evaluation! @hasInverse(field: "categories")
 }
 
-type Question {
+type Criterion {
   id: ID!
   rank: Int!
-  maxPoints: Float!
+  label: String! @search(by: [exact, fulltext])
+  maxPoints: Float! @search
   isBonus: Boolean!
-  exercise: Exercise! @hasInverse(field: "questions")
-  answers: [Answer!]! @hasInverse(field: "question")
+  category: Category! @hasInverse(field: "criteria")
+  criterionResults: [CriterionResult!]! @hasInverse(field: "criterion")
+  evaluation: Evaluation! @hasInverse(field: "criteria")
 }
 
 type Copy {
@@ -72,13 +100,23 @@ type Copy {
   mark: Float! @search
   bonusPoints: Float! @search
   penaltyPoints: Float! @search
-  answers: [Answer!]! @hasInverse(field: "copy")
+  criterionResults: [CriterionResult!]! @hasInverse(field: "copy")
+  categoryResults: [CategoryResult!]! @hasInverse(field: "copy")
   evaluation: Evaluation! @hasInverse(field: "copies")
 }
 
-type Answer {
+type CategoryResult {
   id: ID!
   points: Float! @search
-  copy: Copy! @hasInverse(field: "answers")
-  question: Question! @hasInverse(field: "answers")
+  copy: Copy! @hasInverse(field: "categoryResults")
+  category: Category! @hasInverse(field: "categoryResults")
+  criterionResults: [CriterionResult!]! @hasInverse(field: "categoryResult")
+}
+
+type CriterionResult {
+  id: ID!
+  points: Float! @search
+  copy: Copy! @hasInverse(field: "criterionResults")
+  criterion: Criterion! @hasInverse(field: "criterionResults")
+  categoryResult: CategoryResult @hasInverse(field: "criterionResults")
 }
