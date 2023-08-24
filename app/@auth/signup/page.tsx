@@ -5,7 +5,7 @@ import Modal from "@/components/Modal";
 
 export default function SignUp() {
   return (
-    <Modal goBackOnClose={true}>
+    <Modal>
       <SignUpForm />
     </Modal>
   );

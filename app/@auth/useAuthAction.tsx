@@ -1,9 +1,11 @@
 import { useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SnackContext } from "@/contexts/SnackContext";
+import { ShowModalContext } from "@/components/Modal";
 
 export function useAuthAction() {
   const { haveASnack } = useContext(SnackContext);
+  const { setShowModal } = useContext(ShowModalContext);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,15 +23,18 @@ export function useAuthAction() {
         const result = await response.json();
         haveASnack(result.status, <h6>{result.msg}</h6>);
         if (result.status === "success") {
-          router.refresh();
-          router.back();
+          setShowModal(false);
+          setTimeout(() => {
+            router.back();
+            router.refresh();
+          }, 300);
         }
       } catch (error) {
         console.log(error);
         haveASnack("error", <h6>Oh non, une erreur réseau est survenue !</h6>);
       }
     },
-    [haveASnack, router]
+    [haveASnack, router, setShowModal]
   );
 
   return { isLoading, submitAction };

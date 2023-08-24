@@ -1,50 +1,32 @@
 "use client";
 
-import { ReactElement, useCallback, useRef, cloneElement, MouseEventHandler } from "react";
+import { ReactElement, useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import modalStyles from "./Modal.module.scss";
-import cn from "classnames";
+import Dialog from "../Dialog";
+import ShowModalProvider from "./ShowModalContext";
 
 interface ModalProps {
-  showModal?: boolean;
   children: ReactElement;
-  goBackOnClose?: boolean;
-  closeFunc?: (isOpen: boolean) => void;
 }
 
-export default function Modal({
-  showModal = true,
-  goBackOnClose = false,
-  closeFunc,
-  children: child,
-}: ModalProps) {
-  const modalBgRef = useRef(null);
+export default function Modal({ children }: ModalProps) {
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
 
-  const handleBgClick: MouseEventHandler<HTMLDivElement> = useCallback(
-    (event) => {
-      if ((event.target as HTMLDivElement).isSameNode(modalBgRef.current)) {
-        if (closeFunc) {
-          closeFunc(false);
-        } else if (goBackOnClose) {
-          router.back();
-        }
-      }
-    },
-    [closeFunc, goBackOnClose, router]
-  );
+  useEffect(() => {
+    setShowModal(true);
+  }, [setShowModal]);
+
+  const handleDialogClose = useCallback(() => {
+    setShowModal(false);
+    setTimeout(() => router.back(), 300);
+  }, [router]);
 
   return (
-    <div
-      className={cn(modalStyles.bg, { [modalStyles.show]: showModal })}
-      onClick={handleBgClick}
-      ref={modalBgRef}
-    >
-      {cloneElement(child, {
-        className: cn(child.props.className, modalStyles.modal, {
-          [modalStyles.show]: showModal,
-        }),
-      })}
-    </div>
+    <ShowModalProvider showModal={showModal} setShowModal={setShowModal}>
+      <Dialog showDialog={showModal} closeFunc={handleDialogClose}>
+        {children}
+      </Dialog>
+    </ShowModalProvider>
   );
 }

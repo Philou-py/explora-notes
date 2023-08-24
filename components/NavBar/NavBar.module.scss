@@ -3,9 +3,11 @@ $xs: 600px;
 $sm: 960px;
 $md: 1264px;
 $lg: 1904px;
+$primaryColour: #9e1030;
 
 .navBar {
-  background-color: #9e1030;
+  background-color: $primaryColour;
+  // border-bottom: 2px solid $primaryColour;
   box-shadow: 0 2px 4px 0 darkgrey;
 
   &.fixed {
@@ -22,6 +24,7 @@ $lg: 1904px;
   .navBarContainer {
     display: flex;
     align-items: center;
+    // justify-content: space-between;
     height: $navBarHeight;
   }
 
@@ -59,6 +62,7 @@ $lg: 1904px;
     .title {
       margin-left: 5px;
       color: white;
+      // color: $primaryColour;
     }
 
     &.centerNavSmScreens {
@@ -71,44 +75,9 @@ $lg: 1904px;
     }
   }
 
-  nav.navMenu {
+  .avatar {
     display: none;
-    justify-content: flex-end;
-    align-items: center;
-    flex-grow: 1;
-    margin: 0;
-    padding: 0;
-
-    a,
-    .authTrigger {
-      height: $navBarHeight;
-      line-height: $navBarHeight;
-      padding: 0 15px;
-      text-align: center;
-      text-decoration: none;
-      transition: background-color 400ms ease;
-      color: white;
-
-      &:hover {
-        background-color: #755139;
-      }
-    }
-
-    .authTrigger {
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    @media (min-width: $sm) {
-      display: flex;
-    }
-  }
-
-  .avatarContainer {
-    display: none;
-    height: 100%;
-    margin-left: 10px;
-    align-items: center;
+    margin-left: auto;
 
     @media (min-width: $sm) {
       display: flex;

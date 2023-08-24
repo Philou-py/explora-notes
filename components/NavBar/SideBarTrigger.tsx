@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, ReactNode, useContext } from "react";
+import { useCallback, useContext } from "react";
 import nBStyles from "./NavBar.module.scss";
 import cn from "classnames/bind";
 import Button from "../Button";

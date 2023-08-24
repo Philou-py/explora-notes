@@ -10,7 +10,7 @@ export default function Icon({ iconName, className, ...otherAttributes }: IconPr
   return (
     <span
       className={cn("icon", className)}
-      style={{ fontFamily: "var(--material-symbols)", fontSize: 24 }}
+      style={{ fontFamily: "var(--material-symbols)", fontSize: 24, lineHeight: 1 }}
       {...otherAttributes}
     >
       {iconName}

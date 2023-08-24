@@ -2,6 +2,7 @@ import Link from "next/link";
 import sideBarStyles from "./SideBar.module.scss";
 import cn from "classnames/bind";
 import Avatar from "../Avatar";
+import SignOutButton from "@/app/@auth/SignOutButton";
 
 interface SideBarProps {}
 
@@ -19,17 +20,20 @@ export default function SideBar({}: SideBarProps) {
         </Link>
       )}
       {isAuthenticated && (
-        <Avatar
-          type="initials-avatar"
-          className={sideBarStyles.avatar}
-          initials="MB"
-          // initials={currentUser!.username
-          //   .split(" ")
-          //   .map((part) => part[0].toUpperCase())
-          //   .join("")}
-          borderColour="#33c9ff"
-          size={150}
-        />
+        <>
+          <SignOutButton />
+          <Avatar
+            type="initials-avatar"
+            className={sideBarStyles.avatar}
+            initials="MB"
+            // initials={currentUser!.username
+            //   .split(" ")
+            //   .map((part) => part[0].toUpperCase())
+            //   .join("")}
+            borderColour="#33c9ff"
+            size={150}
+          />
+        </>
       )}
 
       <nav className={sideBarStyles.navList}>
