@@ -4,7 +4,7 @@ import Link from "next/link";
 import { memo, MouseEvent } from "react";
 import buttonStyles from "./Button.module.scss";
 import cn from "classnames";
-import { Icon } from "..";
+import Icon from "../Icon";
 
 interface ButtonProps {
   isFlat?: boolean;

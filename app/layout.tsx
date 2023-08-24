@@ -4,13 +4,14 @@ import "@/styles/colours.scss";
 import SnackProvider from "@/contexts/SnackContext";
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
+import SideBar from "@/components/SideBar";
+import SideBarWrapper from "@/components/SideBar/SideBarWrapper";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { verify } from "jsonwebtoken";
 import { readFileSync } from "fs";
 import { Cormorant_Upright } from "next/font/google";
 import localFont from "next/font/local";
-import SideBar, { SideBarWrapper } from "@/components/SideBar";
 import SideBarProvider from "@/contexts/SideBarContext";
 import Main from "./Main";
 
@@ -55,6 +56,11 @@ export default async function AppLayout({ children, auth, student, teacher }) {
       <body style={{ "--material-symbols": materialSymbols.style.fontFamily } as any}>
         <SideBarProvider clippedSideBar={true}>
           <NavBar />
+          {/*
+          <SideBarWrapper>
+            <SideBar />
+          </SideBarWrapper>
+          */}
           <SideBarWrapper>
             <SideBar />
           </SideBarWrapper>

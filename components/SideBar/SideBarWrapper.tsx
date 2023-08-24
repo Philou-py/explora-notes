@@ -33,14 +33,12 @@ export default function SideBarWrapper({ children }: SideBarWrapperProps) {
   const wrapperRef = useRef(null);
 
   return (
-    <>
-      <div
-        className={cx("wrapper", { show: sideBarOpen, clippedSideBar: isSideBarClipped })}
-        ref={wrapperRef}
-        onClick={handleSideBarClose}
-      >
-        {children}
-      </div>
-    </>
+    <div
+      className={cx("wrapper", { show: sideBarOpen, clippedSideBar: isSideBarClipped })}
+      ref={wrapperRef}
+      onClick={handleSideBarClose}
+    >
+      {children}
+    </div>
   );
 }

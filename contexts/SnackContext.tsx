@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useCallback, ReactElement } from "react";
-import { SnackBar } from "../components";
+import SnackBar from "../components/SnackBar";
 
 interface SnackProviderProps {
   children: ReactNode;

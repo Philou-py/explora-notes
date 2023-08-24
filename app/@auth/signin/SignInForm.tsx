@@ -2,18 +2,12 @@
 
 import { useEffect, useCallback, useState, ChangeEventHandler } from "react";
 import Link from "next/link";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardActions,
-  Form,
-  useForm,
-  InputField,
-  Button,
-  Spacer,
-  Icon,
-} from "@/components";
+import Card, { CardHeader, CardContent, CardActions } from "@/components/Card";
+import Form, { useForm } from "@/components/Form";
+import InputField from "@/components/InputField";
+import Button from "@/components/Button";
+import Spacer from "@/components/Spacer";
+import Icon from "@/components/Icon";
 import cn from "classnames/bind";
 import signInFormStyles from "./SignInForm.module.scss";
 import { useAuthAction } from "../useAuthAction";
