@@ -71,6 +71,7 @@ type Evaluation {
   copies: [Copy!]! @hasInverse(field: "evaluation")
   average: Float! @search
   teacher: Teacher!
+  isClosed: Boolean!
 }
 
 type Category {
@@ -109,6 +110,7 @@ type CategoryResult {
   id: ID!
   points: Float! @search
   copy: Copy! @hasInverse(field: "categoryResults")
+  comment: String
   category: Category! @hasInverse(field: "categoryResults")
   criterionResults: [CriterionResult!]! @hasInverse(field: "categoryResult")
 }
