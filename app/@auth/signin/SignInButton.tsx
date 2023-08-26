@@ -9,7 +9,7 @@ const cx = cn.bind(signInButtonStyles);
 export default function SignInButton() {
   return (
     <Button
-      prependIcon="face"
+      prependIcon="login"
       href="/signin"
       type="outlined"
       className={cn("white--text", cx("signInButton"))}

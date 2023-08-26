@@ -1,4 +1,7 @@
-import cn from "classnames";
+import cn from "classnames/bind";
+import iconStyles from "./Icon.module.scss";
+
+const cx = cn.bind(iconStyles);
 
 interface IconProps {
   iconName: string;
@@ -8,11 +11,7 @@ interface IconProps {
 
 export default function Icon({ iconName, className, ...otherAttributes }: IconProps) {
   return (
-    <span
-      className={cn("icon", className)}
-      style={{ fontFamily: "var(--material-symbols)", fontSize: 24, lineHeight: 1 }}
-      {...otherAttributes}
-    >
+    <span className={cn("icon", className, cx("icon"))} {...otherAttributes}>
       {iconName}
     </span>
   );

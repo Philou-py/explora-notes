@@ -1,126 +1,19 @@
-$defaultSize: 40px;
-$smallSize: 35px;
-$largeSize: 45px;
-$xLargeSize: 55px;
-
-button.btn,
-a.btn {
-  box-sizing: content-box;
+.btn {
+  padding: 0; // Firefox adds padding by default
+  box-sizing: border-box;
   font-family: inherit;
-  height: $defaultSize;
-  line-height: $defaultSize;
-  padding: 0 18px;
-  font-size: 15px;
-  font-weight: 500;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   outline: none;
   border: 0;
-  border-radius: 20px;
-  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-    0 1px 5px 0 rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  min-width: 64px;
-  max-width: 100%;
   transition: all 250ms;
   background-color: transparent;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-decoration: none;
   color: inherit;
-
-  span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &:hover {
-    text-decoration: none;
-    background-color: #dadada;
-  }
-
-  &.small {
-    height: $smallSize;
-    line-height: $smallSize;
-    padding: 0 14px;
-    min-width: 50px;
-    font-size: 13px;
-  }
-
-  &.large {
-    height: $largeSize;
-    line-height: $largeSize;
-    padding: 0 24px;
-    min-width: 74px;
-    font-size: 15px;
-  }
-
-  &.x-large {
-    height: $xLargeSize;
-    line-height: $xLargeSize;
-    padding: 0 34px;
-    min-width: 94px;
-    font-size: 17px;
-  }
-
-  .prependIcon {
-    margin-right: 8px;
-  }
-
-  .trailingIcon {
-    margin-left: 8px;
-  }
-
-  &.outlined {
-    border: 1px solid;
-    background-color: transparent;
-  }
-
-  &.textButton {
-    box-shadow: none;
-    background-color: transparent;
-  }
-
-  &.flat {
-    box-shadow: none;
-  }
-
-  &.fullWidth {
-    width: 100%;
-  }
-
-  &.icon {
-    padding: 6px;
-    width: 36px;
-    height: 36px;
-    min-width: 0; // Reset min-width
-    border-radius: 50%;
-
-    span.icon {
-      font-size: 22px;
-    }
-
-    &.small {
-      width: 26px;
-      height: 26px;
-      padding: 4px;
-
-      span.icon {
-        font-size: 18px;
-      }
-    }
-
-    &.large {
-      width: 45px;
-      height: 45px;
-      padding: 10px;
-
-      span.icon {
-        font-size: 25px;
-      }
-    }
-  }
 
   &.disabled,
   &.disabled:hover {
@@ -130,8 +23,8 @@ a.btn {
   }
 
   &.isLoading {
-    span {
-      visibility: hidden;
+    & * {
+      color: transparent; // Hide button content
     }
 
     &::after {
@@ -144,8 +37,11 @@ a.btn {
       right: 0;
       bottom: 0;
       margin: auto;
-      border: 4px solid transparent;
-      border-top-color: #ffffff;
+      border: 4px solid;
+      // Preserve the default border color
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      border-right-color: transparent;
       border-radius: 50%;
       animation: button-loading-spinner 1s ease infinite;
     }
@@ -162,6 +58,92 @@ a.btn {
   }
 }
 
+a.btn,
+a.btn:hover {
+  text-decoration: none;
+}
+
+.elevatedBtn,
+.fabBtn {
+  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.iconBtn {
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  font-size: 22px;
+
+  &.small {
+    font-size: 18px;
+  }
+
+  &.large {
+    font-size: 26px;
+  }
+
+  &.x-large {
+    font-size: 30px;
+  }
+}
+
+.outlinedBtn {
+  border: 1px solid;
+  background-color: transparent;
+}
+
+.textBtn {
+  background-color: transparent;
+}
+
+.elevatedBtn,
+.filledBtn,
+.outlinedBtn,
+.textBtn {
+  justify-content: var(--justify-content);
+  border-radius: 20px;
+  height: 2.7em;
+  padding: 0 1.2em;
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: uppercase;
+  min-width: 64px;
+  max-width: 100%;
+
+  &:hover {
+    text-decoration: none;
+    background-color: #dadada;
+  }
+
+  &.small {
+    min-width: 50px;
+    font-size: 13px;
+  }
+
+  &.large {
+    min-width: 74px;
+    font-size: 17px;
+  }
+
+  &.x-large {
+    min-width: 94px;
+    font-size: 19px;
+  }
+
+  &.fullWidth {
+    width: 100%;
+  }
+
+  .prependIcon {
+    margin-right: 8px;
+  }
+
+  .trailingIcon {
+    margin-left: 8px;
+  }
+}
+
 .rippleContainer {
   position: relative;
   overflow: hidden;
@@ -171,7 +153,7 @@ a.btn {
       opacity: 0.5;
     }
 
-    8% {
+    15% {
       opacity: 0.9;
     }
 

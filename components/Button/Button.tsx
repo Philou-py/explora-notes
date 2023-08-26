@@ -1,21 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { memo, MouseEvent } from "react";
+import { memo, MouseEvent, CSSProperties, ReactNode } from "react";
 import buttonStyles from "./Button.module.scss";
-import cn from "classnames";
+import cn from "classnames/bind";
 import Icon from "../Icon";
 
+const cx = cn.bind(buttonStyles);
+
 interface ButtonProps {
-  isFlat?: boolean;
-  type?: "raised" | "outlined" | "icon" | "text";
+  type: "elevated" | "filled" | "outlined" | "icon" | "text" | "fab";
   formSubmit?: boolean;
   isDisabled?: boolean;
   isFullWidth?: boolean;
   isLink?: boolean;
   href?: string;
   title?: string;
-  size?: "small" | "large" | "x-large";
+  size?: "small" | "normal" | "large" | "x-large";
   iconName?: string;
   prependIcon?: string;
   trailingIcon?: string;
@@ -23,6 +24,12 @@ interface ButtonProps {
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   isLoading?: boolean;
   noKeyboardFocus?: boolean;
+  justifyContent?: CSSProperties["justifyContent"];
+  makeCustomIcon?: (
+    iconName: string,
+    type: "prependIcon" | "trailingIcon" | "mainIcon"
+  ) => ReactNode;
+  style?: object;
   children?: string;
 }
 
@@ -38,46 +45,45 @@ function createRipple(event: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) 
   circle.style.top = `${
     event.pageY - element.getBoundingClientRect().top - radius - window.pageYOffset
   }px`;
-  circle.classList.add(buttonStyles.ripple, "ripple"); // Don't forget the class 'ripple' for the colours!
+  circle.classList.add(cx("ripple"), "ripple"); // Don't forget the class 'ripple' for the colours!
   element.appendChild(circle);
-  // Remove circle after animation
-  setTimeout(() => {
-    element.removeChild(circle);
-  }, 800);
+  // Remove circle after animation (causes an uninteractive frequency)
+  // setTimeout(() => {
+  //   element.removeChild(circle);
+  // }, 800);
 }
 
 function Button(props: ButtonProps) {
-  const makeIconTemplate = (iconName: string, type: string) => (
-    <Icon iconName={iconName} className={buttonStyles[type]} />
-  );
+  const makeIconTemplate =
+    props.makeCustomIcon ||
+    ((iconName: string, type: string) => <Icon iconName={iconName} className={cx(type)} />);
 
   const childrenWithIcons = (
-    <span>
+    <>
       {props.prependIcon && makeIconTemplate(props.prependIcon, "prependIcon")}
-      {props.children}
+      <span>{props.children}</span>
       {props.trailingIcon && makeIconTemplate(props.trailingIcon, "trailingIcon")}
-    </span>
+    </>
   );
 
   const buttonContent =
-    props.type === "icon" ? makeIconTemplate(props.iconName!, "normal") : childrenWithIcons;
+    props.type === "icon" ? makeIconTemplate(props.iconName, "mainIcon") : childrenWithIcons;
 
   const buttonClassNames = cn(
-    buttonStyles.btn,
-    buttonStyles.rippleContainer,
     "btn", // For the colours
-    {
-      [buttonStyles.icon]: props.type === "icon",
-      [buttonStyles.textButton]: props.type === "text",
-      [buttonStyles.outlined]: props.type === "outlined",
-      [buttonStyles.flat]: props.isFlat || props.type === "outlined",
-      [buttonStyles.disabled]: props.isDisabled,
-      [buttonStyles.fullWidth]: props.isFullWidth,
-      [buttonStyles[props.size!]]: props.size,
-      [props.className!]: props.className && !props.isDisabled,
-      [buttonStyles.isLoading]: props.isLoading,
-    }
+    { [props.className!]: props.className && !props.isDisabled },
+    cx("btn", "rippleContainer", props.type + "Btn", {
+      disabled: props.isDisabled,
+      fullWidth: props.isFullWidth,
+      isLoading: props.isLoading,
+      [props.size]: props.size && props.size !== "normal",
+    })
   );
+
+  const buttonStyle: object = {
+    "--justify-content": props.justifyContent || "center",
+    ...props.style,
+  };
 
   return props.isLink ? (
     !props.isDisabled ? (
@@ -86,11 +92,17 @@ function Button(props: ButtonProps) {
         className={buttonClassNames}
         title={props.title}
         onMouseDown={createRipple}
+        style={buttonStyle}
       >
         {buttonContent}
       </Link>
     ) : (
-      <a className={buttonClassNames} title={props.title} tabIndex={props.noKeyboardFocus ? -1 : 0}>
+      <a
+        className={buttonClassNames}
+        title={props.title}
+        tabIndex={props.noKeyboardFocus ? -1 : 0}
+        style={buttonStyle}
+      >
         {buttonContent}
       </a>
     )
@@ -103,6 +115,7 @@ function Button(props: ButtonProps) {
       title={props.title}
       onMouseDown={createRipple}
       tabIndex={props.noKeyboardFocus ? -1 : 0}
+      style={buttonStyle}
     >
       {buttonContent}
     </button>
