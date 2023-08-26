@@ -104,6 +104,23 @@
   @return $result;
 }
 
+$primary: (
+  "base": #9e1030,
+  "lighten-5": #9e1030,
+  "lighten-4": #9e1030,
+  "lighten-3": #9e1030,
+  "lighten-2": #9e1030,
+  "lighten-1": #9e1030,
+  "darken-1": #9e1030,
+  "darken-2": #9e1030,
+  "darken-3": #9e1030,
+  "darken-4": #9e1030,
+  "accent-1": #9e1030,
+  "accent-2": #9e1030,
+  "accent-3": #9e1030,
+  "accent-4": #9e1030,
+);
+
 // Material Colour Palette
 
 $red: (
@@ -426,6 +443,7 @@ $shades: (
 $colors: () !default;
 $colors: map-deep-merge(
   (
+    "primary": $primary,
     "red": $red,
     "pink": $pink,
     "purple": $purple,
