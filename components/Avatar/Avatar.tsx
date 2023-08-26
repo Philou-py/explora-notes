@@ -37,7 +37,12 @@ function Avatar(props: AvatarProps) {
       if (props.bgColour) {
         return props.bgColour;
       } else {
-        return "#" + Math.floor(Math.random() * 0xffffff).toString(16);
+        return (
+          "#" +
+          Math.floor(Math.random() * 0xffffff)
+            .toString(16)
+            .padStart(6, "0") // Add zeroes until the string is long enough
+        );
       }
     }
   })();
