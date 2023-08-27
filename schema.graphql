@@ -5,6 +5,7 @@ type Teacher @secret(field: "password") {
   fullName: String! @search(by: [exact, fulltext])
   groups: [Group!]! @hasInverse(field: "teacher")
   evaluations: [Evaluation!]! @hasInverse(field: "teacher")
+  evalTemplates: [EvalTemplate!]! @hasInverse(field: "teacher")
 }
 
 type Student @secret(field: "password") {
@@ -40,20 +41,20 @@ type Group {
 type EvalTemplate {
   id: ID!
   title: String! @search(by: [exact, fulltext])
-  teacher: Teacher!
-  categories: [Category!]!
-  criteria: [Criterion!]!
+  teacher: Teacher! @hasInverse(field: "evalTemplates")
+  categories: [CategoryTemplate!]!
+  criteria: [CriterionTemplate!]!
   coefficient: Float!
 }
 
-type TemplateCategory {
+type CategoryTemplate {
   id: ID!
   rank: Int!
   label: String!
-  criteria: [Criterion!]!
+  criteria: [CriterionTemplate!]!
 }
 
-type TemplateCriterion {
+type CriterionTemplate {
   id: ID!
   rank: Int!
   label: String!
