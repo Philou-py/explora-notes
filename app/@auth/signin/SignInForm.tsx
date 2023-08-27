@@ -41,7 +41,7 @@ export default function SignInForm() {
   }, []);
 
   return (
-    <Card cssWidth="clamp(300px, 40%, 600px)">
+    <Card className={cx("signInCard")}>
       <Form onSubmit={() => submitAction("/api/signin", { ...user, accountType })}>
         <CardHeader title={<h3>Connexion</h3>} centerTitle />
         <CardContent>
@@ -95,6 +95,7 @@ export default function SignInForm() {
           </Link>
           <Spacer />
           <Button
+            type="elevated"
             className="blue darken-3"
             isDisabled={!isValid}
             title={buttonTitle}

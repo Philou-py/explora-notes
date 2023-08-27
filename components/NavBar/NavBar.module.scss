@@ -7,7 +7,6 @@ $primaryColour: #9e1030;
 
 .navBar {
   background-color: $primaryColour;
-  // border-bottom: 2px solid $primaryColour;
   box-shadow: 0 2px 4px 0 darkgrey;
 
   &.fixed {
@@ -37,11 +36,11 @@ $primaryColour: #9e1030;
     }
 
     &.showAlways {
-      display: inline-block;
+      display: flex;
     }
 
     @media (max-width: $sm) {
-      display: inline-block;
+      display: flex;
     }
   }
 
@@ -62,17 +61,17 @@ $primaryColour: #9e1030;
     .title {
       margin-left: 5px;
       color: white;
-      // color: $primaryColour;
     }
 
-    &.centerNavSmScreens {
-      justify-content: center;
-      @media (max-width: $sm) {
-        left: -28px;
-        flex-grow: 1;
-        // margin: 0 auto;
-      }
-    }
+    // Doesn't work if the menu button isn't shown (such as when the user isn't signed in
+    // &.centerNavSmScreens {
+    //   justify-content: center;
+
+    //   @media (max-width: $sm) {
+    //     left: -28px;
+    //     flex-grow: 1;
+    //   }
+    // }
   }
 
   .avatar {

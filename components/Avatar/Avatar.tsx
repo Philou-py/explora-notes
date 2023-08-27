@@ -1,4 +1,4 @@
-import { CSSProperties, memo } from "react";
+import { CSSProperties } from "react";
 import Image from "next/legacy/image";
 import avatarStyles from "./Avatar.module.scss";
 import cn from "classnames";
@@ -22,7 +22,7 @@ interface TextProps extends CommonAvatarProps {
 
 type AvatarProps = ImageProps | TextProps;
 
-function Avatar(props: AvatarProps) {
+export default function Avatar(props: AvatarProps) {
   let avatarTemplate;
   let style: CSSProperties & {
     "--border-colour"?: string;
@@ -75,5 +75,3 @@ function Avatar(props: AvatarProps) {
     </div>
   );
 }
-
-export default memo(Avatar);

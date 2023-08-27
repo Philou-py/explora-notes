@@ -14,7 +14,6 @@ export async function dgraphQuery(query: string, variables: object, queryName: s
     });
 
     const result = await dgraphResponse.json();
-    console.log(result);
     return result.data[queryName];
   } catch (error) {
     console.log(error);

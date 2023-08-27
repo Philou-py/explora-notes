@@ -38,40 +38,17 @@ $navBarHeight: 60px;
 .content {
   height: 100%;
   width: 250px;
-  padding: 20px 0;
+  padding: 20px 7px;
   background-color: #eee;
   transform: translateX(-250px);
   transition: transform 0.3s ease, visibility 0.3s ease;
   visibility: hidden;
 }
 
-.avatar,
-.authButton {
+.avatar {
   margin: 0 auto;
 }
 
-.authButton {
-  display: block;
-}
-
-.title {
-  color: black;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-nav.navList {
-  margin: 30px 0;
-
-  a {
-    display: block;
-    padding: 8px 15px;
-    transition: background-color 0.3s ease;
-    text-decoration: none;
-    color: black;
-
-    &:hover {
-      background-color: rgba(#9e1030, 0.5);
-    }
-  }
+.teacherMenu {
+  margin: 20px 0;
 }

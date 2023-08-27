@@ -10,7 +10,6 @@ import cardStyles from "./Card.module.scss";
 import cn from "classnames";
 
 interface CardProps {
-  cssWidth?: string;
   media?: ReactElement;
   mediaPosition?: "top" | "right" | "left";
   mediaClassName?: string;
@@ -20,12 +19,7 @@ interface CardProps {
   children?: ReactNode;
 }
 
-interface CSSWithVars extends CSSProperties {
-  "--card-width"?: string;
-}
-
 export default function Card({
-  cssWidth,
   media,
   mediaPosition,
   mediaClassName,
@@ -34,14 +28,11 @@ export default function Card({
   style,
   children,
 }: CardProps) {
-  let styles: CSSWithVars = {};
-  if (style) styles = style;
-  if (cssWidth) styles["--card-width"] = cssWidth;
   const mediaPositionClass = mediaPosition
     ? cardStyles["media" + mediaPosition[0].toUpperCase() + mediaPosition.slice(1)]
     : undefined;
   return (
-    <div className={cn(cardStyles.card, mediaPositionClass, className)} style={styles}>
+    <div className={cn(className, cardStyles.card, mediaPositionClass)} style={style}>
       {media && <div className={cn(cardStyles.media, mediaClassName)}>{media}</div>}
       <div className={cn(cardStyles.mainContent, mainContentClassName)}>{children}</div>
     </div>

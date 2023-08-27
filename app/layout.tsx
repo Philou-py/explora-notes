@@ -7,15 +7,10 @@ import NavBar from "@/components/NavBar";
 import SideBar from "@/components/SideBar";
 import SideBarWrapper from "@/components/SideBar/SideBarWrapper";
 import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { verify } from "jsonwebtoken";
-import { readFileSync } from "fs";
 import { Cormorant_Upright } from "next/font/google";
 import localFont from "next/font/local";
 import SideBarProvider from "@/contexts/SideBarContext";
 import Main from "./Main";
-
-const publicKey = readFileSync("public.key");
 
 const cormorantUpright = Cormorant_Upright({
   subsets: ["latin"],
@@ -39,38 +34,22 @@ export const metadata: Metadata = {
   themeColor: "#9e1030",
 };
 
-async function getAccountType() {
-  const cookieStore = cookies();
-  const jwt = cookieStore.get("X-ExploraNotes-Auth");
-  if (!jwt) return {};
-  const payload = verify(jwt.value, publicKey, { algorithms: ["RS256"] });
-  if (typeof payload !== "object") return {};
-  return { isAuthenticated: true, accountType: payload.accountType };
-}
-
-export default async function AppLayout({ children, auth, student, teacher }) {
-  const { isAuthenticated, accountType } = await getAccountType();
-
+export default async function AppLayout({ children, auth }) {
   return (
     <html lang="fr" className={cormorantUpright.className}>
       <body style={{ "--material-symbols": materialSymbols.style.fontFamily } as any}>
-        <SideBarProvider clippedSideBar={true}>
-          <NavBar />
-          {/*
-          <SideBarWrapper>
-            <SideBar />
-          </SideBarWrapper>
-          */}
-          <SideBarWrapper>
-            <SideBar />
-          </SideBarWrapper>
-          <Main>
-            <SnackProvider>
-              {isAuthenticated ? (accountType === "student" ? student : teacher) : children}
+        <SideBarProvider clippedSideBar={true} openByDefault={true}>
+          <SnackProvider>
+            <NavBar />
+            <SideBarWrapper>
+              <SideBar />
+            </SideBarWrapper>
+            <Main>
               {auth}
-            </SnackProvider>
-            <Footer />
-          </Main>
+              {children}
+              <Footer />
+            </Main>
+          </SnackProvider>
         </SideBarProvider>
       </body>
     </html>

@@ -1,21 +1,35 @@
-.accountType {
-  font-size: 20px;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-  color: rgba(0, 0, 0, 0.7);
+$xs: 600px;
 
-  .label .icon {
-    vertical-align: bottom;
-    margin-right: 5px;
+.signInCard {
+  width: clamp(300px, 40%, 600px);
+  @media (max-width: $xs) {
+    width: 90%;
   }
 
-  .radioGroup {
-    margin: 0 0 0 auto;
+  .accountType {
+    font-size: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    color: rgba(0, 0, 0, 0.7);
 
-    input {
+    .label .icon {
+      vertical-align: bottom;
       margin-right: 5px;
+    }
+
+    .radioGroup {
+      margin: 0 0 0 auto;
+
+      input {
+        margin: 0;
+        margin-right: 5px;
+      }
+
+      label {
+        margin-right: 5px;
+      }
     }
   }
 }

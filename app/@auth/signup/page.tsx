@@ -1,9 +1,7 @@
-"use client";
-
 import SignUpForm from "./SignUpForm";
 import Modal from "@/components/Modal";
 
-export default function SignUp() {
+export default function SignUpModal() {
   return (
     <Modal>
       <SignUpForm />

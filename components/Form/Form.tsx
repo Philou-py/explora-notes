@@ -1,5 +1,3 @@
-"use client";
-
 import { ReactNode, useCallback, DetailedHTMLProps, FormHTMLAttributes, FormEvent } from "react";
 
 interface FormProps

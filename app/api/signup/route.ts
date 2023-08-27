@@ -47,6 +47,7 @@ export async function POST(request: Request) {
                   fullName: `${firstName} ${lastName}`,
                   groups: [],
                   evaluations: [],
+                  evalTemplates: [blankTemplate, exerciseTemplate],
                 }
               : {
                   username,
@@ -98,3 +99,25 @@ export async function POST(request: Request) {
     );
   }
 }
+
+const blankTemplate = {
+  title: "Catégories / Critères",
+  categories: [
+    {
+      rank: 0,
+      label: "Catégorie",
+      criteria: [{ rank: 0, label: "Critère", maxPoints: 1, isBonus: false }],
+    },
+  ],
+};
+
+const exerciseTemplate = {
+  title: "Exercices / Questions",
+  categories: [
+    {
+      rank: 0,
+      label: "Exercice 1",
+      criteria: [{ rank: 0, label: "Question 1", maxPoints: 1, isBonus: false }],
+    },
+  ],
+};

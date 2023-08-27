@@ -44,7 +44,7 @@ export default function SignUpForm() {
   }, []);
 
   return (
-    <Card cssWidth={"clamp(300px, 40%, 600px)"}>
+    <Card className={cx("signUpCard")}>
       <Form onSubmit={() => submitAction("/api/signup", { ...newUser, accountType })}>
         <CardHeader title={<h3>Inscription</h3>} centerTitle />
         <CardContent>
@@ -127,6 +127,7 @@ export default function SignUpForm() {
           </Link>
           <Spacer />
           <Button
+            type="elevated"
             className="blue darken-3"
             isDisabled={!isFormValid}
             title={buttonTitle}

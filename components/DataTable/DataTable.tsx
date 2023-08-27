@@ -2,7 +2,8 @@
 
 import { useContext, useMemo, useState, useCallback, ReactNode, memo } from "react";
 import { BreakpointsContext } from "../../contexts/BreakpointsContext";
-import { Icon, InputField } from "..";
+import Icon from "../Icon";
+import InputField from "../InputField";
 import dtStyles from "./DataTable.module.scss";
 import cn from "classnames/bind";
 

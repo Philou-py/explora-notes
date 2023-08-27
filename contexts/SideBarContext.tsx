@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useState, ReactNode } from "react";
+import { createContext, useState, ReactNode, useEffect } from "react";
 
 interface SideBarProviderProps {
   children: ReactNode;
   clippedSideBar: boolean;
+  openByDefault: boolean;
 }
 
 export const SideBarContext = createContext({
@@ -13,8 +14,18 @@ export const SideBarContext = createContext({
   setSideBarOpen: (_: boolean | ((_: boolean) => boolean)) => {},
 });
 
-export default function SideBarProvider({ clippedSideBar, children }: SideBarProviderProps) {
+export default function SideBarProvider({
+  clippedSideBar,
+  openByDefault,
+  children,
+}: SideBarProviderProps) {
   const [sideBarOpen, setSideBarOpen] = useState(false);
+
+  // Open the SideBar by default only on large screens
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 960px)");
+    if (openByDefault && !mql.matches) setSideBarOpen(true);
+  }, [openByDefault]);
 
   return (
     <SideBarContext.Provider value={{ clippedSideBar, sideBarOpen, setSideBarOpen }}>

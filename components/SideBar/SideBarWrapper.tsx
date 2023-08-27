@@ -17,6 +17,7 @@ export default function SideBarWrapper({ children }: SideBarWrapperProps) {
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 960px)");
+    setSmScreen(mql.matches); // Test initially
     mql.addEventListener("change", (event) => {
       setSmScreen(event.matches);
     });

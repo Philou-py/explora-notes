@@ -1,9 +1,7 @@
-"use client";
-
 import SignInForm from "./SignInForm";
 import Modal from "@/components/Modal";
 
-export default function SignIn() {
+export default function SignInModal() {
   return (
     <Modal>
       <SignInForm />

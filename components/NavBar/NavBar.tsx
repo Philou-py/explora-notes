@@ -38,25 +38,19 @@ async function getCurrentUser() {
 }
 
 interface NavBarProps {
-  centerNavSmScreens?: boolean;
-  onNavIconClick?: () => void;
   fixed?: boolean;
   flat?: boolean;
 }
 
-export default async function NavBar({
-  centerNavSmScreens = true,
-  fixed = true,
-  flat,
-}: NavBarProps) {
+export default async function NavBar({ fixed = true, flat = false }: NavBarProps) {
   const currentUser = await getCurrentUser();
 
   return (
     <>
       <div className={cx("navBar", { flat, fixed })}>
         <Container className={cx("navBarContainer")}>
-          <SideBarTrigger />
-          <Link href="/" className={cx("logoAndTitle", { centerNavSmScreens })}>
+          {currentUser && <SideBarTrigger />}
+          <Link href="/" className={cx("logoAndTitle")}>
             <Image src={exploraNotesLogo} alt="Logo" width={50} height={50} />
             <h4 className={nBStyles.title}>ExploraNotes</h4>
           </Link>

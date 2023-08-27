@@ -20,7 +20,6 @@ export default function SideBarTrigger() {
       type="icon"
       iconName="menu"
       onClick={toggleSideBar}
-      isFlat
     />
   );
 }

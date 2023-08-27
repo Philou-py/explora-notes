@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Button, Icon } from "..";
+import Icon from "../Icon";
+import Button from "../Button";
 import cn from "classnames/bind";
 import breadCrumbsStyles from "./BreadCrumbs.module.scss";
 
@@ -16,14 +17,13 @@ function BreadCrumbs({ items, namespace }: BreadCrumbsProps) {
       {items.map(([text, href], index) => [
         <li key={`${namespace}-${href}-link`}>
           <Button
-            type={index !== items.length - 1 ? "outlined" : "raised"}
+            type={index !== items.length - 1 ? "outlined" : "filled"}
             href={href}
             className={cn("mb-2", {
               "cyan--text text--darken-2": index !== items.length - 1,
               "cyan darken-2": index === items.length - 1,
             })}
             isLink
-            isFlat
           >
             {text}
           </Button>

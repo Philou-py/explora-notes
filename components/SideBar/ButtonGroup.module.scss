@@ -1,0 +1,24 @@
+.expandArrow {
+  transition: transform 250ms;
+
+  &.reverse {
+    transform: rotate(180deg);
+  }
+}
+
+.dropdown {
+  overflow: hidden;
+  margin-left: 10px;
+  width: calc(100% - 10px);
+
+  & > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &.groupClosed {
+    & > * {
+      height: 0;
+    }
+  }
+}
