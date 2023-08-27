@@ -1,10 +1,10 @@
 import SignUpForm from "./SignUpForm";
-import Modal from "@/components/Modal";
+import AuthModal from "@/components/AuthModal";
 
 export default function SignUpModal() {
   return (
-    <Modal>
+    <AuthModal>
       <SignUpForm />
-    </Modal>
+    </AuthModal>
   );
 }
