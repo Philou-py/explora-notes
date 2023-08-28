@@ -10,15 +10,15 @@ export async function POST(request: Request) {
 
   try {
     const CHECK_USER_PWD = `
-    query($email: String!, $password: String!)  {
-      checkUserPassword: ${
-        aT === "student" ? "checkStudentPassword" : "checkTeacherPassword"
-      }(email: $email, password: $password) {
-        email
-        displayName: ${aT === "student" ? "username" : "fullName"}
+      query($email: String!, $password: String!)  {
+        checkUserPassword: ${
+          aT === "student" ? "checkStudentPassword" : "checkTeacherPassword"
+        }(email: $email, password: $password) {
+          email
+          displayName: ${aT === "student" ? "username" : "fullName"}
+        }
       }
-    }
-  `;
+    `;
     const dgraphResponse = await fetch(DGRAPH_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

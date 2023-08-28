@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import sideBarStyles from "./SideBar.module.scss";
 import cn from "classnames/bind";
-import Container from "@/components/Container";
 import Avatar from "@/components/Avatar";
 import SignOutButton from "@/app/@auth/SignOutButton";
 import { verify } from "jsonwebtoken";

@@ -26,7 +26,7 @@ $navBarHeight: 60px;
     top: $navBarHeight;
     width: auto;
     height: calc(100% - $navBarHeight);
-    transform: translateX(-250px);
+    transform: translateX(-270px);
 
     &.show,
     .content {
@@ -37,12 +37,13 @@ $navBarHeight: 60px;
 
 .content {
   height: 100%;
-  width: 250px;
+  width: 270px;
   padding: 20px 7px;
   background-color: #eee;
-  transform: translateX(-250px);
+  transform: translateX(-270px);
   transition: transform 0.3s ease, visibility 0.3s ease;
   visibility: hidden;
+  overflow-y: auto;
 }
 
 .avatar {

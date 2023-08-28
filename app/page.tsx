@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Container from "../components/Container";
 
 export const metadata: Metadata = {
-  title: "ExploraNotes - Page d&rsquo;accueil",
+  title: "ExploraNotes - Page d'accueil",
 };
 
 export default function Home() {

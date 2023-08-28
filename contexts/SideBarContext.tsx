@@ -6,6 +6,7 @@ interface SideBarProviderProps {
   children: ReactNode;
   clippedSideBar: boolean;
   openByDefault: boolean;
+  isAuthenticated: boolean;
 }
 
 export const SideBarContext = createContext({
@@ -17,15 +18,18 @@ export const SideBarContext = createContext({
 export default function SideBarProvider({
   clippedSideBar,
   openByDefault,
+  isAuthenticated,
   children,
 }: SideBarProviderProps) {
   const [sideBarOpen, setSideBarOpen] = useState(false);
 
-  // Open the SideBar by default only on large screens
+  // Open the SideBar by default, if authenticated and on a large screen
   useEffect(() => {
-    const mql = window.matchMedia("(max-width: 960px)");
-    if (openByDefault && !mql.matches) setSideBarOpen(true);
-  }, [openByDefault]);
+    if (openByDefault && isAuthenticated) {
+      const mql = window.matchMedia("(max-width: 960px)");
+      if (!mql.matches) setSideBarOpen(true);
+    }
+  }, [isAuthenticated, openByDefault]);
 
   return (
     <SideBarContext.Provider value={{ clippedSideBar, sideBarOpen, setSideBarOpen }}>

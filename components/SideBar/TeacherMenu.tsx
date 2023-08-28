@@ -1,7 +1,10 @@
+"use client";
+
 import cn from "classnames/bind";
 import sideBarStyles from "./SideBar.module.scss";
 import Button from "../Button";
 import ButtonGroup from "./ButtonGroup";
+import { usePathname } from "next/navigation";
 
 const cx = cn.bind(sideBarStyles);
 
@@ -23,6 +26,8 @@ interface Teacher {
 }
 
 export default function TeacherMenu({ teacher: { evalTemplates, groups } }: { teacher: Teacher }) {
+  const pathname = usePathname();
+
   return (
     <div className={cx("teacherMenu")}>
       <ButtonGroup
@@ -62,24 +67,6 @@ export default function TeacherMenu({ teacher: { evalTemplates, groups } }: { te
           triggerText={name}
           triggerProps={{ className: "purple--text text--lighten-2" }}
         >
-          <Button
-            className="red--text text--lighten-2"
-            type="text"
-            justifyContent="flex-start"
-            isFullWidth
-          >
-            Administration
-          </Button>
-
-          <Button
-            className="red--text text--lighten-2"
-            type="text"
-            justifyContent="flex-start"
-            isFullWidth
-          >
-            Synthèse des notes
-          </Button>
-
           <ButtonGroup
             triggerText="Évaluations"
             triggerProps={{ className: "purple--text text--lighten-2" }}
@@ -96,8 +83,45 @@ export default function TeacherMenu({ teacher: { evalTemplates, groups } }: { te
               </Button>
             ))}
           </ButtonGroup>
+
+          <Button
+            className="red--text text--lighten-2"
+            type="text"
+            justifyContent="flex-start"
+            isFullWidth
+          >
+            Synthèse des notes
+          </Button>
+
+          <Button
+            className={
+              pathname === `/teacher/group/${groupId}`
+                ? "red lighten-2"
+                : "red--text text--lighten-2"
+            }
+            type={pathname === `/teacher/group/${groupId}` ? "filled" : "text"}
+            justifyContent="flex-start"
+            href={`/teacher/group/${groupId}`}
+            isFullWidth
+            isLink
+          >
+            Administration
+          </Button>
         </ButtonGroup>
       ))}
+
+      <Button
+        className={
+          pathname === "/group-actions/create-group" ? "red lighten-2" : "red--text text--lighten-2"
+        }
+        type={pathname === "/group-actions/create-group" ? "filled" : "text"}
+        justifyContent="flex-start"
+        href="/group-actions/create-group"
+        isFullWidth
+        isLink
+      >
+        Créer un groupe
+      </Button>
     </div>
   );
 }
