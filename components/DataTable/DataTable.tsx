@@ -187,7 +187,10 @@ function DataTable<
           itemsTemplate
         ) : (
           <tr>
-            <td colSpan={headers.length} className={cx("noData")}>
+            <td
+              colSpan={lineNumbering ? headers.length + 1 : headers.length}
+              className={cx("noData")}
+            >
               Aucune donnée !
             </td>
           </tr>
