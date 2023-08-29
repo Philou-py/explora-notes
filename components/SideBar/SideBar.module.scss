@@ -9,7 +9,7 @@ $navBarHeight: 60px;
   background-color: rgba(black, 0.5);
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-  z-index: 9999;
+  z-index: 8888; // Less than the Dialog's z-index
   visibility: hidden;
 
   &.show {
