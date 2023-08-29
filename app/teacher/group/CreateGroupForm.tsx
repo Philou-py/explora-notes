@@ -7,7 +7,7 @@ import Button from "@/components/Button";
 import Spacer from "@/components/Spacer";
 import cn from "classnames/bind";
 import createGroupFormStyles from "./CreateGroupForm.module.scss";
-import { useDgraphMutation } from "@/app/useDgraphMutation";
+import { useHandleMutation } from "@/app/useHandleMutation";
 import { useCallback } from "react";
 
 const cx = cn.bind(createGroupFormStyles);
@@ -28,11 +28,11 @@ export default function CreateGroupForm({ closeDialog }) {
     setNewGroup({ name: "", subject: "", level: "" });
   }, [setNewGroup]);
 
-  const { submitAction, isLoading } = useDgraphMutation(closeDialog, resetForm);
+  const { submitAction, isLoading } = useHandleMutation(closeDialog, resetForm);
 
   return (
     <Card className={cx("createGroupCard")}>
-      <Form onSubmit={() => submitAction("/api/group-actions/create-group", newGroup)}>
+      <Form onSubmit={() => submitAction("/teacher/group/create-group", "POST", newGroup)}>
         <CardHeader title={<h2>Créer un groupe</h2>} centerTitle />
         <CardContent>
           <InputField
@@ -63,7 +63,7 @@ export default function CreateGroupForm({ closeDialog }) {
 
         <CardActions>
           <Spacer />
-          <Button className="red--text mr-4" type="outlined" onClick={closeDialog}>
+          <Button className="red--text mr-3" type="outlined" onClick={closeDialog}>
             Annuler
           </Button>
           <Button

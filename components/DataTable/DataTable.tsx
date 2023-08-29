@@ -1,7 +1,6 @@
 "use client";
 
-import { useContext, useMemo, useState, useCallback, ReactNode, memo } from "react";
-import { BreakpointsContext } from "../../contexts/BreakpointsContext";
+import { useEffect, useMemo, useState, useCallback, ReactNode, memo } from "react";
 import Icon from "../Icon";
 import InputField from "../InputField";
 import dtStyles from "./DataTable.module.scss";
@@ -47,7 +46,16 @@ function DataTable<
   className,
   lineNumbering,
 }: DataTableProps<TableItem>) {
-  const { currentBreakpoint: cbp } = useContext(BreakpointsContext);
+  const [smScreen, setSmScreen] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 960px)");
+    setSmScreen(mql.matches); // Test initially
+    mql.addEventListener("change", (event) => {
+      setSmScreen(event.matches);
+    });
+  }, []);
+
   const [sortedBy, setSortedBy] = useState(sortBy);
   const [sortedOrder, setSortedOrder] = useState(sortOrder);
 
@@ -111,9 +119,9 @@ function DataTable<
   const itemsTemplate = sortedItems.map((item, lineNumber) => (
     <tr key={item.key.rawContent}>
       {lineNumbering && (
-        <td className={cx(cbp === "xs" ? "mobileDisplay" : "desktopDisplay")}>
+        <td className={cx(smScreen ? "mobileDisplay" : "desktopDisplay")}>
           <div className={cx("tdContent")}>
-            {cbp === "xs" && <div className={cx("tdHeader")}>Numéro de ligne</div>}
+            {smScreen && <div className={cx("tdHeader")}>Numéro de ligne</div>}
             <div className={cx("valDisplay", "center")}>{lineNumber + 1}</div>
           </div>
         </td>
@@ -122,10 +130,10 @@ function DataTable<
       {headers.map(({ value: headerVal, text: headerText, alignContent = "start", unitSuffix }) => (
         <td
           key={`${headerVal}-${item.key}`}
-          className={cx(cbp === "xs" ? "mobileDisplay" : "desktopDisplay")}
+          className={cx(smScreen ? "mobileDisplay" : "desktopDisplay")}
         >
           <div className={cx("tdContent")}>
-            {cbp === "xs" && <div className={cx("tdHeader")}>{headerText}</div>}
+            {smScreen && <div className={cx("tdHeader")}>{headerText}</div>}
             <div className={cx("valDisplay", alignContent)}>
               {item[headerVal].content ? item[headerVal].content : item[headerVal].rawContent}
               {unitSuffix ? unitSuffix : ""}
@@ -160,8 +168,8 @@ function DataTable<
 
   return (
     <table className={cn(cx("table"), className)}>
-      {cbp !== "xs" && <thead>{headersTemplate}</thead>}
-      {cbp === "xs" && (
+      {!smScreen && <thead>{headersTemplate}</thead>}
+      {smScreen && (
         <thead>
           <tr className={cx("mobileSortInputFields")}>
             <td>

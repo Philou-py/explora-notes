@@ -7,14 +7,11 @@ import { revalidateTag } from "next/cache";
 
 const publicKey = readFileSync("public.key");
 
-const ADD_STUDENTS = `
-  mutation($input: UpdateGroupInput!) {
-    updateGroup(input: $input) {
-      group {
-        name
-        groupStudents {
-          fullName
-        }
+const UPDATE_STUDENT = `
+  mutation($input: UpdateGroupStudentInput!) {
+    updateGroupStudent(input: $input) {
+      groupStudent {
+        fullName
       }
     }
   }
@@ -51,9 +48,7 @@ async function getGroupTeacher(groupId: string): Promise<Group> {
   return result.data.getGroup.teacher.email;
 }
 
-export async function POST(request: Request) {
-  const { groupId, newStudents } = await request.json();
-
+export async function PUT(request: Request, { params: { groupId } }) {
   const cookieStore = cookies();
   const jwt = cookieStore.get("X-ExploraNotes-Auth");
   if (!jwt)
@@ -67,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         status: "error",
-        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de créer un groupe !",
+        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de modifier cet élève !",
       },
       { status: 403 }
     );
@@ -78,53 +73,18 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         status: "error",
-        msg: "Désolé, mais vous n'avez pas la permission d'ajouter des élèves à ce groupe !",
+        msg: "Désolé, mais vous n'avez pas la permission de modifier cet élève !",
       },
       { status: 403 }
     );
 
-  // Test the new students for issues
-  // Check for blanks
-  let hasBlanks = false;
-  newStudents.forEach((student: { firstName: string; lastName: string }) => {
-    if (!student) return;
-    if (student.firstName === "" || student.lastName === "") hasBlanks = true;
-  });
-  if (hasBlanks) {
+  const { firstName, lastName, id } = await request.json();
+
+  if (firstName === "" || lastName === "")
     return NextResponse.json(
       { status: "error", msg: "Attention ! Vous ne pouvez pas laisser certains champs vides !" },
       { status: 400 }
     );
-  }
-
-  // Check for duplicates
-  let hasDuplicates = false;
-  const combined = {};
-  for (let i = 0; i < newStudents.length; i++) {
-    if (!newStudents[i]) continue;
-    const combination = newStudents[i].firstName + newStudents[i].lastName;
-    if (combined[combination]) {
-      hasDuplicates = true;
-      break;
-    }
-    combined[combination] = true;
-  }
-  if (hasDuplicates) {
-    return NextResponse.json(
-      { status: "error", msg: "Attention ! Au moins un élève a été entré plusieurs fois !" },
-      { status: 400 }
-    );
-  }
-
-  // Reshape the new students
-  const newStudentsToSend = newStudents.filter((student: any) => !!student);
-  newStudentsToSend.forEach((newStudent: any) => {
-    newStudent.fullName = `${newStudent.firstName} ${newStudent.lastName}`;
-    newStudent.copies = [];
-    newStudent.studentPoints = 0;
-    newStudent.studentCoefs = 0;
-    newStudent.studentAverage = 0;
-  });
 
   try {
     const dgraphRes = await fetch(DGRAPH_URL, {
@@ -133,11 +93,11 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query: ADD_STUDENTS,
+        query: UPDATE_STUDENT,
         variables: {
           input: {
-            filter: { id: groupId },
-            set: { groupStudents: newStudentsToSend },
+            filter: { id: id },
+            set: { firstName, lastName, fullName: `${firstName} ${lastName}` },
           },
         },
       }),
@@ -155,10 +115,10 @@ export async function POST(request: Request) {
 
     revalidateTag("getGroupStudents");
 
-    const groupName = result.data.updateGroup.group[0].name;
+    const studentName = result.data.updateGroupStudent.groupStudent[0].fullName;
     return NextResponse.json(
-      { msg: `Les élèves ont bien été ajouté au groupe ${groupName} !`, status: "success" },
-      { status: 201 }
+      { msg: `L'élève ${studentName} a bien été renommé !`, status: "success" },
+      { status: 200 }
     );
   } catch (error) {
     console.log(error);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import Card, { CardHeader, CardContent, CardActions } from "@/components/Card";
 import Form from "@/components/Form";
@@ -8,7 +9,7 @@ import Button from "@/components/Button";
 import Spacer from "@/components/Spacer";
 import cn from "classnames/bind";
 import addStudentsFormStyles from "./AddStudentsForm.module.scss";
-import { useDgraphMutation } from "@/app/useDgraphMutation";
+import { useHandleMutation } from "@/app/useHandleMutation";
 
 const cx = cn.bind(addStudentsFormStyles);
 
@@ -17,7 +18,8 @@ interface NewGroupStudent {
   lastName: string;
 }
 
-export default function AddStudentsForm({ groupId, closeASDialog }) {
+export default function AddStudentsForm({ closeASDialog }) {
+  const { groupId } = useParams();
   const [students, setStudents] = useState<(NewGroupStudent | null)[]>([
     { firstName: "", lastName: "" },
   ]);
@@ -34,7 +36,7 @@ export default function AddStudentsForm({ groupId, closeASDialog }) {
     setNbStudents(1);
   }, []);
 
-  const { submitAction, isLoading } = useDgraphMutation(closeASDialog, resetForm);
+  const { submitAction, isLoading } = useHandleMutation(closeASDialog, resetForm);
 
   const handleAddStudent = useCallback(() => {
     setStudents((prev) => [...prev, { firstName: "", lastName: "" }]);
@@ -107,7 +109,7 @@ export default function AddStudentsForm({ groupId, closeASDialog }) {
     <Card className={cx("addStudentsCard")}>
       <Form
         onSubmit={() =>
-          submitAction("/api/group-actions/add-students", { groupId, newStudents: students })
+          submitAction(`/teacher/group/${groupId}/admin/add-students`, "PUT", students)
         }
       >
         <CardHeader title={<h2>Ajouter des élèves</h2>} centerTitle />
@@ -125,7 +127,7 @@ export default function AddStudentsForm({ groupId, closeASDialog }) {
         <CardActions>
           <Spacer />
           <Button
-            className="red--text mr-4"
+            className="red--text mr-3"
             type="outlined"
             onClick={() => {
               closeASDialog();

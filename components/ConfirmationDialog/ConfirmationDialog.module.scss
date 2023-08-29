@@ -1,0 +1,8 @@
+$sm: 960px;
+
+.confirmationCard {
+  width: clamp(300px, 30%, 600px);
+  @media (max-width: $sm) {
+    width: 80%;
+  }
+}

@@ -15,9 +15,8 @@ export default function SignOutButton() {
     setSideBarOpen(false);
     await fetch("/api/signout");
     router.refresh();
+    router.push("/goodbye");
     haveASnack("info", <h6>Vous êtes à présent déconnecté(e) !</h6>);
-    // The router freezes when 'refresh' is called together with 'push'
-    // router.push("/goodbye");
   }, [router, setSideBarOpen, haveASnack]);
 
   return (

@@ -1,8 +1,8 @@
 import { DGRAPH_URL } from "@/config";
 import groupAdminStyles from "./GroupAdmin.module.scss";
 import cn from "classnames/bind";
-import DataTable, { TableHeader } from "@/components/DataTable";
 import AddStudents from "./AddStudents";
+import StudentsTable from "./StudentsTable";
 
 const cx = cn.bind(groupAdminStyles);
 
@@ -50,26 +50,10 @@ async function getGroupStudents(groupId: string): Promise<GroupStudent[]> {
 export default async function Page({ params: { groupId } }: { params: { groupId: string } }) {
   const groupStudents = await getGroupStudents(groupId);
 
-  const studentsTableHeaders: TableHeader[] = [
-    { text: "Prénom", value: "firstName" },
-    { text: "Nom de famille", value: "lastName" },
-  ];
-
-  const studentsTableItems = groupStudents.map((groupStudent) => ({
-    key: { rawContent: groupStudent.id },
-    firstName: { rawContent: groupStudent.firstName },
-    lastName: { rawContent: groupStudent.lastName },
-  }));
-
   return (
     <>
-      <AddStudents groupId={groupId} />
-      <DataTable
-        headers={studentsTableHeaders}
-        items={studentsTableItems}
-        sortBy="lastName"
-        lineNumbering
-      />
+      <AddStudents />
+      <StudentsTable groupStudents={groupStudents} />
     </>
   );
 }

@@ -3,6 +3,7 @@ import "@/styles/globals.scss";
 import "@/styles/typography.scss";
 import "@/styles/colours.scss";
 import SnackProvider from "@/contexts/SnackContext";
+import ConfirmationProvider from "@/contexts/ConfirmationContext";
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
 import SideBar from "@/components/SideBar";
@@ -57,22 +58,24 @@ export default async function AppLayout({ children, auth, qa }) {
       <body>
         {/* style={{ "--material-symbols": materialSymbols.style.fontFamily } as any} */}
         <SnackProvider>
-          <SideBarProvider
-            clippedSideBar={true}
-            openByDefault={true}
-            isAuthenticated={isAuthenticated}
-          >
-            <NavBar />
-            <SideBarWrapper>
-              <SideBar />
-            </SideBarWrapper>
-            <Main>
-              {auth}
-              {qa}
-              {children}
-              <Footer />
-            </Main>
-          </SideBarProvider>
+          <ConfirmationProvider>
+            <SideBarProvider
+              clippedSideBar={true}
+              openByDefault={true}
+              isAuthenticated={isAuthenticated}
+            >
+              <NavBar />
+              <SideBarWrapper>
+                <SideBar />
+              </SideBarWrapper>
+              <Main>
+                {auth}
+                {qa}
+                {children}
+                <Footer />
+              </Main>
+            </SideBarProvider>
+          </ConfirmationProvider>
         </SnackProvider>
       </body>
     </html>
