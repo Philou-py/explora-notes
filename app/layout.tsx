@@ -1,3 +1,4 @@
+import "material-symbols/rounded.scss";
 import "@/styles/globals.scss";
 import "@/styles/typography.scss";
 import "@/styles/colours.scss";
@@ -8,7 +9,7 @@ import SideBar from "@/components/SideBar";
 import SideBarWrapper from "@/components/SideBar/SideBarWrapper";
 import { Metadata } from "next";
 import { Cormorant_Upright } from "next/font/google";
-import localFont from "next/font/local";
+// import localFont from "next/font/local";
 import SideBarProvider from "@/contexts/SideBarContext";
 import Main from "./Main";
 import { cookies } from "next/headers";
@@ -23,10 +24,10 @@ const cormorantUpright = Cormorant_Upright({
   display: "swap",
 });
 
-const materialSymbols = localFont({
-  src: "./material-symbols-rounded.woff2",
-  display: "block",
-});
+// const materialSymbols = localFont({
+//   src: "./material-symbols-rounded.woff2",
+//   display: "block",
+// });
 
 export const metadata: Metadata = {
   title: "ExploraNotes",
@@ -53,13 +54,14 @@ export default async function AppLayout({ children, auth, qa }) {
 
   return (
     <html lang="fr" className={cormorantUpright.className}>
-      <body style={{ "--material-symbols": materialSymbols.style.fontFamily } as any}>
-        <SideBarProvider
-          clippedSideBar={true}
-          openByDefault={true}
-          isAuthenticated={isAuthenticated}
-        >
-          <SnackProvider>
+      <body>
+        {/* style={{ "--material-symbols": materialSymbols.style.fontFamily } as any} */}
+        <SnackProvider>
+          <SideBarProvider
+            clippedSideBar={true}
+            openByDefault={true}
+            isAuthenticated={isAuthenticated}
+          >
             <NavBar />
             <SideBarWrapper>
               <SideBar />
@@ -70,8 +72,8 @@ export default async function AppLayout({ children, auth, qa }) {
               {children}
               <Footer />
             </Main>
-          </SnackProvider>
-        </SideBarProvider>
+          </SideBarProvider>
+        </SnackProvider>
       </body>
     </html>
   );
