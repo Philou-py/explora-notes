@@ -20,6 +20,8 @@
 
 # Next.js
 .next
+public/sw*
+public/workbox*
 
 # Node modules
 node_modules
@@ -30,3 +32,6 @@ public.key
 
 # Neovim
 .vim
+
+# To-Do list
+todo.md
