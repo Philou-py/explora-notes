@@ -29,7 +29,7 @@ interface ButtonProps {
     iconName: string,
     type: "prependIcon" | "trailingIcon" | "mainIcon"
   ) => ReactNode;
-  style?: object;
+  style?: CSSProperties;
   children?: string;
 }
 
