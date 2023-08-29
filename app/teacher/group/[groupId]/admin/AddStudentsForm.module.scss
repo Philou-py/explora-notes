@@ -1,0 +1,48 @@
+$sm: 960px;
+
+.addStudentsCard {
+  width: clamp(300px, 40%, 600px);
+  @media (max-width: $sm) {
+    width: 90%;
+  }
+  .nameInput {
+    display: flex;
+    align-items: center;
+
+    & > div {
+      margin-right: 10px;
+      flex-grow: 1;
+    }
+
+    .deleteButton {
+      flex-shrink: 0;
+    }
+  }
+
+  p {
+    color: black;
+    text-align: center;
+  }
+
+  @keyframes enter {
+    from {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+      max-height: 220px;
+    }
+  }
+
+  .studentInput {
+    overflow: hidden;
+    animation-name: enter;
+    animation-duration: 0.3s;
+  }
+
+  .addStudentBtn {
+    margin: 20px auto 0;
+  }
+}

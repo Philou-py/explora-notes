@@ -12,7 +12,6 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  animation: fadeIn 0.3s ease;
 
   &.show {
     opacity: 1;
@@ -28,6 +27,5 @@
     visibility: hidden;
     transform: scale(0);
     transition: transform 0.3s ease, visibility 0.3s ease;
-    animation: grow 0.3s ease;
   }
 }

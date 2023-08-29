@@ -12,6 +12,15 @@ const cx = cn.bind(groupLayoutStyles);
 
 const publicKey = readFileSync("public.key");
 
+function getTeacherEmail() {
+  const cookieStore = cookies();
+  const jwt = cookieStore.get("X-ExploraNotes-Auth");
+  if (!jwt) notFound();
+  const payload = verify(jwt.value, publicKey, { algorithms: ["RS256"] });
+  if (typeof payload !== "object" || payload.accountType === "student") notFound();
+  return payload.email;
+}
+
 interface Group {
   id: string;
   name: string;
@@ -32,15 +41,6 @@ interface Group {
   }[];
 }
 
-function getTeacherEmail() {
-  const cookieStore = cookies();
-  const jwt = cookieStore.get("X-ExploraNotes-Auth");
-  if (!jwt) notFound();
-  const payload = verify(jwt.value, publicKey, { algorithms: ["RS256"] });
-  if (typeof payload !== "object" || payload.accountType === "student") notFound();
-  return payload.email;
-}
-
 const GET_GROUP = `
   query($groupId: ID!) {
     getGroup(id: $groupId) {
@@ -51,15 +51,6 @@ const GET_GROUP = `
       subject
       teacher {
         email
-      }
-      groupStudents {
-        id
-        firstName
-        lastName
-        fullName
-        studentAccount {
-          username
-        }
       }
     }
   }
@@ -74,6 +65,7 @@ async function getGroup(groupId: string, teacherEmail: string): Promise<Group> {
     body: JSON.stringify({
       query: GET_GROUP,
       variables: { groupId },
+      next: { tags: ["getGroupLayout"] }, // Not yet in use
     }),
   });
   const result = await dgraphRes.json();

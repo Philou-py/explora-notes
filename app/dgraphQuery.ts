@@ -11,6 +11,8 @@ export async function dgraphQuery(query: string, variables: object, queryName: s
         query,
         variables,
       }),
+      // next: { revalidate: 30 },
+      next: { tags: ["collection"] },
     });
 
     const result = await dgraphResponse.json();

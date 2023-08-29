@@ -1,8 +1,8 @@
-$xs: 600px;
+$sm: 960px;
 
 .createGroupCard {
   width: clamp(300px, 40%, 600px);
-  @media (max-width: $xs) {
+  @media (max-width: $sm) {
     width: 90%;
   }
 }

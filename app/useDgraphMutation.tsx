@@ -1,18 +1,11 @@
 import { useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SnackContext } from "@/contexts/SnackContext";
-import { ShowQuickActionsModalContext } from "@/components/QuickActionsModal";
 
-export function useQuickAction() {
+export function useDgraphMutation(closeDialog: () => void, resetForm: () => void) {
   const { haveASnack } = useContext(SnackContext);
-  const { setShowQuickActionsModal } = useContext(ShowQuickActionsModalContext);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-
-  const cancelAction = useCallback(() => {
-    setShowQuickActionsModal(false);
-    setTimeout(() => router.back(), 300);
-  }, [router, setShowQuickActionsModal]);
 
   const submitAction = useCallback(
     async (url: string, reqBody: object) => {
@@ -28,11 +21,10 @@ export function useQuickAction() {
         const result = await response.json();
         haveASnack(result.status, <h6>{result.msg}</h6>);
         if (result.status === "success") {
-          setShowQuickActionsModal(false);
-          setTimeout(() => {
-            router.refresh();
-            router.back();
-          }, 200);
+          closeDialog();
+          setIsLoading(false);
+          resetForm();
+          router.refresh();
         } else {
           setIsLoading(false);
         }
@@ -42,7 +34,7 @@ export function useQuickAction() {
         setIsLoading(false);
       }
     },
-    [haveASnack, setIsLoading, router, setShowQuickActionsModal]
+    [haveASnack, setIsLoading, closeDialog, router, resetForm]
   );
-  return { isLoading, submitAction, cancelAction };
+  return { isLoading, submitAction };
 }

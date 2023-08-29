@@ -14,9 +14,9 @@ export default function SignOutButton() {
   const signOut = useCallback(async () => {
     setSideBarOpen(false);
     await fetch("/api/signout");
+    router.refresh();
     haveASnack("info", <h6>Vous êtes à présent déconnecté(e) !</h6>);
     // The router freezes when 'refresh' is called together with 'push'
-    router.refresh();
     // router.push("/goodbye");
   }, [router, setSideBarOpen, haveASnack]);
 
