@@ -70,11 +70,13 @@ function DataTable<
     if (sortedBy !== "") {
       const sortedArray = [...items];
       sortedArray.sort((itemA, itemB) => {
-        if (sortedOrder === SortOrder.ASC) {
-          return itemA[sortedBy].rawContent < itemB[sortedBy].rawContent ? -1 : 1;
-        } else {
-          return itemA[sortedBy].rawContent > itemB[sortedBy].rawContent ? -1 : 1;
+        let decision = 0;
+        if (itemA[sortedBy].rawContent < itemB[sortedBy].rawContent) {
+          decision = -1;
+        } else if (itemA[sortedBy].rawContent > itemB[sortedBy].rawContent) {
+          decision = 1;
         }
+        return sortedOrder === SortOrder.ASC ? decision : -decision;
       });
       return sortedArray;
     } else return items;

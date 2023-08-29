@@ -65,6 +65,9 @@
     color: rgba(0, 0, 0, 0.6);
     opacity: 0;
     transition: transform ease 400ms, color ease 400ms, opacity ease 200ms;
+    // Prevent shifting while loading
+    width: 24px;
+    overflow: hidden;
 
     &.reversedIcon {
       transform: rotate(0.5turn);
