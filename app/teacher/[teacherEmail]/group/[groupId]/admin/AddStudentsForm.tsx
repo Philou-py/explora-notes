@@ -19,7 +19,7 @@ interface NewGroupStudent {
 }
 
 export default function AddStudentsForm({ closeASDialog }) {
-  const { groupId } = useParams();
+  const { teacherEmail, groupId } = useParams();
   const [students, setStudents] = useState<(NewGroupStudent | null)[]>([
     { firstName: "", lastName: "" },
   ]);
@@ -109,7 +109,11 @@ export default function AddStudentsForm({ closeASDialog }) {
     <Card className={cx("addStudentsCard")}>
       <Form
         onSubmit={() =>
-          submitAction(`/teacher/group/${groupId}/admin/add-students`, "PUT", students)
+          submitAction(
+            `/teacher/${teacherEmail}/group/${groupId}/admin/add-students`,
+            "PUT",
+            students
+          )
         }
       >
         <CardHeader title={<h2>Ajouter des élèves</h2>} centerTitle />

@@ -4,15 +4,13 @@ import cn from "classnames/bind";
 
 const cx = cn.bind(notFoundStyles);
 
-export default function NotFound() {
+export default function TeacherNotFound() {
   return (
     <div className={cx("notFound")}>
       <h1>Erreur 404</h1>
+      <h2>Ce professeur n&rsquo;existe pas, ou bien vous n&rsquo;y avez pas accès !</h2>
       <h2>
-        Attention ! Vous n&rsquo;êtes pas connecté(e), ou bien vous possédez un compte élève !
-      </h2>
-      <h2>
-        Essayez de vous <Link href="/signin">(re-)connecter</Link> !
+        Revenez-donc sur <Link href="/">la page d&rsquo;accueil</Link> !
       </h2>
     </div>
   );

@@ -137,7 +137,7 @@ export async function DELETE(request: Request, { params: { groupId } }) {
       );
     }
 
-    revalidateTag("getGroupStudents");
+    revalidateTag("getGroup-" + groupId);
 
     const studentName = result.data.deleteGroupStudent.groupStudent[0].fullName;
     return NextResponse.json(

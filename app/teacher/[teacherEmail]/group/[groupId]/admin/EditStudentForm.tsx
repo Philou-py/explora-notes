@@ -24,7 +24,7 @@ export default function EditStudentForm({
   currentStudent: CurrentStudent;
   closeDialog: () => void;
 }) {
-  const { groupId } = useParams();
+  const { teacherEmail, groupId } = useParams();
   const { submitAction, isLoading } = useHandleMutation(closeDialog);
   const {
     data: student,
@@ -41,7 +41,7 @@ export default function EditStudentForm({
     <Card className={cx("editStudentCard")}>
       <Form
         onSubmit={() =>
-          submitAction(`/teacher/group/${groupId}/admin/edit-student`, "PUT", {
+          submitAction(`/teacher/${teacherEmail}/group/${groupId}/admin/edit-student`, "PUT", {
             id: currentStudent.id,
             ...student,
           })

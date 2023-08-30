@@ -153,11 +153,11 @@ export async function PUT(request: Request, { params: { groupId } }) {
       );
     }
 
-    revalidateTag("getGroupStudents");
+    revalidateTag("getGroup-" + groupId);
 
     const groupName = result.data.updateGroup.group[0].name;
     return NextResponse.json(
-      { msg: `Les élèves ont bien été ajouté au groupe ${groupName} !`, status: "success" },
+      { msg: `Les élèves ont bien été ajoutés au groupe ${groupName} !`, status: "success" },
       { status: 200 }
     );
   } catch (error) {

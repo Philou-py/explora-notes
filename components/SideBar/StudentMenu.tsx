@@ -1,4 +1,4 @@
-interface Student {
+export interface Student {
   email: string;
   displayName: string;
   groups: {

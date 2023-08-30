@@ -1,13 +1,11 @@
 import { useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SnackContext } from "@/contexts/SnackContext";
-import { SideBarContext } from "@/contexts/SideBarContext";
 import { ShowAuthModalContext } from "@/components/AuthModal";
 
 export function useAuthAction() {
   const { haveASnack } = useContext(SnackContext);
   const { setShowAuthModal } = useContext(ShowAuthModalContext);
-  const { setSideBarOpen } = useContext(SideBarContext);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,8 +25,6 @@ export function useAuthAction() {
         if (result.status === "success") {
           setShowAuthModal(false);
           setTimeout(() => {
-            const mql = window.matchMedia("(max-width: 960px)");
-            if (!mql.matches) setSideBarOpen(true);
             router.refresh();
             router.back();
           }, 200);
@@ -41,7 +37,7 @@ export function useAuthAction() {
         setIsLoading(false);
       }
     },
-    [haveASnack, setIsLoading, setSideBarOpen, router, setShowAuthModal]
+    [haveASnack, setIsLoading, router, setShowAuthModal]
   );
   return { isLoading, submitAction };
 }

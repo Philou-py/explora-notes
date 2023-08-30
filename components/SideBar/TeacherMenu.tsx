@@ -10,7 +10,7 @@ import { SideBarContext } from "@/contexts/SideBarContext";
 
 const cx = cn.bind(sideBarStyles);
 
-interface Teacher {
+export interface Teacher {
   email: string;
   displayName: string;
   evalTemplates: {
@@ -27,7 +27,11 @@ interface Teacher {
   }[];
 }
 
-export default function TeacherMenu({ teacher: { evalTemplates, groups } }: { teacher: Teacher }) {
+export default function TeacherMenu({
+  teacher: { email, evalTemplates, groups },
+}: {
+  teacher: Teacher;
+}) {
   const pathname = usePathname();
   const { cGDialogOpen, setCGDialogOpen } = useContext(SideBarContext);
 
@@ -99,13 +103,13 @@ export default function TeacherMenu({ teacher: { evalTemplates, groups } }: { te
 
             <Button
               className={
-                pathname === `/teacher/group/${groupId}/admin` && !cGDialogOpen
+                pathname === `/teacher/${email}/group/${groupId}/admin` && !cGDialogOpen
                   ? "red lighten-2"
                   : "red--text text--lighten-2"
               }
-              type={pathname === `/teacher/group/${groupId}/admin` ? "filled" : "text"}
+              type={pathname === `/teacher/${email}/group/${groupId}/admin` ? "filled" : "text"}
               justifyContent="flex-start"
-              href={`/teacher/group/${groupId}/admin`}
+              href={`/teacher/${email}/group/${groupId}/admin`}
               isFullWidth
               isLink
             >

@@ -113,7 +113,7 @@ export async function PUT(request: Request, { params: { groupId } }) {
       );
     }
 
-    revalidateTag("getGroupStudents");
+    revalidateTag("getGroup-" + groupId);
 
     const studentName = result.data.updateGroupStudent.groupStudent[0].fullName;
     return NextResponse.json(

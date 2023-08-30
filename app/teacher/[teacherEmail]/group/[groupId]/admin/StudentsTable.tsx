@@ -18,7 +18,7 @@ interface GroupStudent {
 }
 
 export default function StudentsTable({ groupStudents }: { groupStudents: GroupStudent[] }) {
-  const { groupId } = useParams();
+  const { teacherEmail, groupId } = useParams();
   const promptConfirmation = useContext(ConfirmationContext);
 
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -60,7 +60,7 @@ export default function StudentsTable({ groupStudents }: { groupStudents: GroupS
           onClick={() =>
             promptConfirmation(
               "Voulez-vous vraiment retirer cet élève du groupe ?",
-              `/teacher/group/${groupId}/admin/delete-student`,
+              `/teacher/${teacherEmail}/group/${groupId}/admin/delete-student`,
               "DELETE",
               { groupStudentId: groupStudent.id }
             )

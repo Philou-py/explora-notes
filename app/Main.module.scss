@@ -1,9 +1,7 @@
 $sm: 960px;
 $sideBarWidth: 270px;
-$navBarHeight: 60px;
 
 .main {
-  padding-top: $navBarHeight;
   transition: margin-left 0.3s ease;
 
   @media (min-width: $sm) {

@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useState, ReactNode, useEffect, useCallback } from "react";
 import Dialog from "@/components/Dialog";
-import CreateGroupForm from "@/app/teacher/group/CreateGroupForm";
+import CreateGroupForm from "@/app/teacher/[teacherEmail]/group/CreateGroupForm";
+import CreateEvalForm from "@/app/teacher/[teacherEmail]/group/CreateEvalForm";
 
 interface SideBarProviderProps {
   children: ReactNode;
@@ -27,6 +28,9 @@ export default function SideBarProvider({
 }: SideBarProviderProps) {
   const [sideBarOpen, setSideBarOpen] = useState(false);
   const [cGDialogOpen, setCGDialogOpen] = useState(false);
+  const closeCGDialog = useCallback(() => setCGDialogOpen(false), []);
+  const [cEDialogOpen, setCEDialogOpen] = useState(false);
+  const closeCEDialogOpen = useCallback(() => setCEDialogOpen(false), []);
 
   // Open the SideBar by default, if authenticated and on a large screen
   useEffect(() => {
@@ -41,7 +45,10 @@ export default function SideBarProvider({
       value={{ clippedSideBar, sideBarOpen, setSideBarOpen, cGDialogOpen, setCGDialogOpen }}
     >
       <Dialog showDialog={cGDialogOpen}>
-        <CreateGroupForm closeDialog={() => setCGDialogOpen(false)} />
+        <CreateGroupForm closeDialog={closeCGDialog} />
+      </Dialog>
+      <Dialog showDialog={cEDialogOpen}>
+        <CreateEvalForm />
       </Dialog>
       {children}
     </SideBarContext.Provider>
