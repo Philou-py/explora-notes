@@ -16,12 +16,12 @@ interface ButtonGroupProps {
 }
 
 export default function ButtonGroup({
-  openByDefault,
+  openByDefault = true,
   triggerText,
   triggerProps,
   children,
 }: ButtonGroupProps) {
-  const [groupClosed, setGroupClosed] = useState(openByDefault);
+  const [groupClosed, setGroupClosed] = useState(!openByDefault);
 
   return (
     <>

@@ -1,0 +1,43 @@
+$sm: 960px;
+
+.createEvalCard {
+  width: clamp(300px, 40%, 600px);
+  @media (max-width: $sm) {
+    width: 90%;
+  }
+
+  h2,
+  h3,
+  p {
+    text-align: center;
+  }
+
+  p {
+    color: #424242;
+  }
+
+  fieldset {
+    margin-bottom: 20px;
+
+    &.generalInfo {
+      border-color: forestgreen;
+
+      legend {
+        background-color: forestgreen;
+      }
+    }
+
+    &.scale {
+      border-color: royalblue;
+
+      legend {
+        background-color: royalblue;
+      }
+    }
+  }
+
+  legend {
+    color: white;
+    padding: 3px 6px;
+  }
+}

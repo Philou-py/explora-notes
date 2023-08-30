@@ -33,56 +33,60 @@ export default function TeacherMenu({
   teacher: Teacher;
 }) {
   const pathname = usePathname();
-  const { cGDialogOpen, setCGDialogOpen } = useContext(SideBarContext);
+  const { cGDialogOpen, setCGDialogOpen, cEDialogOpen, createEvalInfo, setCreateEvalInfo } =
+    useContext(SideBarContext);
 
   return (
     <>
       <div className={cx("teacherMenu")}>
-        <ButtonGroup
-          triggerText="Créer un barème"
-          triggerProps={{ className: "purple--text text--lighten-2" }}
-        >
-          <ButtonGroup
-            triggerText="À partir d&rsquo;un modèle"
-            triggerProps={{ className: "purple--text text--lighten-2" }}
-          >
-            {evalTemplates.map(({ templateId, title }) => (
-              <Button
-                key={templateId}
-                className="red--text text--lighten-2"
-                type="text"
-                justifyContent="flex-start"
-                isFullWidth
-              >
-                {title}
-              </Button>
-            ))}
-          </ButtonGroup>
-
-          <Button
-            className="red--text text--lighten-2"
-            type="text"
-            justifyContent="flex-start"
-            isFullWidth
-          >
-            Gestion des modèles
-          </Button>
-        </ButtonGroup>
+        <Button className="indigo--text" type="text" justifyContent="flex-start" isFullWidth>
+          Gestion des modèles
+        </Button>
 
         {groups.map(({ groupId, name, evaluations }) => (
           <ButtonGroup
             key={groupId}
             triggerText={name}
-            triggerProps={{ className: "purple--text text--lighten-2" }}
+            triggerProps={{ className: "indigo--text" }}
           >
             <ButtonGroup
-              triggerText="Évaluations"
-              triggerProps={{ className: "purple--text text--lighten-2" }}
+              triggerText="Créer un barème"
+              triggerProps={{ className: "purple--text" }}
+              openByDefault={false}
             >
+              {evalTemplates.map(({ templateId, title }) => (
+                <Button
+                  key={templateId}
+                  className={
+                    cEDialogOpen &&
+                    createEvalInfo.templateId === templateId &&
+                    createEvalInfo.group.name === name
+                      ? "deep-orange darken-3"
+                      : "deep-orange--text text--darken-3"
+                  }
+                  type={
+                    cEDialogOpen &&
+                    createEvalInfo.templateId === templateId &&
+                    createEvalInfo.group.name === name
+                      ? "filled"
+                      : "text"
+                  }
+                  justifyContent="flex-start"
+                  onClick={() => {
+                    setCreateEvalInfo({ templateId, group: { id: groupId, name } });
+                  }}
+                  isFullWidth
+                >
+                  {title}
+                </Button>
+              ))}
+            </ButtonGroup>
+
+            <ButtonGroup triggerText="Évaluations" triggerProps={{ className: "purple--text" }}>
               {evaluations.map(({ evalId, title }) => (
                 <Button
                   key={evalId}
-                  className="red--text text--lighten-2"
+                  className="purple--text"
                   type="text"
                   justifyContent="flex-start"
                   isFullWidth
@@ -92,20 +96,17 @@ export default function TeacherMenu({
               ))}
             </ButtonGroup>
 
-            <Button
-              className="red--text text--lighten-2"
-              type="text"
-              justifyContent="flex-start"
-              isFullWidth
-            >
+            <Button className="purple--text" type="text" justifyContent="flex-start" isFullWidth>
               Synthèse des notes
             </Button>
 
             <Button
               className={
-                pathname === `/teacher/${email}/group/${groupId}/admin` && !cGDialogOpen
-                  ? "red lighten-2"
-                  : "red--text text--lighten-2"
+                pathname === `/teacher/${email}/group/${groupId}/admin` &&
+                !cGDialogOpen &&
+                !cEDialogOpen
+                  ? "purple white--text"
+                  : "purple--text"
               }
               type={pathname === `/teacher/${email}/group/${groupId}/admin` ? "filled" : "text"}
               justifyContent="flex-start"
@@ -119,7 +120,7 @@ export default function TeacherMenu({
         ))}
 
         <Button
-          className={cGDialogOpen ? "red lighten-2" : "red--text text--lighten-2"}
+          className={cGDialogOpen ? "indigo white--text" : "indigo--text"}
           type={cGDialogOpen ? "filled" : "text"}
           justifyContent="flex-start"
           onClick={() => setCGDialogOpen(true)}

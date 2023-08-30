@@ -35,12 +35,12 @@ async function checkGroup(groupId: string, teacherEmail: string) {
   if (!group || group.teacher.email !== teacherEmail) notFound();
 }
 
-interface LayoutProps {
+interface Props {
   children: ReactNode;
   params: { teacherEmail: string; groupId: string };
 }
 
-export default async function Layout({ children, params: { teacherEmail, groupId } }: LayoutProps) {
+export default async function GroupLayout({ children, params: { teacherEmail, groupId } }: Props) {
   await checkGroup(groupId, decodeURIComponent(teacherEmail));
   return <>{children}</>;
 }

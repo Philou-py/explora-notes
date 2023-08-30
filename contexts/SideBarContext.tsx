@@ -3,7 +3,7 @@
 import { createContext, useState, ReactNode, useEffect, useCallback } from "react";
 import Dialog from "@/components/Dialog";
 import CreateGroupForm from "@/app/teacher/[teacherEmail]/group/CreateGroupForm";
-import CreateEvalForm from "@/app/teacher/[teacherEmail]/group/CreateEvalForm";
+import CreateEvalForm from "@/app/teacher/[teacherEmail]/group/[groupId]/evaluation/CreateEvalForm";
 
 interface SideBarProviderProps {
   children: ReactNode;
@@ -18,6 +18,10 @@ export const SideBarContext = createContext({
   setSideBarOpen: (_: boolean | ((_: boolean) => boolean)) => {},
   cGDialogOpen: false,
   setCGDialogOpen: (_: boolean | ((_: boolean) => boolean)) => {},
+  cEDialogOpen: false,
+  setCEDialogOpen: (_: boolean | ((_: boolean) => boolean)) => {},
+  createEvalInfo: { templateId: "", group: { id: "", name: "" } },
+  setCreateEvalInfo: (_: { templateId: string; group: { id: string; name: string } }) => {},
 });
 
 export default function SideBarProvider({
@@ -30,7 +34,17 @@ export default function SideBarProvider({
   const [cGDialogOpen, setCGDialogOpen] = useState(false);
   const closeCGDialog = useCallback(() => setCGDialogOpen(false), []);
   const [cEDialogOpen, setCEDialogOpen] = useState(false);
-  const closeCEDialogOpen = useCallback(() => setCEDialogOpen(false), []);
+  const closeCEDialog = useCallback(() => {
+    setCEDialogOpen(false);
+    setCreateEvalInfo({
+      templateId: "",
+      group: { id: "", name: "" },
+    });
+  }, []);
+  const [createEvalInfo, setCreateEvalInfo] = useState({
+    templateId: "",
+    group: { id: "", name: "" },
+  });
 
   // Open the SideBar by default, if authenticated and on a large screen
   useEffect(() => {
@@ -42,13 +56,23 @@ export default function SideBarProvider({
 
   return (
     <SideBarContext.Provider
-      value={{ clippedSideBar, sideBarOpen, setSideBarOpen, cGDialogOpen, setCGDialogOpen }}
+      value={{
+        clippedSideBar,
+        sideBarOpen,
+        setSideBarOpen,
+        cGDialogOpen,
+        setCGDialogOpen,
+        cEDialogOpen,
+        setCEDialogOpen,
+        createEvalInfo,
+        setCreateEvalInfo,
+      }}
     >
       <Dialog showDialog={cGDialogOpen}>
         <CreateGroupForm closeDialog={closeCGDialog} />
       </Dialog>
       <Dialog showDialog={cEDialogOpen}>
-        <CreateEvalForm />
+        <CreateEvalForm {...createEvalInfo} closeDialog={closeCEDialog} />
       </Dialog>
       {children}
     </SideBarContext.Provider>

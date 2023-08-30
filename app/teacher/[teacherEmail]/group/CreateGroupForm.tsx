@@ -38,6 +38,7 @@ export default function CreateGroupForm({ closeDialog }) {
           <InputField
             type="text"
             label="Nom du groupe"
+            placeholder="Ex : Groupe Spé N°7"
             prependIcon="face"
             maxLength={20}
             isRequired
@@ -46,6 +47,7 @@ export default function CreateGroupForm({ closeDialog }) {
           <InputField
             type="text"
             label="Matière"
+            placeholder="Ex : Physique-chimie"
             prependIcon="subject"
             maxLength={50}
             isRequired
@@ -54,6 +56,7 @@ export default function CreateGroupForm({ closeDialog }) {
           <InputField
             type="text"
             label="Niveau"
+            placeholder="Terminale"
             prependIcon="school"
             maxLength={40}
             isRequired

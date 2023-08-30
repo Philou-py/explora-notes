@@ -50,13 +50,13 @@ async function getCurrentUser(userEmail: string) {
   return user || null;
 }
 
-interface LayoutProps {
+interface Props {
   nav: ReactNode;
   children: ReactNode;
   params: { teacherEmail: string };
 }
 
-export default async function TeacherLayout({ children, params: { teacherEmail } }: LayoutProps) {
+export default async function TeacherLayout({ children, params: { teacherEmail } }: Props) {
   const decodedEmail = decodeURIComponent(teacherEmail);
   checkTeacherEmail(decodedEmail);
   const currentUser = await getCurrentUser(decodedEmail);

@@ -41,16 +41,17 @@ type Group {
 type EvalTemplate {
   id: ID!
   title: String! @search(by: [exact, fulltext])
+  coefficient: Float!
+  markPrecision: Float!
   teacher: Teacher! @hasInverse(field: "evalTemplates")
   categories: [CategoryTemplate!]!
-  criteria: [CriterionTemplate!]!
-  coefficient: Float!
 }
 
 type CategoryTemplate {
   id: ID!
   rank: Int!
   label: String!
+  maxPoints: Float!
   criteria: [CriterionTemplate!]!
 }
 
@@ -80,6 +81,7 @@ type Category {
   id: ID!
   rank: Int!
   label: String! @search(by: [exact, fulltext])
+  maxPoints: Float! @search
   criteria: [Criterion!]! @hasInverse(field: "category")
   categoryResults: [CategoryResult!]! @hasInverse(field: "category")
   evaluation: Evaluation! @hasInverse(field: "categories")

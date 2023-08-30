@@ -102,10 +102,13 @@ export async function POST(request: Request) {
 
 const blankTemplate = {
   title: "Catégories / Critères",
+  coefficient: 1,
+  markPrecision: 0.5,
   categories: [
     {
       rank: 0,
       label: "Catégorie",
+      maxPoints: 1,
       criteria: [{ rank: 0, label: "Critère", maxPoints: 1, isBonus: false }],
     },
   ],
@@ -113,10 +116,13 @@ const blankTemplate = {
 
 const exerciseTemplate = {
   title: "Exercices / Questions",
+  coefficient: 1,
+  markPrecision: 0.5,
   categories: [
     {
       rank: 0,
       label: "Exercice 1",
+      maxPoints: 1,
       criteria: [{ rank: 0, label: "Question 1", maxPoints: 1, isBonus: false }],
     },
   ],
