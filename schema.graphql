@@ -65,10 +65,11 @@ type CriterionTemplate {
 type Evaluation {
   id: ID!
   title: String! @search(by: [exact, fulltext])
+  coefficient: Float! @search
+  markPrecision: Float! @search
   group: Group! @hasInverse(field: "evaluations")
   categories: [Category!]! @hasInverse(field: "evaluation")
   criteria: [Criterion!]! @hasInverse(field: "evaluation")
-  coefficient: Float! @search
   copies: [Copy!]! @hasInverse(field: "evaluation")
   average: Float! @search
   teacher: Teacher!
