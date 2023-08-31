@@ -9,10 +9,13 @@ import cn from "classnames/bind";
 import createGroupFormStyles from "./CreateGroupForm.module.scss";
 import { useHandleMutation } from "@/app/useHandleMutation";
 import { useCallback } from "react";
+import { useParams } from "next/navigation";
 
 const cx = cn.bind(createGroupFormStyles);
 
 export default function CreateGroupForm({ closeDialog }) {
+  const { teacherEmail } = useParams();
+
   const {
     data: newGroup,
     setData: setNewGroup,
@@ -32,7 +35,11 @@ export default function CreateGroupForm({ closeDialog }) {
 
   return (
     <Card className={cx("createGroupCard")}>
-      <Form onSubmit={() => submitAction("/teacher/group/create-group", "POST", newGroup)}>
+      <Form
+        onSubmit={() =>
+          submitAction(`/teacher/${teacherEmail}/group/create-group`, "POST", newGroup)
+        }
+      >
         <CardHeader title={<h2>Créer un groupe</h2>} centerTitle />
         <CardContent>
           <InputField

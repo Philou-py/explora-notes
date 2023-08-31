@@ -23,11 +23,12 @@ function incrementLabel(label: string) {
 
 interface Props {
   markPrecision: number;
-  categories: EvalTemplate["categories"];
+  scale: EvalTemplate["categories"];
+  setScale: (_: EvalTemplate["categories"]) => void;
 }
 
-export default function CreateEvalScale({ markPrecision, categories }: Props) {
-  const [scale, setScale] = useState<EvalTemplate["categories"]>([]);
+export default function CreateEvalScale({ markPrecision, scale, setScale }: Props) {
+  const { createEvalTemplate: template } = useContext(SideBarContext);
   const [nbCategories, setNbCategories] = useState(0);
   const [nbCriteria, setNbCriteria] = useState(0);
   const totalPoints = useMemo(
@@ -37,7 +38,8 @@ export default function CreateEvalScale({ markPrecision, categories }: Props) {
   const { setCEDialogOpen } = useContext(SideBarContext);
 
   useEffect(() => {
-    if (categories.length !== 0) {
+    if (template) {
+      const categories = template.categories;
       setNbCategories(categories.length);
       setNbCriteria(categories.reduce((nbCriteria, cat) => nbCriteria + cat.criteria.length, 0));
       setScale(
@@ -50,7 +52,7 @@ export default function CreateEvalScale({ markPrecision, categories }: Props) {
       );
       setCEDialogOpen(true);
     }
-  }, [categories, setCEDialogOpen]);
+  }, [template, setCEDialogOpen, setScale]);
 
   const handleAddCriterion = (catId: number, critId: number) => {
     const newScale = scale.map((category) => {
@@ -225,8 +227,8 @@ export default function CreateEvalScale({ markPrecision, categories }: Props) {
                       />
                     </div>
                     <div className={cx("radioButtonsContainer")}>
-                      {[...Array(21).keys()]
-                        .map((i) => i * Number(markPrecision))
+                      {[...Array(20).keys()]
+                        .map((i) => Number(markPrecision) + i * Number(markPrecision))
                         .map((i) => (
                           <div key={`crit-${criterion.id}-${i}`} className={cx("radioButton")}>
                             <label>

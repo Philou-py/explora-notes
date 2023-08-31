@@ -70,7 +70,6 @@ type Evaluation {
   markPrecision: Float! @search
   group: Group! @hasInverse(field: "evaluations")
   categories: [Category!]! @hasInverse(field: "evaluation")
-  criteria: [Criterion!]! @hasInverse(field: "evaluation")
   copies: [Copy!]! @hasInverse(field: "evaluation")
   average: Float! @search
   teacher: Teacher!
@@ -95,7 +94,6 @@ type Criterion {
   isBonus: Boolean!
   category: Category! @hasInverse(field: "criteria")
   criterionResults: [CriterionResult!]! @hasInverse(field: "criterion")
-  evaluation: Evaluation! @hasInverse(field: "criteria")
 }
 
 type Copy {

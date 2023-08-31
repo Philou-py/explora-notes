@@ -69,7 +69,7 @@ async function getTemplate(templateId: string): Promise<EvalTemplate> {
   return result.data.getEvalTemplate;
 }
 
-export async function GET(_, { params: { templateId } }) {
+export async function GET(_: Request, { params: { templateId } }) {
   const cookieStore = cookies();
   const jwt = cookieStore.get("X-ExploraNotes-Auth");
   if (!jwt)

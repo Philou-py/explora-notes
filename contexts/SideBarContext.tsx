@@ -4,12 +4,33 @@ import { createContext, useState, ReactNode, useEffect, useCallback } from "reac
 import Dialog from "@/components/Dialog";
 import CreateGroupForm from "@/app/teacher/[teacherEmail]/group/CreateGroupForm";
 import CreateEvalForm from "@/app/teacher/[teacherEmail]/group/[groupId]/evaluation/CreateEvalForm";
+import { EvalTemplate } from "@/app/teacher/[teacherEmail]/template/[templateId]/get-template/route";
+
+async function fetchTemplate(url: string): Promise<EvalTemplate> {
+  const response = await fetch(url);
+  const result = await response.json();
+  return result.template;
+}
 
 interface SideBarProviderProps {
   children: ReactNode;
   clippedSideBar: boolean;
   openByDefault: boolean;
   isAuthenticated: boolean;
+}
+
+type Modify<T, R> = Omit<T, keyof R> & R;
+
+export interface TemplateForGr
+  extends Modify<
+    EvalTemplate,
+    {
+      markPrecision: string;
+      coefficient: string;
+    }
+  > {
+  groupId: string;
+  groupName: string;
 }
 
 export const SideBarContext = createContext({
@@ -20,8 +41,9 @@ export const SideBarContext = createContext({
   setCGDialogOpen: (_: boolean | ((_: boolean) => boolean)) => {},
   cEDialogOpen: false,
   setCEDialogOpen: (_: boolean | ((_: boolean) => boolean)) => {},
-  createEvalInfo: { templateId: "", group: { id: "", name: "" } },
-  setCreateEvalInfo: (_: { templateId: string; group: { id: string; name: string } }) => {},
+  createEvalTemplate: null as TemplateForGr | null,
+  setCreateEvalTemplate: (_: TemplateForGr | null) => {},
+  getPrefillInfo: (_: string, __: string, ___: string, ____: string) => {},
 });
 
 export default function SideBarProvider({
@@ -36,15 +58,25 @@ export default function SideBarProvider({
   const [cEDialogOpen, setCEDialogOpen] = useState(false);
   const closeCEDialog = useCallback(() => {
     setCEDialogOpen(false);
-    setCreateEvalInfo({
-      templateId: "",
-      group: { id: "", name: "" },
-    });
+    setCreateEvalTemplate(null);
   }, []);
-  const [createEvalInfo, setCreateEvalInfo] = useState({
-    templateId: "",
-    group: { id: "", name: "" },
-  });
+  const [createEvalTemplate, setCreateEvalTemplate] = useState<TemplateForGr>(null);
+  const getPrefillInfo = useCallback(
+    async (teacherEmail: string, templateId: string, groupName: string, groupId: string) => {
+      const template = await fetchTemplate(
+        `/teacher/${teacherEmail}/template/${templateId}/get-template`
+      );
+      template.categories.sort((a, b) => a.rank - b.rank);
+      setCreateEvalTemplate({
+        ...template,
+        groupId: groupId,
+        groupName,
+        markPrecision: template.markPrecision.toString(),
+        coefficient: template.coefficient.toString(),
+      });
+    },
+    []
+  );
 
   // Open the SideBar by default, if authenticated and on a large screen
   useEffect(() => {
@@ -64,15 +96,16 @@ export default function SideBarProvider({
         setCGDialogOpen,
         cEDialogOpen,
         setCEDialogOpen,
-        createEvalInfo,
-        setCreateEvalInfo,
+        createEvalTemplate,
+        setCreateEvalTemplate,
+        getPrefillInfo,
       }}
     >
       <Dialog showDialog={cGDialogOpen}>
         <CreateGroupForm closeDialog={closeCGDialog} />
       </Dialog>
       <Dialog showDialog={cEDialogOpen}>
-        <CreateEvalForm {...createEvalInfo} closeDialog={closeCEDialog} />
+        <CreateEvalForm closeDialog={closeCEDialog} />
       </Dialog>
       {children}
     </SideBarContext.Provider>

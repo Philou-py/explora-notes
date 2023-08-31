@@ -25,8 +25,6 @@ export const metadata: Metadata = {
 };
 
 export default async function AppLayout({ children, auth }) {
-  console.log("App layout rendered!");
-
   return (
     <html lang="fr" className={cormorantUpright.className}>
       <body>

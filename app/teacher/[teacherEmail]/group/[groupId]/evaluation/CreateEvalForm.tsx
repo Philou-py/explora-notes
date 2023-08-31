@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { EvalTemplate } from "../../../template/[templateId]/get-template/route";
+import { useState, useEffect, useContext } from "react";
 import { useParams } from "next/navigation";
+import { SideBarContext, TemplateForGr } from "@/contexts/SideBarContext";
 import Card, { CardHeader, CardContent, CardActions } from "@/components/Card";
 import Form, { useForm } from "@/components/Form";
 import InputField from "@/components/InputField";
@@ -25,23 +25,9 @@ const coefficientForSelect = [...Array(21).keys()].map((i) => [
   (0.5 * i).toString(),
 ]);
 
-async function fetchTemplate(url: string): Promise<EvalTemplate> {
-  const response = await fetch(url);
-  const result = await response.json();
-  return result.template;
-}
-
-interface Props {
-  templateId: string;
-  group: {
-    id: string;
-    name: string;
-  };
-  closeDialog: () => void;
-}
-
-export default function CreateEvalForm({ templateId, group, closeDialog }: Props) {
+export default function CreateEvalForm({ closeDialog }: { closeDialog: () => void }) {
   const { teacherEmail } = useParams();
+  const { createEvalTemplate: template } = useContext(SideBarContext);
 
   const {
     data: newEval,
@@ -50,22 +36,17 @@ export default function CreateEvalForm({ templateId, group, closeDialog }: Props
     register,
   } = useForm({ title: "", markPrecision: "0.5", coefficient: "1" });
 
-  const [categories, setCategories] = useState<EvalTemplate["categories"]>([]);
+  const [scale, setScale] = useState<TemplateForGr["categories"]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const template = await fetchTemplate(
-        `/teacher/${teacherEmail}/template/${templateId}/get-template`
-      );
+    if (template) {
       setNewEval({
-        title: template.title,
-        markPrecision: template.markPrecision.toString(),
-        coefficient: template.coefficient.toString(),
+        title: "",
+        markPrecision: template.markPrecision,
+        coefficient: template.coefficient,
       });
-      setCategories(template.categories);
-    };
-    if (templateId) fetchData();
-  }, [teacherEmail, templateId, setNewEval]);
+    }
+  }, [template, setNewEval]);
 
   const { submitAction, isLoading } = useHandleMutation(closeDialog);
 
@@ -74,19 +55,25 @@ export default function CreateEvalForm({ templateId, group, closeDialog }: Props
       <Form
         onSubmit={() =>
           submitAction(
-            `/teacher/${teacherEmail}/group/${group.id}/evaluation/create-eval`,
+            template
+              ? `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/create-eval`
+              : "",
             "POST",
-            newEval
+            { ...template, ...newEval, categories: scale }
           )
         }
       >
-        <CardHeader title={<h2>Créer un barème</h2>} subtitle={<h3>{group.name}</h3>} />
+        <CardHeader
+          title={<h2>Créer un barème</h2>}
+          subtitle={template && <h3>{template.groupName}</h3>}
+        />
         <CardContent>
           <fieldset className={cx("generalInfo")}>
             <legend>Informations générales</legend>
             <InputField
               type="text"
               label="Titre de l&rsquo;évaluation"
+              placeholder="Ex : Évaluation N°7"
               prependIcon="title"
               isRequired
               {...register("title")}
@@ -113,7 +100,8 @@ export default function CreateEvalForm({ templateId, group, closeDialog }: Props
           <fieldset className={cx("scale")}>
             <legend>Barème</legend>
             <CreateEvalScale
-              categories={categories}
+              scale={scale}
+              setScale={setScale}
               markPrecision={Number(newEval.markPrecision)}
             />
           </fieldset>

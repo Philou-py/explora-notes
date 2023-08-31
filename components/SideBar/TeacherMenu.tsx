@@ -33,10 +33,10 @@ export default function TeacherMenu({
   teacher: Teacher;
 }) {
   const pathname = usePathname();
-  const { cGDialogOpen, setCGDialogOpen, cEDialogOpen, createEvalInfo, setCreateEvalInfo } =
+  const { cGDialogOpen, setCGDialogOpen, cEDialogOpen, createEvalTemplate, getPrefillInfo } =
     useContext(SideBarContext);
 
-  return (
+  const teacherMenuTemplate = (
     <>
       <div className={cx("teacherMenu")}>
         <Button className="indigo--text" type="text" justifyContent="flex-start" isFullWidth>
@@ -58,22 +58,22 @@ export default function TeacherMenu({
                 <Button
                   key={templateId}
                   className={
-                    cEDialogOpen &&
-                    createEvalInfo.templateId === templateId &&
-                    createEvalInfo.group.name === name
+                    createEvalTemplate &&
+                    createEvalTemplate.id === templateId &&
+                    createEvalTemplate.groupName === name
                       ? "deep-orange darken-3"
                       : "deep-orange--text text--darken-3"
                   }
                   type={
-                    cEDialogOpen &&
-                    createEvalInfo.templateId === templateId &&
-                    createEvalInfo.group.name === name
+                    createEvalTemplate &&
+                    createEvalTemplate.id === templateId &&
+                    createEvalTemplate.groupName === name
                       ? "filled"
                       : "text"
                   }
                   justifyContent="flex-start"
                   onClick={() => {
-                    setCreateEvalInfo({ templateId, group: { id: groupId, name } });
+                    getPrefillInfo(email, templateId, name, groupId);
                   }}
                   isFullWidth
                 >
@@ -86,7 +86,7 @@ export default function TeacherMenu({
               {evaluations.map(({ evalId, title }) => (
                 <Button
                   key={evalId}
-                  className="purple--text"
+                  className="deep-orange--text text--darken-3"
                   type="text"
                   justifyContent="flex-start"
                   isFullWidth
@@ -131,4 +131,5 @@ export default function TeacherMenu({
       </div>
     </>
   );
+  return teacherMenuTemplate;
 }
