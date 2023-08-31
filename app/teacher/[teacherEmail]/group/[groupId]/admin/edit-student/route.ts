@@ -97,7 +97,7 @@ export async function PUT(request: Request, { params: { groupId } }) {
         variables: {
           input: {
             filter: { id: id },
-            set: { firstName, lastName, fullName: `${firstName} ${lastName}` },
+            set: { firstName, lastName, fullName: `${lastName} ${firstName}` },
           },
         },
       }),

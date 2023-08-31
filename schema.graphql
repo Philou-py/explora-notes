@@ -104,7 +104,6 @@ type Copy {
   mark: Float! @search
   bonusPoints: Float! @search
   penaltyPoints: Float! @search
-  criterionResults: [CriterionResult!]! @hasInverse(field: "copy")
   categoryResults: [CategoryResult!]! @hasInverse(field: "copy")
   evaluation: Evaluation! @hasInverse(field: "copies")
 }
@@ -121,7 +120,6 @@ type CategoryResult {
 type CriterionResult {
   id: ID!
   points: Float! @search
-  copy: Copy! @hasInverse(field: "criterionResults")
   criterion: Criterion! @hasInverse(field: "criterionResults")
   categoryResult: CategoryResult @hasInverse(field: "criterionResults")
 }

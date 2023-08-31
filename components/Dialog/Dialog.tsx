@@ -17,7 +17,7 @@ export default function Dialog({ showDialog, closeFunc, children }: DialogProps)
   const modalBgRef = useRef(null);
   const handleBgClick: MouseEventHandler<HTMLDivElement> = useCallback(
     (event) => {
-      if (closeFunc && (event.target as HTMLDivElement).isSameNode(modalBgRef.current)) {
+      if ((event.target as HTMLDivElement).isSameNode(modalBgRef.current)) {
         closeFunc(false);
       }
     },
@@ -25,7 +25,11 @@ export default function Dialog({ showDialog, closeFunc, children }: DialogProps)
   );
 
   return (
-    <div className={cx("bg", { show: showDialog })} onClick={handleBgClick} ref={modalBgRef}>
+    <div
+      className={cx("bg", { show: showDialog })}
+      onClick={closeFunc ? handleBgClick : undefined}
+      ref={modalBgRef}
+    >
       {children}
     </div>
   );

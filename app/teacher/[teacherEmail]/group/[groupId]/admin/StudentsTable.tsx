@@ -32,26 +32,26 @@ export default function StudentsTable({ groupStudents }: { groupStudents: GroupS
     { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
   ];
 
-  const studentsTableItems = groupStudents.map((groupStudent) => ({
-    key: { rawContent: groupStudent.id },
-    firstName: { rawContent: groupStudent.firstName },
-    lastName: { rawContent: groupStudent.lastName },
+  const studentsTableItems = groupStudents.map((grSt) => ({
+    key: { rawContent: grSt.id },
+    firstName: { rawContent: grSt.firstName.toLowerCase(), content: grSt.firstName },
+    lastName: { rawContent: grSt.lastName.toLowerCase(), content: grSt.lastName },
     actions: {
       rawContent: "",
       content: [
         <Button
-          key={`${groupStudent}--edit`}
+          key={`${grSt}--edit`}
           type="icon"
           size="small"
           iconName="edit"
           className="purple--text"
           onClick={() => {
-            setCurrentStudent({ ...groupStudent });
+            setCurrentStudent({ ...grSt });
             setShowEditDialog(true);
           }}
         />,
         <Button
-          key={`${groupStudent}--delete`}
+          key={`${grSt}--delete`}
           type="icon"
           size="small"
           iconName="delete"
@@ -62,7 +62,7 @@ export default function StudentsTable({ groupStudents }: { groupStudents: GroupS
               "Voulez-vous vraiment retirer cet élève du groupe ?",
               `/teacher/${teacherEmail}/group/${groupId}/admin/delete-student`,
               "DELETE",
-              { groupStudentId: groupStudent.id }
+              { groupStudentId: grSt.id }
             )
           }
         />,

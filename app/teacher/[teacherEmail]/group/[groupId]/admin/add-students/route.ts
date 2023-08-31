@@ -119,7 +119,7 @@ export async function PUT(request: Request, { params: { groupId } }) {
   // Reshape the new students
   const newStudentsToSend = newStudents.filter((student: any) => !!student);
   newStudentsToSend.forEach((newStudent: any) => {
-    newStudent.fullName = `${newStudent.firstName} ${newStudent.lastName}`;
+    newStudent.fullName = `${newStudent.lastName} ${newStudent.firstName}`;
     newStudent.copies = [];
     newStudent.studentPoints = 0;
     newStudent.studentCoefs = 0;

@@ -35,11 +35,17 @@ export default function TeacherMenu({
   const pathname = usePathname();
   const { cGDialogOpen, setCGDialogOpen, cEDialogOpen, createEvalTemplate, getPrefillInfo } =
     useContext(SideBarContext);
+  const areDialogsOpen = cGDialogOpen || cEDialogOpen;
+  const colours = {
+    level1: ["indigo--text", "indigo"],
+    level2: ["purple--text", "purple white--text"],
+    level3: ["deep-orange--text text--darken-3", "deep-orange darken-3"],
+  };
 
   const teacherMenuTemplate = (
     <>
       <div className={cx("teacherMenu")}>
-        <Button className="indigo--text" type="text" justifyContent="flex-start" isFullWidth>
+        <Button className={colours.level1[0]} type="text" justifyContent="flex-start" isFullWidth>
           Gestion des modèles
         </Button>
 
@@ -47,11 +53,11 @@ export default function TeacherMenu({
           <ButtonGroup
             key={groupId}
             triggerText={name}
-            triggerProps={{ className: "indigo--text" }}
+            triggerProps={{ className: colours.level1[0] }}
           >
             <ButtonGroup
               triggerText="Créer un barème"
-              triggerProps={{ className: "purple--text" }}
+              triggerProps={{ className: colours.level2[0] }}
               openByDefault={false}
             >
               {evalTemplates.map(({ templateId, title }) => (
@@ -61,8 +67,8 @@ export default function TeacherMenu({
                     createEvalTemplate &&
                     createEvalTemplate.id === templateId &&
                     createEvalTemplate.groupName === name
-                      ? "deep-orange darken-3"
-                      : "deep-orange--text text--darken-3"
+                      ? colours.level3[1]
+                      : colours.level3[0]
                   }
                   type={
                     createEvalTemplate &&
@@ -82,14 +88,21 @@ export default function TeacherMenu({
               ))}
             </ButtonGroup>
 
-            <ButtonGroup triggerText="Évaluations" triggerProps={{ className: "purple--text" }}>
+            <ButtonGroup triggerText="Évaluations" triggerProps={{ className: colours.level2[0] }}>
               {evaluations.map(({ evalId, title }) => (
                 <Button
                   key={evalId}
-                  className="deep-orange--text text--darken-3"
+                  className={
+                    !areDialogsOpen &&
+                    pathname === `/teacher/${email}/group/${groupId}/evaluation/${evalId}`
+                      ? colours.level3[1]
+                      : colours.level3[0]
+                  }
                   type="text"
                   justifyContent="flex-start"
+                  href={`/teacher/${email}/group/${groupId}/evaluation/${evalId}`}
                   isFullWidth
+                  isLink
                 >
                   {title}
                 </Button>
@@ -102,11 +115,9 @@ export default function TeacherMenu({
 
             <Button
               className={
-                pathname === `/teacher/${email}/group/${groupId}/admin` &&
-                !cGDialogOpen &&
-                !cEDialogOpen
-                  ? "purple white--text"
-                  : "purple--text"
+                !areDialogsOpen && pathname === `/teacher/${email}/group/${groupId}/admin`
+                  ? colours.level2[1]
+                  : colours.level2[0]
               }
               type={pathname === `/teacher/${email}/group/${groupId}/admin` ? "filled" : "text"}
               justifyContent="flex-start"
@@ -120,7 +131,7 @@ export default function TeacherMenu({
         ))}
 
         <Button
-          className={cGDialogOpen ? "indigo white--text" : "indigo--text"}
+          className={cGDialogOpen ? colours.level1[0] : colours.level1[1]}
           type={cGDialogOpen ? "filled" : "text"}
           justifyContent="flex-start"
           onClick={() => setCGDialogOpen(true)}

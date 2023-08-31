@@ -44,7 +44,7 @@ export async function POST(request: Request) {
               ? {
                   firstName,
                   lastName,
-                  fullName: `${firstName} ${lastName}`,
+                  fullName: `${lastName} ${firstName}`,
                   groups: [],
                   evaluations: [],
                   evalTemplates: [blankTemplate, exerciseTemplate],
