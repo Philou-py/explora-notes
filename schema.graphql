@@ -68,6 +68,7 @@ type Evaluation {
   title: String! @search(by: [exact, fulltext])
   coefficient: Float! @search
   markPrecision: Float! @search
+  totalPoints: Float! @search
   group: Group! @hasInverse(field: "evaluations")
   categories: [Category!]! @hasInverse(field: "evaluation")
   copies: [Copy!]! @hasInverse(field: "evaluation")

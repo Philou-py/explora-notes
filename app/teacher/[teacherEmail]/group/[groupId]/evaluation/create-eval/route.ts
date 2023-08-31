@@ -82,6 +82,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
     title: newEval.title,
     markPrecision: Number(newEval.markPrecision),
     coefficient: Number(newEval.coefficient),
+    totalPoints: newEval.categories.reduce((p, cat) => p + cat.maxPoints, 0),
     categories: newEval.categories.map((cat, catRank) => {
       // Remove IDs and add ranks
       delete cat.id;
