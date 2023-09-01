@@ -1,0 +1,63 @@
+$sm: 960px;
+
+.copyCard {
+  width: clamp(350px, 40%, 600px);
+  max-width: 95%;
+
+  .studentInQuestion {
+    text-align: center;
+    font-weight: bold;
+    font-size: 22px;
+  }
+
+  p {
+    color: black;
+    text-align: center;
+  }
+
+  .categoryLabel {
+    margin: 0;
+    text-align: center;
+    text-decoration: underline red 2px;
+    font-weight: bold;
+    font-size: 22px;
+  }
+
+  .criterionLabel {
+    margin: 0;
+    margin-top: 10px;
+    text-align: left;
+    text-decoration: underline;
+  }
+
+  .categorySummary {
+    margin-bottom: 30px !important;
+  }
+
+  .radioButtonsContainer {
+    margin-bottom: 5px;
+
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .radioButton {
+      margin: 5px 3px;
+    }
+  }
+
+  .bonusPenalty {
+    margin: 20px 0;
+    display: flex;
+
+    & > div {
+      flex-grow: 1;
+    }
+  }
+
+  .preselectControls {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+  }
+}

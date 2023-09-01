@@ -167,94 +167,91 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     setNbCategories((oldNb) => oldNb - 1);
   };
 
-  const categoryTemplate = scale.map(
-    (category) =>
-      category && (
-        <div key={category.id} className={cx("category")}>
-          <div className={cx("categoryLabel")}>
-            <InputField
-              type="text"
-              placeholder="Catégorie"
-              prependIcon="category"
-              value={category.label}
-              className={cx("categoryInput")}
-              setValue={(newLabel) => handleRenameCategory(category.id, newLabel)}
-              isRequired
-            />
-            <Button
-              type="icon"
-              iconName="create_new_folder"
-              className="teal white--text"
-              onClick={() => handleAddCategory(category.id)}
-            />
-            <Button
-              type="icon"
-              iconName="folder_delete"
-              className={cn("orange", cx("removeCategoryBtn"))}
-              onClick={() => handleRemoveCategory(category.id)}
-              size="small"
-            />
-          </div>
-          <div className={cx("criteria")}>
-            {category.criteria.map(
-              (criterion) =>
-                criterion && (
-                  <div key={criterion.id} className={cx("criterion")}>
-                    <div className={cx("criterionLabel")}>
-                      <InputField
-                        type="text"
-                        placeholder="Critère"
-                        prependIcon="title"
-                        value={criterion.label}
-                        className={cx("criterionInput")}
-                        setValue={(newLabel) =>
-                          handleRenameCriterion(category.id, criterion.id, newLabel)
-                        }
-                        isRequired
-                      />
-                      <Button
-                        type="icon"
-                        iconName="add_task"
-                        className="cyan white--text"
-                        onClick={() => handleAddCriterion(category.id, criterion.id)}
-                      />
-                      <Button
-                        type="icon"
-                        iconName="backspace"
-                        className={cn("amber", cx("removeCriterionBtn"))}
-                        onClick={() => handleRemoveCriterion(category.id, criterion.id)}
-                        size="small"
-                      />
-                    </div>
-                    <div className={cx("radioButtonsContainer")}>
-                      {[...Array(20).keys()]
-                        .map((i) => Number(markPrecision) + i * Number(markPrecision))
-                        .map((i) => (
-                          <div key={`crit-${criterion.id}-${i}`} className={cx("radioButton")}>
-                            <label>
-                              <input
-                                type="radio"
-                                name={`crit-${criterion.id}`}
-                                value={i}
-                                checked={i === criterion.maxPoints}
-                                onChange={() => handleSetMaxPoints(category.id, criterion.id, i)}
-                                required
-                              />
-                              {i}
-                            </label>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )
-            )}
-          </div>
-          <p className={cx("categorySummary")}>
-            Total de points pour {category.label} : {category.maxPoints}
-          </p>
-        </div>
-      )
-  );
+  const categoryTemplate = scale.map((category) => (
+    <div key={category.id} className={cx("category")}>
+      <div className={cx("categoryLabel")}>
+        <InputField
+          type="text"
+          placeholder="Catégorie"
+          prependIcon="category"
+          value={category.label}
+          className={cx("categoryInput")}
+          setValue={(newLabel) => handleRenameCategory(category.id, newLabel)}
+          isRequired
+        />
+        <Button
+          type="icon"
+          iconName="create_new_folder"
+          className="teal white--text"
+          onClick={() => handleAddCategory(category.id)}
+        />
+        <Button
+          type="icon"
+          iconName="folder_delete"
+          className={cn("orange", cx("removeCategoryBtn"))}
+          onClick={() => handleRemoveCategory(category.id)}
+          size="small"
+        />
+      </div>
+      <div className={cx("criteria")}>
+        {category.criteria.map(
+          (criterion) =>
+            criterion && (
+              <div key={criterion.id} className={cx("criterion")}>
+                <div className={cx("criterionLabel")}>
+                  <InputField
+                    type="text"
+                    placeholder="Critère"
+                    prependIcon="title"
+                    value={criterion.label}
+                    className={cx("criterionInput")}
+                    setValue={(newLabel) =>
+                      handleRenameCriterion(category.id, criterion.id, newLabel)
+                    }
+                    isRequired
+                  />
+                  <Button
+                    type="icon"
+                    iconName="add_task"
+                    className="cyan white--text"
+                    onClick={() => handleAddCriterion(category.id, criterion.id)}
+                  />
+                  <Button
+                    type="icon"
+                    iconName="backspace"
+                    className={cn("amber", cx("removeCriterionBtn"))}
+                    onClick={() => handleRemoveCriterion(category.id, criterion.id)}
+                    size="small"
+                  />
+                </div>
+                <div className={cx("radioButtonsContainer")}>
+                  {[...Array(20).keys()]
+                    .map((i) => Number(markPrecision) + i * Number(markPrecision))
+                    .map((i) => (
+                      <div key={`crit-${criterion.id}-${i}`} className={cx("radioButton")}>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`crit-${criterion.id}`}
+                            value={i}
+                            checked={i === criterion.maxPoints}
+                            onChange={() => handleSetMaxPoints(category.id, criterion.id, i)}
+                            required
+                          />
+                          {i}
+                        </label>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )
+        )}
+      </div>
+      <p className={cx("categorySummary")}>
+        Total de points pour {category.label} : {category.maxPoints}
+      </p>
+    </div>
+  ));
 
   return (
     <div className={cx("evalScale")}>

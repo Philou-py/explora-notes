@@ -3,6 +3,7 @@ import CopyActionTriggers from "./CopyActionTriggers";
 import CopyDialog from "./CopyDialog";
 import { dgraphQuery } from "@/app/dgraphQuery";
 import { roundNum } from "@/helpers/roundNum";
+import { Suspense } from "react";
 
 interface GroupStudent {
   id: string;
@@ -25,10 +26,18 @@ interface Eval {
   students: GroupStudent[];
   categories: RawEval["categories"];
   totalPoints: number;
+  markPrecision: number;
+}
+
+export interface GroupStudentName {
+  id: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface Scale {
   totalPoints: number;
+  markPrecision: number;
   categories: {
     id: string;
     label: string;
@@ -42,12 +51,10 @@ export interface Scale {
 }
 
 interface RawEval extends Scale {
+  totalPoints: number;
+  markPrecision: number;
   group: {
-    groupStudents: {
-      id: string;
-      firstName: string;
-      lastName: string;
-    }[];
+    id: string;
   };
   copies: {
     id: string;
@@ -62,23 +69,33 @@ interface RawEval extends Scale {
 }
 
 const GET_STUDENTS = `
+  query($groupId: ID!) {
+    getGroup(id: $groupId) {
+      groupStudents {
+        id
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+const GET_EVAL = `
   query($evalId: ID!) {
     getEvaluation(id: $evalId) {
-      categories {
+      totalPoints
+      markPrecision
+      group {
+        id
+      }
+      categories (order: { asc: rank } ) {
         id
         label
         maxPoints
-        criteria {
+        criteria (order: { asc: rank } ) {
           id
           label
           maxPoints
-        }
-      }
-      group {
-        groupStudents {
-          id
-          firstName
-          lastName
         }
       }
       copies {
@@ -101,24 +118,32 @@ const GET_STUDENTS = `
 
 async function getEvalResults(evalId: string): Promise<Eval> {
   const evaluation: RawEval = await dgraphQuery(
-    GET_STUDENTS,
+    GET_EVAL,
     { evalId },
     "getEvaluation",
-    `getEvaluation${evalId}`
+    `getEvaluation-${evalId}`
   );
-  const groupStudents = evaluation.group.groupStudents.map((grSt) => ({
+
+  const { groupStudents }: { groupStudents: GroupStudentName[] } = await dgraphQuery(
+    GET_STUDENTS,
+    { groupId: evaluation.group.id },
+    "getGroup",
+    "getGroup-" + evaluation.group.id
+  );
+  const students = groupStudents.map((grSt) => ({
     ...grSt,
     copy: evaluation.copies.find((c) => c.groupStudent.id === grSt.id),
   }));
   return {
+    students,
     categories: evaluation.categories,
-    students: groupStudents,
     totalPoints: evaluation.totalPoints,
+    markPrecision: evaluation.markPrecision,
   };
 }
 
 export default async function StudentMarksTable({ evalId }: { evalId: string }) {
-  const { totalPoints, categories, students } = await getEvalResults(evalId);
+  const { totalPoints, markPrecision, categories, students } = await getEvalResults(evalId);
 
   const genMarkDisplay = (pts: number, mark: number) => {
     return totalPoints === 20
@@ -161,14 +186,7 @@ export default async function StudentMarksTable({ evalId }: { evalId: string }) 
 
   return (
     <>
-      {students.map((st) => (
-        <CopyDialog
-          key={st.id}
-          copyId={st.copy && st.copy.id}
-          scale={{ totalPoints, categories }}
-          student={students.find((s) => s.id === st.id)}
-        />
-      ))}
+      <CopyDialog scale={{ totalPoints, markPrecision, categories }} />
       <DataTable
         headers={studentsTableHeaders}
         items={studentsTableItems}

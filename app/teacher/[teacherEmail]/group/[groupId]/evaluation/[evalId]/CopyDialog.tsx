@@ -1,6 +1,10 @@
-import { dgraphQuery } from "@/app/dgraphQuery";
+"use client";
+
 import CopyForm from "./CopyForm";
 import { Scale } from "./StudentMarksTable";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { ActionContext } from "./ActionContext";
+import Dialog from "@/components/Dialog";
 
 export interface Copy {
   totalPoints: number;
@@ -19,65 +23,81 @@ export interface Copy {
   }[];
 }
 
-const GET_COPY = `
-  query($copyId: ID!) {
-    getCopy(id: $copyId) {
-      totalPoints
-      bonusPoints
-      penaltyPoints
-      categoryResults {
-        id
-        points
-        comment
-        category {
-          id
-        }
-        criterionResults {
-          id
-          points
-          criterion {
-            id
-          }
-        }
-      }
-    }
-  }
-`;
-
 interface Props {
-  copyId?: string;
   scale: Scale;
-  student: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
 }
 
-export default async function CopyDialog({ copyId, scale, student }: Props) {
-  async function getCopy(copyId?: string): Promise<Copy> {
-    if (copyId) {
-      return await dgraphQuery(GET_COPY, { copyId }, "getCopy", `getCopy${copyId}`);
-    } else {
-      return {
-        totalPoints: 0,
-        bonusPoints: 0,
-        penaltyPoints: 0,
-        categoryResults: scale.categories.map((cat) => ({
-          id: cat.id,
-          points: -1,
-          comment: "",
-          category: { id: cat.id },
-          criterionResults: cat.criteria.map((crit) => ({
-            id: crit.id,
-            points: -1,
-            criterion: { id: crit.id },
-          })),
-        })),
-      };
-    }
-  }
+const emptyCopy = {
+  totalPoints: 0,
+  bonusPoints: 0,
+  penaltyPoints: 0,
+  categoryResults: [],
+};
 
-  const copy = await getCopy(copyId);
-  return <CopyForm copy={copy} scale={scale} student={student} />;
+export default function CopyDialog({ scale }: Props) {
+  const { action } = useContext(ActionContext);
+  const [actionType, setActionType] = useState("");
+  const [copy, setCopy] = useState(emptyCopy);
+  const [studentId, setStudentId] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [show, setShow] = useState(false);
+  const closeDialog = useCallback(() => setShow(false), []);
+
+  useEffect(() => {
+    async function getCopy(copyId: string) {
+      let copy: Copy;
+      if (copyId) {
+        const response = await fetch(`/teacher/copy/${copyId}`);
+        copy = await response.json();
+      } else {
+        copy = {
+          ...emptyCopy,
+          categoryResults: scale.categories.map((cat) => ({
+            id: cat.id,
+            points: 0,
+            comment: "",
+            category: { id: cat.id },
+            criterionResults: cat.criteria.map((crit) => ({
+              id: crit.id,
+              points: -2,
+              criterion: { id: crit.id },
+            })),
+          })),
+        };
+      }
+      copy.categoryResults.sort(
+        (a, b) =>
+          scale.categories.findIndex((cat) => cat.id === a.category.id) -
+          scale.categories.findIndex((cat) => cat.id === b.category.id)
+      );
+      copy.categoryResults.forEach((catRes, catIndex) => {
+        catRes.criterionResults.sort(
+          (a, b) =>
+            scale.categories[catIndex].criteria.findIndex((crit) => crit.id === a.criterion.id) -
+            scale.categories[catIndex].criteria.findIndex((crit) => crit.id === b.criterion.id)
+        );
+      });
+      setCopy(copy);
+      setStudentId(action.info.studentId);
+      setStudentName(action.info.studentName);
+      setActionType(action.type);
+      setShow(true);
+    }
+    if (action.type) {
+      getCopy(action.info.copyId);
+    }
+  }, [action, scale]);
+
+  return (
+    <Dialog showDialog={show}>
+      <CopyForm
+        studentId={studentId}
+        studentName={studentName}
+        copy={copy}
+        scale={scale}
+        actionType={actionType}
+        closeDialog={closeDialog}
+      />
+    </Dialog>
+  );
 }

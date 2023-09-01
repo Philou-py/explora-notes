@@ -131,7 +131,7 @@ export default function TeacherMenu({
         ))}
 
         <Button
-          className={cGDialogOpen ? colours.level1[0] : colours.level1[1]}
+          className={cGDialogOpen ? colours.level1[1] : colours.level1[0]}
           type={cGDialogOpen ? "filled" : "text"}
           justifyContent="flex-start"
           onClick={() => setCGDialogOpen(true)}

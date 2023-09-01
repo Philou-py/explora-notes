@@ -3,7 +3,7 @@
 import { createContext, useState } from "react";
 
 const defaultAction = {
-  actionType: "",
+  type: "",
   info: {} as { [key: string]: string },
 };
 
