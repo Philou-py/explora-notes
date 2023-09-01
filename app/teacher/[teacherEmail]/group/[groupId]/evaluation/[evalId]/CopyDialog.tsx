@@ -7,6 +7,7 @@ import { ActionContext } from "./ActionContext";
 import Dialog from "@/components/Dialog";
 
 export interface Copy {
+  id: string;
   totalPoints: number;
   bonusPoints: number;
   penaltyPoints: number;
@@ -28,6 +29,7 @@ interface Props {
 }
 
 const emptyCopy = {
+  id: "",
   totalPoints: 0,
   bonusPoints: 0,
   penaltyPoints: 0,
@@ -35,20 +37,23 @@ const emptyCopy = {
 };
 
 export default function CopyDialog({ scale }: Props) {
-  const { action } = useContext(ActionContext);
+  const { action, resetAction } = useContext(ActionContext);
   const [actionType, setActionType] = useState("");
   const [copy, setCopy] = useState(emptyCopy);
   const [studentId, setStudentId] = useState("");
   const [studentName, setStudentName] = useState("");
   const [show, setShow] = useState(false);
-  const closeDialog = useCallback(() => setShow(false), []);
+  const closeDialog = useCallback(() => {
+    resetAction();
+    setShow(false);
+  }, [resetAction]);
 
   useEffect(() => {
     async function getCopy(copyId: string) {
       let copy: Copy;
       if (copyId) {
         const response = await fetch(`/teacher/copy/${copyId}`);
-        copy = await response.json();
+        copy = (await response.json()).copy;
       } else {
         copy = {
           ...emptyCopy,

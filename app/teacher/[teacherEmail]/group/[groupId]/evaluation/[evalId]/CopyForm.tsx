@@ -180,9 +180,16 @@ export default function CopyForm({
       <Form
         onSubmit={() =>
           submitAction(
-            `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/create-copy`,
+            `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/${
+              copy.id ? "update" : "create"
+            }-copy`,
             "POST",
-            { categoryResults: catRes }
+            {
+              copyId: copy.id,
+              studentId,
+              categoryResults: catRes,
+              summary: { totalPoints, mark, bonusPoints, penaltyPoints },
+            }
           )
         }
       >
@@ -258,7 +265,7 @@ export default function CopyForm({
           <Button
             type="elevated"
             className="blue darken-3"
-            isDisabled={areAllChecked}
+            isDisabled={!areAllChecked}
             isLoading={isLoading}
             formSubmit
           >

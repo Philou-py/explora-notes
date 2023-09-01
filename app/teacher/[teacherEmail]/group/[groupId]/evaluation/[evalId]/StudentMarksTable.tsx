@@ -3,7 +3,7 @@ import CopyActionTriggers from "./CopyActionTriggers";
 import CopyDialog from "./CopyDialog";
 import { dgraphQuery } from "@/app/dgraphQuery";
 import { roundNum } from "@/helpers/roundNum";
-import { Suspense } from "react";
+import { DGRAPH_URL } from "@/config";
 
 interface GroupStudent {
   id: string;
@@ -121,9 +121,8 @@ async function getEvalResults(evalId: string): Promise<Eval> {
     GET_EVAL,
     { evalId },
     "getEvaluation",
-    `getEvaluation-${evalId}`
+    "getEvaluation-" + evalId
   );
-
   const { groupStudents }: { groupStudents: GroupStudentName[] } = await dgraphQuery(
     GET_STUDENTS,
     { groupId: evaluation.group.id },

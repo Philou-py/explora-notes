@@ -46,7 +46,12 @@ const GET_TEACHER = `
 `;
 
 async function getCurrentUser(userEmail: string) {
-  const user = await dgraphQuery(GET_TEACHER, { email: userEmail }, "getTeacher");
+  const user = await dgraphQuery(
+    GET_TEACHER,
+    { email: userEmail },
+    "getTeacher",
+    "getTeacher-" + userEmail
+  );
   return user || null;
 }
 

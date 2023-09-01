@@ -20,7 +20,7 @@ interface Evaluation {
 }
 
 async function fetchEval(evalId: string): Promise<Evaluation> {
-  return await dgraphQuery(GET_EVAL, { evalId }, "getEvaluation", `getEval${evalId}Title`);
+  return await dgraphQuery(GET_EVAL, { evalId }, "getEvaluation", `getEvalTitle-${evalId}`);
 }
 
 export default async function Page({ params: { evalId } }) {

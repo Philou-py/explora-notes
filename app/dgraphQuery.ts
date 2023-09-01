@@ -10,10 +10,11 @@ export async function dgraphQuery(query: string, vars: object, queryName: string
       query,
       variables: vars,
     }),
+    cache: "force-cache",
     ...(tag ? { next: { tags: [tag] } } : {}),
   });
 
   const result = await dgraphResponse.json();
-  // console.log("dgraphQuery", result.extensions.tracing.startTime);
+  console.log(queryName, tag, result.extensions.tracing.startTime);
   return result.data[queryName];
 }

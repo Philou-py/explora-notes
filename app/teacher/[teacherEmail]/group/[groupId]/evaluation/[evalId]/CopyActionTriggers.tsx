@@ -23,7 +23,7 @@ export default function CopyActionTriggers({ copyId, studentId, studentName }: P
         <Button
           type="icon"
           size="small"
-          iconName="post_add"
+          iconName="note_add"
           className="purple--text"
           onClick={() => {
             setAction({ type: "createCopy", info: { copyId, studentId, studentName } });
@@ -36,7 +36,7 @@ export default function CopyActionTriggers({ copyId, studentId, studentName }: P
           <Button
             type="icon"
             size="small"
-            iconName="post_add"
+            iconName="edit_note"
             className="purple--text"
             onClick={() => {
               setAction({ type: "editCopy", info: { copyId, studentId, studentName } });

@@ -3,16 +3,19 @@ import { verify } from "jsonwebtoken";
 import { readFileSync } from "fs";
 import { NextResponse } from "next/server";
 import { DGRAPH_URL } from "@/config";
-import { TemplateForGr } from "@/contexts/SideBarContext";
 import { revalidateTag } from "next/cache";
 
 const publicKey = readFileSync("public.key");
 
-const ADD_EVAL = `
-  mutation($input: UpdateGroupInput!) {
-    updateGroup(input: $input) {
-      group {
+const ADD_COPY = `
+  mutation($input: [AddCopyInput!]!) {
+    addCopy(input: $input) {
+      copy {
         id
+        groupStudent {
+          firstName
+          lastName
+        }
       }
     }
   }
@@ -49,7 +52,7 @@ async function getGroupTeacher(groupId: string): Promise<Group> {
   return result.data.getGroup.teacher.email;
 }
 
-export async function POST(request: Request, { params: { teacherEmail, groupId } }) {
+export async function POST(request: Request, { params: { teacherEmail, groupId, evalId } }) {
   const cookieStore = cookies();
   const jwt = cookieStore.get("X-ExploraNotes-Auth");
   if (!jwt)
@@ -63,7 +66,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
     return NextResponse.json(
       {
         status: "error",
-        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de créer un barème !",
+        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de créer une copie !",
       },
       { status: 403 }
     );
@@ -73,34 +76,27 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
     return NextResponse.json(
       {
         status: "error",
-        msg: "Désolé, mais vous n'avez pas la permission d'ajouter des élèves à ce groupe !",
+        msg: "Désolé, mais vous n'avez pas la permission de créer une copie !",
       },
       { status: 403 }
     );
 
-  const newEval: TemplateForGr = await request.json();
-  const newEvalToSend = {
-    title: newEval.title,
-    markPrecision: Number(newEval.markPrecision),
-    coefficient: Number(newEval.coefficient),
-    totalPoints: newEval.categories.reduce((p, cat) => p + cat.maxPoints, 0),
-    categories: newEval.categories.map((cat, catRank) => {
-      // Remove IDs and add ranks
-      delete cat.id;
-      cat.rank = catRank;
-      return {
-        ...cat,
-        criteria: cat.criteria.map((crit, critRank) => {
-          delete crit.id;
-          crit.rank = critRank;
-          return crit;
-        }),
-      };
-    }),
-    teacher: {
-      email: teacherEmail,
+  const { studentId, categoryResults, summary } = await request.json();
+  const copy = {
+    groupStudent: {
+      id: studentId,
     },
+    ...summary,
+    categoryResults,
+    evaluation: { id: evalId },
   };
+
+  categoryResults.forEach((catRes: any) => {
+    delete catRes.id;
+    catRes.criterionResults.forEach((critRes: any) => {
+      delete critRes.id;
+    });
+  });
 
   try {
     const dgraphRes = await fetch(DGRAPH_URL, {
@@ -109,31 +105,33 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query: ADD_EVAL,
+        query: ADD_COPY,
         variables: {
-          input: {
-            filter: { id: groupId },
-            set: { evaluations: [newEvalToSend] },
-          },
+          input: copy,
         },
       }),
     });
 
-    const result = await dgraphRes.json();
+    const { data, errors } = await dgraphRes.json();
 
-    if (result.errors) {
-      console.log(result.errors);
+    if (errors) {
+      console.log(errors);
       return NextResponse.json(
         { msg: "Oh non, une erreur est survenue !", status: "error" },
         { status: 400 }
       );
     }
 
-    revalidateTag("getTeacher-" + teacherEmail);
+    const returnedCopy = data.addCopy.copy[0];
 
+    revalidateTag("getEvaluation-" + evalId);
+    revalidateTag("getCopy-" + returnedCopy.id);
+
+    const grSt = returnedCopy.groupStudent;
+    const stName = `${grSt.firstName} ${grSt.lastName}`;
     return NextResponse.json(
       {
-        msg: `Le barème a bien été créé et affecté au groupe ${newEval.groupName} !`,
+        msg: `La copie de l'élève ${stName} a bien été créée !`,
         status: "success",
       },
       { status: 200 }

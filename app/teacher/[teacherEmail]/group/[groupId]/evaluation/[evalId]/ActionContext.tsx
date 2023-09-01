@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState } from "react";
+import { createContext, useCallback, useState } from "react";
 
 const defaultAction = {
   type: "",
@@ -10,9 +10,15 @@ const defaultAction = {
 export const ActionContext = createContext({
   action: defaultAction,
   setAction: (_: typeof defaultAction) => {},
+  resetAction: () => {},
 });
 
 export default function ActionContextProvider({ children }) {
   const [action, setAction] = useState(defaultAction);
-  return <ActionContext.Provider value={{ action, setAction }}>{children}</ActionContext.Provider>;
+  const resetAction = useCallback(() => setAction(defaultAction), []);
+  return (
+    <ActionContext.Provider value={{ action, setAction, resetAction }}>
+      {children}
+    </ActionContext.Provider>
+  );
 }

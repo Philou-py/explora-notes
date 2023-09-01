@@ -1,8 +1,10 @@
 import { DGRAPH_URL } from "@/config";
+import { NextResponse } from "next/server";
 
 const GET_COPY = `
   query($copyId: ID!) {
     getCopy(id: $copyId) {
+      id
       totalPoints
       bonusPoints
       penaltyPoints
@@ -25,7 +27,7 @@ const GET_COPY = `
   }
 `;
 
-export default async function GET(_: Request, { params: { copyId } }) {
+export async function GET(_: Request, { params: { copyId } }) {
   try {
     const dgraphRes = await fetch(DGRAPH_URL, {
       method: "POST",
@@ -39,7 +41,7 @@ export default async function GET(_: Request, { params: { copyId } }) {
       next: { tags: [`getCopy-${copyId}`] },
     });
     const result = await dgraphRes.json();
-    return result.data.getCopy;
+    return NextResponse.json({ copy: result.data.getCopy });
   } catch (err) {
     console.log(err);
   }
