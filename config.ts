@@ -1,1 +1,1 @@
-export const DGRAPH_URL = "http://localhost:8080/graphql";
+export const DGRAPH_URL = process.env.DGRAPH_URL;
