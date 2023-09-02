@@ -8,6 +8,9 @@ module.exports = withPWA({
   // With Strict Mode enabled, components initially render twice!
   reactStrictMode: true,
 
+  // See https://nextjs.org/docs/pages/api-reference/next-config-js/output
+  output: "standalone",
+
   images: {
     domains: [
       "file-server.toccatech.com",
