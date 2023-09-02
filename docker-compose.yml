@@ -1,0 +1,25 @@
+version: "3.2"
+services:
+  explora-notes:
+    image: philoupy/explora-notes:latest
+    ports:
+      - 3000:3000
+    restart: always
+  zero:
+    image: dgraph/dgraph:v23.1.0-arm64
+    volumes:
+      - /var/dgraph:/dgraph
+    ports:
+      - 5080:5080
+      - 6080:6080
+    restart: always
+    command: dgraph zero --my=zero:5080
+  alpha:
+    image: dgraph/dgraph:v23.1.0-arm64
+    volumes:
+      - /var/dgraph:/dgraph
+    ports:
+      - 8080:8080
+      - 9080:9080
+    restart: always
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080
