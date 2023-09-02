@@ -27,7 +27,7 @@ export default async function Page({ params: { evalId } }) {
   const evaluation = await fetchEval(evalId);
 
   return (
-    <Container>
+    <Container className={cx("evaluation")}>
       <h1>{evaluation.title}</h1>
       <ActionContextProvider>
         <section>

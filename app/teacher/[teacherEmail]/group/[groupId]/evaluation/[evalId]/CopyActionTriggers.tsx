@@ -48,7 +48,6 @@ export default function CopyActionTriggers({ copyId, studentId, studentName }: P
             size="small"
             iconName="delete"
             className="red--text"
-            style={{ marginLeft: 5 }}
             onClick={() =>
               promptConfirmation(
                 `Confirmez-vous vouloir supprimer la copie de ${studentName} ?`,

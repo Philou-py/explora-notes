@@ -7,21 +7,13 @@ import { revalidateTag } from "next/cache";
 
 const publicKey = readFileSync("public.key");
 
-const GET_COPY_COUNT = `
-  query($groupStudentId: ID!) {
-    getGroupStudent(id: $groupStudentId) {
-      copiesAggregate {
-        count
-      }
-    }
-  }
-`;
-
-const DELETE_STUDENT = `
-  mutation($groupStudentId: [ID!]) {
-    deleteGroupStudent(filter: { id: $groupStudentId }) {
-      groupStudent {
-        fullName
+const DELETE_COPY = `
+  mutation($copyId: [ID!]) {
+    deleteCopy(filter: { id: $copyId }) {
+      copy {
+        groupStudent {
+          fullName
+        }
       }
     }
   }
@@ -58,22 +50,7 @@ async function getGroupTeacher(groupId: string): Promise<Group> {
   return result.data.getGroup.teacher.email;
 }
 
-async function getCopyCount(groupStudentId: string): Promise<number> {
-  const dgraphRes = await fetch(DGRAPH_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: GET_COPY_COUNT,
-      variables: { groupStudentId },
-    }),
-  });
-  const result = await dgraphRes.json();
-  return result.data.getGroupStudent.copiesAggregate.count;
-}
-
-export async function DELETE(request: Request, { params: { groupId } }) {
+export async function DELETE(request: Request, { params: { evalId, groupId } }) {
   const cookieStore = cookies();
   const jwt = cookieStore.get("X-ExploraNotes-Auth");
   if (!jwt)
@@ -87,7 +64,7 @@ export async function DELETE(request: Request, { params: { groupId } }) {
     return NextResponse.json(
       {
         status: "error",
-        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de modifier cet élève !",
+        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de supprimer cette copie !",
       },
       { status: 403 }
     );
@@ -98,22 +75,12 @@ export async function DELETE(request: Request, { params: { groupId } }) {
     return NextResponse.json(
       {
         status: "error",
-        msg: "Désolé, mais vous n'avez pas la permission de modifier cet élève !",
+        msg: "Désolé, mais vous n'avez pas la permission de supprimer cette copie !",
       },
       { status: 403 }
     );
 
-  const { groupStudentId } = await request.json();
-
-  const copyCount = await getCopyCount(groupStudentId);
-  if (copyCount != 0)
-    return NextResponse.json(
-      {
-        status: "error",
-        msg: "Attention ! Des copies ont été corrigées pour cet élève, donc vous ne pouvez pas le retirer du groupe !",
-      },
-      { status: 400 }
-    );
+  const { copyId } = await request.json();
 
   try {
     const dgraphRes = await fetch(DGRAPH_URL, {
@@ -122,16 +89,17 @@ export async function DELETE(request: Request, { params: { groupId } }) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query: DELETE_STUDENT,
-        variables: { groupStudentId },
+        query: DELETE_COPY,
+        variables: { copyId },
       }),
     });
 
     const result = await dgraphRes.json();
 
-    revalidateTag("getGroup-" + groupId);
+    revalidateTag("getEvaluation-" + evalId);
+    revalidateTag("getCopy-" + copyId);
 
-    if (result.errors || result.data.deleteGroupStudent.groupStudent.length === 0) {
+    if (result.errors || result.data.deleteCopy.copy.length === 0) {
       console.log(result);
       return NextResponse.json(
         { msg: "Oh non, une erreur est survenue !", status: "error" },
@@ -139,9 +107,12 @@ export async function DELETE(request: Request, { params: { groupId } }) {
       );
     }
 
-    const studentName = result.data.deleteGroupStudent.groupStudent[0].fullName;
+    const studentName = result.data.deleteCopy.copy[0].groupStudent.fullName;
     return NextResponse.json(
-      { msg: `L'élève ${studentName} a bien été retiré du groupe !`, status: "success" },
+      {
+        msg: `La copie de l'élève ${studentName} a bien été retiré du groupe !`,
+        status: "success",
+      },
       { status: 200 }
     );
   } catch (error) {

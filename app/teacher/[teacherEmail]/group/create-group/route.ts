@@ -3,6 +3,7 @@ import { verify } from "jsonwebtoken";
 import { readFileSync } from "fs";
 import { NextResponse } from "next/server";
 import { DGRAPH_URL } from "@/config";
+import { revalidateTag } from "next/cache";
 
 const publicKey = readFileSync("public.key");
 
@@ -16,7 +17,7 @@ const ADD_GROUP = `
   }
 `;
 
-export async function POST(request: Request) {
+export async function POST(request: Request, { params: { teacherEmail } }) {
   const cookieStore = cookies();
   const jwt = cookieStore.get("X-ExploraNotes-Auth");
   if (!jwt)
@@ -34,8 +35,6 @@ export async function POST(request: Request) {
       },
       { status: 403 }
     );
-
-  const teacherEmail = payload.email;
 
   const newGroup = await request.json();
 
@@ -68,6 +67,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    revalidateTag("getTeacher-" + teacherEmail);
 
     const newGroupName = result.data.addGroup.group[0].name;
     return NextResponse.json(

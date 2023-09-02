@@ -3,7 +3,6 @@ import CopyActionTriggers from "./CopyActionTriggers";
 import CopyDialog from "./CopyDialog";
 import { dgraphQuery } from "@/app/dgraphQuery";
 import { roundNum } from "@/helpers/roundNum";
-import { DGRAPH_URL } from "@/config";
 
 interface GroupStudent {
   id: string;
@@ -153,7 +152,12 @@ export default async function StudentMarksTable({ evalId }: { evalId: string }) 
   const studentsTableHeaders: TableHeader[] = [
     { text: "Nom de famille", value: "lastName" },
     { text: "Prénom", value: "firstName" },
-    ...categories.map((cat) => ({ text: cat.label, value: cat.id })),
+    { text: "Note", value: "mark", alignContent: "center" },
+    ...categories.map((cat) => ({
+      text: `${cat.label} (${cat.maxPoints} pts)`,
+      value: cat.id,
+      alignContent: "center" as "center",
+    })),
     { text: "Actions", value: "actions", alignContent: "center", isSortable: false },
   ];
 
@@ -162,7 +166,7 @@ export default async function StudentMarksTable({ evalId }: { evalId: string }) 
     firstName: { rawContent: st.firstName.toLowerCase(), content: st.firstName },
     lastName: { rawContent: st.lastName.toLowerCase(), content: st.lastName },
     mark: {
-      rawContent: st.copy ? st.copy.mark : 0,
+      rawContent: st.copy ? st.copy.mark : -1,
       content: st.copy ? genMarkDisplay(st.copy.totalPoints, st.copy.mark) : "Copie non corrigée",
     },
     ...(st.copy
@@ -170,7 +174,10 @@ export default async function StudentMarksTable({ evalId }: { evalId: string }) 
           (cols, catRes) => ({ ...cols, [catRes.category.id]: { rawContent: catRes.points } }),
           {}
         )
-      : categories.reduce((cols, cat) => ({ ...cols, [cat.id]: { rawContent: "-" } }), {})),
+      : categories.reduce(
+          (cols, cat) => ({ ...cols, [cat.id]: { rawContent: -1, content: "-" } }),
+          {}
+        )),
     actions: {
       rawContent: "",
       content: (
