@@ -8,7 +8,12 @@ import { SideBarContext } from "@/contexts/SideBarContext";
 
 const cx = cn.bind(createEvalScaleStyles);
 
-let counter = 0;
+let counter = -1;
+
+function genId() {
+  counter++;
+  return counter.toString();
+}
 
 function incrementLabel(label: string) {
   const found = label.match(/\d+/);
@@ -25,10 +30,16 @@ interface Props {
   markPrecision: number;
   scale: EvalTemplate["categories"];
   setScale: (_: EvalTemplate["categories"]) => void;
+  setCriteriaToObserve: (_: (_: string[]) => string[]) => void;
 }
 
-export default function CreateEvalScale({ markPrecision, scale, setScale }: Props) {
-  const { createEvalTemplate: template } = useContext(SideBarContext);
+export default function CreateEvalScale({
+  markPrecision,
+  scale,
+  setScale,
+  setCriteriaToObserve,
+}: Props) {
+  const { createEvalTemplate: template, isEditingEval: ed } = useContext(SideBarContext);
   const [nbCategories, setNbCategories] = useState(0);
   const [nbCriteria, setNbCriteria] = useState(0);
   const totalPoints = useMemo(
@@ -42,26 +53,30 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
       const categories = template.categories;
       setNbCategories(categories.length);
       setNbCriteria(categories.reduce((nbCriteria, cat) => nbCriteria + cat.criteria.length, 0));
-      setScale(
-        // Add unique IDs
-        categories.map((cat) => ({
-          ...cat,
-          id: counter++,
-          criteria: cat.criteria.map((crit) => ({ ...crit, id: counter++ })),
-        }))
-      );
+
+      if (ed) setScale(categories);
+      else {
+        setScale(
+          // Add unique IDs
+          categories.map((cat) => ({
+            ...cat,
+            id: genId(),
+            criteria: cat.criteria.map((crit) => ({ ...crit, id: genId() })),
+          }))
+        );
+      }
       setCEDialogOpen(true);
     }
-  }, [template, setCEDialogOpen, setScale]);
+  }, [template, setCEDialogOpen, setScale, ed]);
 
-  const handleAddCriterion = (catId: number, critId: number) => {
+  const handleAddCriterion = (catId: string, critId: string) => {
     const newScale = scale.map((category) => {
       if (category.id === catId) {
         const fromCritIndex = category.criteria.findIndex((crit) => crit.id === critId);
         const fromCrit = category.criteria[fromCritIndex];
         const newCriterion = {
           ...fromCrit,
-          id: counter++,
+          id: genId(),
           label: incrementLabel(fromCrit.label),
           maxPoints: 1,
         };
@@ -80,7 +95,7 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     setNbCriteria((oldNb) => oldNb + 1);
   };
 
-  const handleSetMaxPoints = (catId: number, critId: number, maxPoints: number) => {
+  const handleSetMaxPoints = (catId: string, critId: string, maxPoints: number) => {
     const newScale = scale.map((category) => {
       if (category.id === catId) {
         let oldMaxPoints = category.criteria.find((crit) => crit.id === critId).maxPoints;
@@ -88,8 +103,11 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
           ...category,
           maxPoints: category.maxPoints - oldMaxPoints + maxPoints,
           criteria: category.criteria.map((criterion) => {
-            if (criterion.id === critId) return { ...criterion, maxPoints };
-            else return criterion;
+            if (criterion.id === critId) {
+              if (ed === "simple")
+                setCriteriaToObserve((p) => (p.includes(critId) ? p : [...p, critId]));
+              return { ...criterion, maxPoints };
+            } else return criterion;
           }),
         };
       } else return category;
@@ -97,7 +115,7 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     setScale(newScale);
   };
 
-  const handleRenameCriterion = (catId: number, critId: number, newLabel: string) => {
+  const handleRenameCriterion = (catId: string, critId: string, newLabel: string) => {
     const newScale = scale.map((category) => {
       if (category.id === catId) {
         return {
@@ -112,7 +130,7 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     setScale(newScale);
   };
 
-  const handleRemoveCriterion = (catId: number, critId: number) => {
+  const handleRemoveCriterion = (catId: string, critId: string) => {
     let effectivelyRemoved = true;
     const newScale = scale.map((category) => {
       if (category.id === catId) {
@@ -135,15 +153,15 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     if (effectivelyRemoved) setNbCriteria((oldNb) => oldNb - 1);
   };
 
-  const handleAddCategory = (catId: number) => {
+  const handleAddCategory = (catId: string) => {
     const catIndex = scale.findIndex((cat) => cat.id === catId);
     const fromCategory = scale[catIndex];
     const newCategory = {
       ...fromCategory,
-      id: counter++,
+      id: genId(),
       label: incrementLabel(fromCategory.label),
       maxPoints: 1,
-      criteria: [{ ...fromCategory.criteria[0], id: counter++, maxPoints: 1 }],
+      criteria: [{ ...fromCategory.criteria[0], id: genId(), maxPoints: 1 }],
     };
     const newScale = [...scale.slice(0, catIndex + 1), newCategory, ...scale.slice(catIndex + 1)];
     setScale(newScale);
@@ -151,7 +169,7 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     setNbCriteria((oldNb) => oldNb + 1);
   };
 
-  const handleRenameCategory = (catId: number, newLabel: string) => {
+  const handleRenameCategory = (catId: string, newLabel: string) => {
     const newScale = scale.map((category) => {
       if (category.id === catId) {
         return { ...category, label: newLabel };
@@ -160,7 +178,7 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
     setScale(newScale);
   };
 
-  const handleRemoveCategory = (catId: number) => {
+  const handleRemoveCategory = (catId: string) => {
     if (scale.length === 1) return;
     setNbCriteria((oldNb) => oldNb - scale.find((cat) => cat.id === catId).criteria.length);
     setScale(scale.filter((cat) => cat.id !== catId));
@@ -179,19 +197,23 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
           setValue={(newLabel) => handleRenameCategory(category.id, newLabel)}
           isRequired
         />
-        <Button
-          type="icon"
-          iconName="create_new_folder"
-          className="teal white--text"
-          onClick={() => handleAddCategory(category.id)}
-        />
-        <Button
-          type="icon"
-          iconName="folder_delete"
-          className={cn("orange", cx("removeCategoryBtn"))}
-          onClick={() => handleRemoveCategory(category.id)}
-          size="small"
-        />
+        {ed !== "simple" && (
+          <>
+            <Button
+              type="icon"
+              iconName="create_new_folder"
+              className="teal white--text"
+              onClick={() => handleAddCategory(category.id)}
+            />
+            <Button
+              type="icon"
+              iconName="folder_delete"
+              className={cn("orange", cx("removeCategoryBtn"))}
+              onClick={() => handleRemoveCategory(category.id)}
+              size="small"
+            />
+          </>
+        )}
       </div>
       <div className={cx("criteria")}>
         {category.criteria.map(
@@ -210,19 +232,23 @@ export default function CreateEvalScale({ markPrecision, scale, setScale }: Prop
                     }
                     isRequired
                   />
-                  <Button
-                    type="icon"
-                    iconName="add_task"
-                    className="cyan white--text"
-                    onClick={() => handleAddCriterion(category.id, criterion.id)}
-                  />
-                  <Button
-                    type="icon"
-                    iconName="backspace"
-                    className={cn("amber", cx("removeCriterionBtn"))}
-                    onClick={() => handleRemoveCriterion(category.id, criterion.id)}
-                    size="small"
-                  />
+                  {ed !== "simple" && (
+                    <>
+                      <Button
+                        type="icon"
+                        iconName="add_task"
+                        className="cyan white--text"
+                        onClick={() => handleAddCriterion(category.id, criterion.id)}
+                      />
+                      <Button
+                        type="icon"
+                        iconName="backspace"
+                        className={cn("amber", cx("removeCriterionBtn"))}
+                        onClick={() => handleRemoveCriterion(category.id, criterion.id)}
+                        size="small"
+                      />
+                    </>
+                  )}
                 </div>
                 <div className={cx("radioButtonsContainer")}>
                   {[...Array(20).keys()]

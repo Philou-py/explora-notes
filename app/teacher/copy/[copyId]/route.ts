@@ -8,6 +8,7 @@ const GET_COPY = `
       totalPoints
       bonusPoints
       penaltyPoints
+      shouldObserve
       categoryResults {
         id
         points

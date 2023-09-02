@@ -119,6 +119,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId, 
     },
     ...summary,
     evaluation: { id: evalId },
+    shouldObserve: false,
   };
 
   let criteriaToUpdate = [];

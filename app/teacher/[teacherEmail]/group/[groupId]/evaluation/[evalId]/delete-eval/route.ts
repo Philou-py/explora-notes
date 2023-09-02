@@ -3,23 +3,9 @@ import { verify } from "jsonwebtoken";
 import { readFileSync } from "fs";
 import { NextResponse } from "next/server";
 import { DGRAPH_URL } from "@/config";
-import { TemplateForGr } from "@/contexts/SideBarContext";
 import { revalidateTag } from "next/cache";
 
 const publicKey = readFileSync("public.key");
-
-const ADD_EVAL = `
-  mutation($input: [AddEvaluationInput!]!) {
-    addEvaluation(input: $input) {
-      evaluation {
-        id
-        group {
-          name
-        }
-      }
-    }
-  }
-`;
 
 interface Group {
   teacher: {
@@ -52,7 +38,7 @@ async function getGroupTeacher(groupId: string): Promise<Group> {
   return result.data.getGroup.teacher.email;
 }
 
-export async function POST(request: Request, { params: { teacherEmail, groupId } }) {
+export async function DELETE(_: Request, { params: { teacherEmail, groupId, evalId } }) {
   const cookieStore = cookies();
   const jwt = cookieStore.get("X-ExploraNotes-Auth");
   if (!jwt)
@@ -66,7 +52,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
     return NextResponse.json(
       {
         status: "error",
-        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de créer un barème !",
+        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de supprimer cette évaluation !",
       },
       { status: 403 }
     );
@@ -76,41 +62,78 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
     return NextResponse.json(
       {
         status: "error",
-        msg: "Désolé, mais vous n'avez pas la permission d'ajouter des élèves à ce groupe !",
+        msg: "Désolé, mais vous n'avez pas la permission de supprimer cette évaluation !",
       },
       { status: 403 }
     );
 
-  const newEval: TemplateForGr = await request.json();
-  const newEvalToSend = {
-    title: newEval.title,
-    markPrecision: Number(newEval.markPrecision),
-    coefficient: Number(newEval.coefficient),
-    totalPoints: newEval.categories.reduce((p, cat) => p + cat.maxPoints, 0),
-    categories: newEval.categories.map((cat, catRank) => {
-      // Remove IDs and add ranks
-      delete cat.id;
-      cat.rank = catRank;
-      return {
-        ...cat,
-        criteria: cat.criteria.map((crit, critRank) => {
-          delete crit.id;
-          crit.rank = critRank;
-          return crit;
-        }),
-      };
+  const GET_EVAL = `
+    getEvaluation(id: "${evalId}") {
+      copiesAggregate {
+        count
+      }
+      categories {
+        id
+        criteria {
+          id
+        }
+      }
+    }
+  `;
+  const response = await fetch(DGRAPH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: `query { ${GET_EVAL} }`,
     }),
-    copies: [],
-    average: -1,
-    isClosed: false,
-    criteriaToObserve: [],
-    teacher: {
-      email: teacherEmail,
-    },
-    group: {
-      id: groupId,
-    },
-  };
+  });
+  const {
+    data: { getEvaluation },
+  } = await response.json();
+
+  if (getEvaluation.copiesAggregate.count !== 0)
+    return NextResponse.json(
+      {
+        status: "error",
+        msg: "Attention, vous ne pouvez pas supprimer cette évaluation, car des copies ont déjà été corrigées !",
+      },
+      { status: 400 }
+    );
+
+  const catIDs = getEvaluation.categories.map((cat: any) => cat.id);
+  const critIDs = getEvaluation.categories.reduce(
+    (arr: any, cat: any) => arr.concat(cat.criteria.map((crit: any) => crit.id)),
+    []
+  );
+
+  let OPS = "";
+
+  OPS += `
+    deleteEvaluation(filter: { id: "${evalId}" }) {
+      evaluation {
+        id
+        title
+      }
+    }
+  `;
+
+  OPS += `
+    deleteCategory(filter: { id: [${catIDs.map((id: string) => `"${id}",`).join(" ")}] }) {
+      category {
+        id
+      }
+    }
+  `;
+
+  OPS += `
+    deleteCriterion(filter: { id: [${critIDs.map((id: string) => `"${id}",`).join(" ")}] }) {
+      criterion {
+        id
+      }
+    }
+  `;
 
   try {
     const dgraphRes = await fetch(DGRAPH_URL, {
@@ -119,12 +142,13 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query: ADD_EVAL,
-        variables: { input: newEvalToSend },
+        query: `mutation { ${OPS} }`,
       }),
     });
 
     const result = await dgraphRes.json();
+
+    revalidateTag("getTeacher-" + teacherEmail);
 
     if (result.errors) {
       console.log(result.errors);
@@ -134,13 +158,9 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
       );
     }
 
-    revalidateTag("getTeacher-" + teacherEmail);
-
-    const receivedEval = result.data.addEvaluation.evaluation[0];
     return NextResponse.json(
       {
-        msg: `Le barème a bien été créé et affecté au groupe ${receivedEval.group.name} !`,
-        redirectURL: `/teacher/${teacherEmail}/group/${groupId}/evaluation/${receivedEval.id}`,
+        msg: `L'évaluation ${result.data.deleteEvaluation.evaluation[0].title} a bien été supprimée !`,
         status: "success",
       },
       { status: 200 }

@@ -11,6 +11,7 @@ export interface Copy {
   totalPoints: number;
   bonusPoints: number;
   penaltyPoints: number;
+  shouldObserve: boolean;
   categoryResults: {
     id: string;
     points: number;
@@ -26,6 +27,7 @@ export interface Copy {
 
 interface Props {
   scale: Scale;
+  criteriaToObserve: string[];
 }
 
 const emptyCopy = {
@@ -34,9 +36,10 @@ const emptyCopy = {
   bonusPoints: 0,
   penaltyPoints: 0,
   categoryResults: [],
+  shouldObserve: false,
 };
 
-export default function CopyDialog({ scale }: Props) {
+export default function CopyDialog({ scale, criteriaToObserve }: Props) {
   const { action, resetAction } = useContext(ActionContext);
   const [actionType, setActionType] = useState("");
   const [copy, setCopy] = useState(emptyCopy);
@@ -100,6 +103,7 @@ export default function CopyDialog({ scale }: Props) {
         studentName={studentName}
         copy={copy}
         scale={scale}
+        criteriaToObserve={criteriaToObserve}
         actionType={actionType}
         closeDialog={closeDialog}
       />

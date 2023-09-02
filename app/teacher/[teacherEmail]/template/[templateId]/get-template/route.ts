@@ -11,12 +11,12 @@ export interface EvalTemplate {
   title: string;
   markPrecision: number;
   categories: {
-    id: number;
+    id: string;
     rank: number;
     label: string;
     maxPoints: number;
     criteria: {
-      id: number;
+      id: string;
       rank: number;
       label: string;
       maxPoints: number;
@@ -32,7 +32,6 @@ export interface EvalTemplate {
 const GET_TEMPLATE = `
   query($templateId: ID!) {
     getEvalTemplate(id: $templateId) {
-      id
       title
       coefficient
       markPrecision

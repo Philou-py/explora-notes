@@ -1,5 +1,23 @@
+$xs: 600px;
+
 .evaluation {
   h2 {
     margin: 30px 0;
+  }
+
+  .editEvalTrigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    @media (max-width: $xs) {
+      flex-direction: column;
+      align-items: flex-start;
+
+      button {
+        margin: 20px 0;
+        align-self: center;
+      }
+    }
   }
 }

@@ -110,7 +110,7 @@ export async function DELETE(request: Request, { params: { evalId, groupId } }) 
     const studentName = result.data.deleteCopy.copy[0].groupStudent.fullName;
     return NextResponse.json(
       {
-        msg: `La copie de l'élève ${studentName} a bien été retiré du groupe !`,
+        msg: `La copie de l'élève ${studentName} a bien été retirée du groupe !`,
         status: "success",
       },
       { status: 200 }

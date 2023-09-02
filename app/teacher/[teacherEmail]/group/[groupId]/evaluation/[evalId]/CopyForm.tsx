@@ -17,6 +17,7 @@ const cx = cn.bind(copyFormStyles);
 interface Props {
   copy: Copy;
   scale: Scale;
+  criteriaToObserve: string[];
   studentId: string;
   studentName: string;
   actionType: string;
@@ -26,6 +27,7 @@ interface Props {
 export default function CopyForm({
   copy,
   scale,
+  criteriaToObserve,
   studentId,
   studentName,
   actionType,
@@ -127,47 +129,52 @@ export default function CopyForm({
     scale.categories.map((cat, catIndex) => (
       <div key={cat.id} className={cx("category")}>
         <p className={cx("categoryLabel")}>{cat.label}</p>
-        {cat.criteria.map((crit, critIndex) => (
-          <div key={crit.id}>
-            <p className={cx("criterionLabel")}>{crit.label}</p>
-            <div className={cx("radioButtonsContainer")}>
-              <div className={cx("radioButton")}>
-                <label>
-                  <input
-                    type="radio"
-                    name={`crit-${crit.id}`}
-                    value=""
-                    checked={catRes[catIndex].criterionResults[critIndex].points === -1}
-                    onChange={() => handleSelectNA(catIndex, critIndex)}
-                    required
-                  />
-                  N/T
-                </label>
-              </div>
-              {[
-                ...Array(
-                  scale.categories[catIndex].criteria[critIndex].maxPoints / scale.markPrecision + 1
-                ).keys(),
-              ]
-                .map((i) => i * scale.markPrecision)
-                .map((i) => (
-                  <div key={`crit-${crit.id}-${i}`} className={cx("radioButton")}>
+        {cat.criteria.map(
+          (crit, critIndex) =>
+            (!copy.shouldObserve || criteriaToObserve.includes(crit.id)) && (
+              <div key={crit.id}>
+                <p className={cx("criterionLabel")}>{crit.label}</p>
+                <div className={cx("radioButtonsContainer")}>
+                  <div className={cx("radioButton")}>
                     <label>
                       <input
                         type="radio"
                         name={`crit-${crit.id}`}
-                        value={i}
-                        checked={i === catRes[catIndex].criterionResults[critIndex].points}
-                        onChange={() => handleSelectPoints(catIndex, critIndex, i)}
+                        value=""
+                        checked={catRes[catIndex].criterionResults[critIndex].points === -1}
+                        onChange={() => handleSelectNA(catIndex, critIndex)}
                         required
                       />
-                      {i}
+                      N/T
                     </label>
                   </div>
-                ))}
-            </div>
-          </div>
-        ))}
+                  {[
+                    ...Array(
+                      scale.categories[catIndex].criteria[critIndex].maxPoints /
+                        scale.markPrecision +
+                        1
+                    ).keys(),
+                  ]
+                    .map((i) => i * scale.markPrecision)
+                    .map((i) => (
+                      <div key={`crit-${crit.id}-${i}`} className={cx("radioButton")}>
+                        <label>
+                          <input
+                            type="radio"
+                            name={`crit-${crit.id}`}
+                            value={i}
+                            checked={i === catRes[catIndex].criterionResults[critIndex].points}
+                            onChange={() => handleSelectPoints(catIndex, critIndex, i)}
+                            required
+                          />
+                          {i}
+                        </label>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )
+        )}
         <p className={cx("categorySummary")}>
           Points obtenus à {cat.label} : {catRes[catIndex].points} /{" "}
           {scale.categories[catIndex].maxPoints}

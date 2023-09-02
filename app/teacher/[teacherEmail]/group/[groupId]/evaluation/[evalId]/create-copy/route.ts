@@ -89,6 +89,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId, 
     ...summary,
     categoryResults,
     evaluation: { id: evalId },
+    shouldObserve: false,
   };
 
   categoryResults.forEach((catRes: any) => {

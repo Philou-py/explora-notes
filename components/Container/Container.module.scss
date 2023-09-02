@@ -3,6 +3,28 @@ $sm: 960px;
 $md: 1264px;
 $lg: 1904px;
 
+.container.narrow {
+  @media (max-width: $xs) {
+    padding: 0 2%;
+  }
+
+  @media (max-width: $sm) {
+    padding: 0 4%;
+  }
+
+  @media (max-width: $md) {
+    padding: 0 5%;
+  }
+
+  @media (max-width: $lg) {
+    padding: 0 7%;
+  }
+
+  @media (min-width: $lg) {
+    padding: 0 13%;
+  }
+}
+
 .container {
   @media (max-width: $xs) {
     padding: 0 3%;
@@ -47,6 +69,6 @@ $lg: 1904px;
   }
 }
 
-.container.narrow {
+.container.xNarrow {
   padding: 0 20px;
 }

@@ -75,6 +75,7 @@ type Evaluation {
   average: Float! @search
   teacher: Teacher!
   isClosed: Boolean!
+  criteriaToObserve: [Criterion!]!
 }
 
 type Category {
@@ -106,6 +107,7 @@ type Copy {
   penaltyPoints: Float! @search
   categoryResults: [CategoryResult!]! @hasInverse(field: "copy")
   evaluation: Evaluation! @hasInverse(field: "copies")
+  shouldObserve: Boolean!
 }
 
 type CategoryResult {

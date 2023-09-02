@@ -1,4 +1,3 @@
-import { DGRAPH_URL } from "@/config";
 import Container from "@/components/Container";
 import groupAdminStyles from "./GroupAdmin.module.scss";
 import cn from "classnames/bind";
@@ -45,28 +44,14 @@ const GET_GROUP = `
 `;
 
 async function getGroup(groupId: string): Promise<Group> {
-  // const dgraphRes = await fetch(DGRAPH_URL, {
-  //   method: "POST",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify({
-  //     query: GET_GROUP,
-  //     variables: { groupId },
-  //   }),
-  //   next: { tags: ["getGroup-" + groupId] },
-  // });
-  // const result = await dgraphRes.json();
-  // const group: Group = result.data.getGroup;
-  const group: Group = await dgraphQuery(GET_GROUP, { groupId }, "getGroup", "getGroup-" + groupId);
-  return group;
+  return await dgraphQuery(GET_GROUP, { groupId }, "getGroup", "getGroup-" + groupId);
 }
 
 export default async function Page({ params: { groupId } }: { params: { groupId: string } }) {
   const group = await getGroup(groupId);
 
   return (
-    <Container className={cx("groupAdmin")}>
+    <Container className={cx("groupAdmin")} narrow>
       <h1>{group.name}</h1>
       <h2>
         {group.subject} - {group.level} - {group.schoolYear}/{group.schoolYear + 1}

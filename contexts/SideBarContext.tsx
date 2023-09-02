@@ -43,6 +43,8 @@ export const SideBarContext = createContext({
   setCEDialogOpen: (_: boolean | ((_: boolean) => boolean)) => {},
   createEvalTemplate: null as TemplateForGr | null,
   setCreateEvalTemplate: (_: TemplateForGr | null) => {},
+  isEditingEval: "",
+  setIsEditingEval: (_: string) => {},
   getPrefillInfo: (_: string, __: string, ___: string, ____: string) => {},
 });
 
@@ -58,18 +60,21 @@ export default function SideBarProvider({
   const [cEDialogOpen, setCEDialogOpen] = useState(false);
   const closeCEDialog = useCallback(() => {
     setCEDialogOpen(false);
+    setIsEditingEval("");
     setCreateEvalTemplate(null);
   }, []);
   const [createEvalTemplate, setCreateEvalTemplate] = useState<TemplateForGr>(null);
+  const [isEditingEval, setIsEditingEval] = useState("");
   const getPrefillInfo = useCallback(
     async (teacherEmail: string, templateId: string, groupName: string, groupId: string) => {
       const template = await fetchTemplate(
         `/teacher/${teacherEmail}/template/${templateId}/get-template`
       );
       template.categories.sort((a, b) => a.rank - b.rank);
+      template.categories.forEach((cat) => cat.criteria.sort((a, b) => a.rank - b.rank));
       setCreateEvalTemplate({
         ...template,
-        groupId: groupId,
+        groupId,
         groupName,
         markPrecision: template.markPrecision.toString(),
         coefficient: template.coefficient.toString(),
@@ -98,6 +103,8 @@ export default function SideBarProvider({
         setCEDialogOpen,
         createEvalTemplate,
         setCreateEvalTemplate,
+        isEditingEval,
+        setIsEditingEval,
         getPrefillInfo,
       }}
     >

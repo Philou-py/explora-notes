@@ -15,6 +15,6 @@ export async function dgraphQuery(query: string, vars: object, queryName: string
   });
 
   const result = await dgraphResponse.json();
-  console.log(queryName, tag, result.extensions.tracing.startTime);
+  // console.log(queryName, tag, result.extensions.tracing.startTime);
   return result.data[queryName];
 }

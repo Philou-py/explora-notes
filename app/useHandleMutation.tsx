@@ -8,7 +8,7 @@ export function useHandleMutation(closeDialog?: () => void, resetForm?: () => vo
   const [isLoading, setIsLoading] = useState(false);
 
   const submitAction = useCallback(
-    async (url: string, method: string, reqBody: object) => {
+    async (url: string, method: string, reqBody: object, redirect?: boolean) => {
       try {
         setIsLoading(true);
         const response = await fetch(url, {
@@ -27,6 +27,7 @@ export function useHandleMutation(closeDialog?: () => void, resetForm?: () => vo
             if (resetForm) resetForm();
           }, 300); // Avoid layout shift
           router.refresh();
+          if (redirect) router.push(result.redirectURL);
         } else {
           setIsLoading(false);
         }

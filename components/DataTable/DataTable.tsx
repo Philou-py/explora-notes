@@ -33,6 +33,7 @@ let cx = cn.bind(dtStyles);
 
 function DataTable<
   TableItem extends {
+    key: { rawContent: string; isHighlighted?: boolean };
     [key: string]: {
       rawContent: string | number;
       content?: ReactNode;
@@ -117,9 +118,9 @@ function DataTable<
   );
 
   const itemsTemplate = sortedItems.map((item, lineNumber) => (
-    <tr key={item.key.rawContent}>
+    <tr key={item.key.rawContent} className={cx({ highlighted: item.key.isHighlighted })}>
       {lineNumbering && (
-        <td className={cx(smScreen ? "mobileDisplay" : "desktopDisplay")}>
+        <td className={cx(smScreen ? "mobileDisplay" : "")}>
           <div className={cx("tdContent")}>
             {smScreen && <div className={cx("tdHeader")}>Numéro de ligne</div>}
             <div className={cx("valDisplay", "center")}>{lineNumber + 1}</div>
@@ -128,10 +129,7 @@ function DataTable<
       )}
 
       {headers.map(({ value: headerVal, text: headerText, alignContent = "start", unitSuffix }) => (
-        <td
-          key={`${headerVal}-${item.key}`}
-          className={cx(smScreen ? "mobileDisplay" : "desktopDisplay")}
-        >
+        <td key={`${headerVal}-${item.key}`} className={cx(smScreen ? "mobileDisplay" : "")}>
           <div className={cx("tdContent")}>
             {smScreen && <div className={cx("tdHeader")}>{headerText}</div>}
             <div className={cx("valDisplay", alignContent)}>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { SideBarContext, TemplateForGr } from "@/contexts/SideBarContext";
 import Card, { CardHeader, CardContent, CardActions } from "@/components/Card";
@@ -27,7 +27,7 @@ const coefficientForSelect = [...Array(21).keys()].map((i) => [
 
 export default function CreateEvalForm({ closeDialog }: { closeDialog: () => void }) {
   const { teacherEmail } = useParams();
-  const { createEvalTemplate: template } = useContext(SideBarContext);
+  const { createEvalTemplate: template, isEditingEval: ed } = useContext(SideBarContext);
 
   const {
     data: newEval,
@@ -37,34 +37,57 @@ export default function CreateEvalForm({ closeDialog }: { closeDialog: () => voi
   } = useForm({ title: "", markPrecision: "0.5", coefficient: "1" });
 
   const [scale, setScale] = useState<TemplateForGr["categories"]>([]);
+  const [criteriaToObserve, setCriteriaToObserve] = useState<string[]>([]);
 
   useEffect(() => {
     if (template) {
       setNewEval({
-        title: "",
+        title: ed ? template.title : "",
         markPrecision: template.markPrecision,
         coefficient: template.coefficient,
       });
     }
-  }, [template, setNewEval]);
+  }, [template, setNewEval, ed]);
 
   const { submitAction, isLoading } = useHandleMutation(closeDialog);
+  const handleOnSubmit = () => {
+    if (!template) return;
+    const newEvalToSend = { ...newEval, categories: scale, criteriaToObserve };
+    if (!ed) {
+      submitAction(
+        `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/create-eval`,
+        "POST",
+        newEvalToSend,
+        true
+      );
+    } else if (ed === "detailed") {
+      const handleDeleteCreate = async () => {
+        await fetch(
+          `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/${template.id}/delete-eval`,
+          { method: "DELETE" }
+        );
+        submitAction(
+          `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/create-eval`,
+          "POST",
+          newEvalToSend,
+          true
+        );
+      };
+      handleDeleteCreate();
+    } else if (ed === "simple") {
+      submitAction(
+        `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/${template.id}/update-eval`,
+        "POST",
+        newEvalToSend
+      );
+    }
+  };
 
   return (
     <Card className={cx("createEvalCard")}>
-      <Form
-        onSubmit={() =>
-          submitAction(
-            template
-              ? `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/create-eval`
-              : "",
-            "POST",
-            { ...template, ...newEval, categories: scale }
-          )
-        }
-      >
+      <Form onSubmit={handleOnSubmit}>
         <CardHeader
-          title={<h2>Créer un barème</h2>}
+          title={<h2>{ed ? "Modifier une évaluation" : "Créer un barème"}</h2>}
           subtitle={template && <h3>{template.groupName}</h3>}
         />
         <CardContent>
@@ -83,6 +106,7 @@ export default function CreateEvalForm({ closeDialog }: { closeDialog: () => voi
               label="Intervalle de notation"
               prependIcon="precision_manufacturing"
               selectItems={precisionsForSelect}
+              isDisabled={ed === "simple"}
               isRequired
               {...register("markPrecision")}
             />
@@ -103,6 +127,7 @@ export default function CreateEvalForm({ closeDialog }: { closeDialog: () => voi
               scale={scale}
               setScale={setScale}
               markPrecision={Number(newEval.markPrecision)}
+              setCriteriaToObserve={setCriteriaToObserve}
             />
           </fieldset>
         </CardContent>
