@@ -24,4 +24,4 @@ services:
       - 8080:8080
       - 9080:9080
     restart: always
-    command: dgraph alpha --my=alpha:7080 --zero=zero:5080
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --security whitelist=192.168.86.99

@@ -11,15 +11,15 @@ module.exports = withPWA({
   // See https://nextjs.org/docs/pages/api-reference/next-config-js/output
   output: "standalone",
 
+  // Private and public keys are not included by default
+  experimental: {
+    outputFileTracingIncludes: {
+      "/*": ["private.key", "public.key"],
+    },
+  },
+
   images: {
-    domains: [
-      "file-server.toccatech.com",
-      "toccatech.com",
-      "explora-notes.com",
-      "upload.wikimedia.org",
-      "firebasestorage.googleapis.com",
-      "images.unsplash.com",
-    ],
+    domains: [],
 
     minimumCacheTTL: 31_536_000, // One year
   },
