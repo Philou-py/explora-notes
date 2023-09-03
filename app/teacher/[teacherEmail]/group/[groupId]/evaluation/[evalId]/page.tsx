@@ -59,7 +59,7 @@ export default async function Page({ params: { groupId, evalId } }) {
         </section>
         <div className={cx("evalButtons")}>
           <DeleteEvalButton />
-          <ExportEvalButton evalTitle={evaluation.title} />
+          <ExportEvalButton evalTitle={evaluation.title} groupName={groupName} />
         </div>
       </ActionContextProvider>
     </Container>

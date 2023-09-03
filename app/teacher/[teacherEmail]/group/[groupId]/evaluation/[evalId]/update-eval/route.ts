@@ -189,6 +189,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId, 
 
     revalidateTag("getTeacher-" + teacherEmail);
     revalidateTag("getEvaluation-" + evalId);
+    copyIDs.forEach((copyId) => revalidateTag("getCopy-" + copyId));
 
     return NextResponse.json(
       {

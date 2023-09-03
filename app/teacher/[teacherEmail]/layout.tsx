@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { verify } from "jsonwebtoken";
@@ -10,6 +11,10 @@ import NavBar from "@/components/NavBar";
 import SideBar from "@/components/SideBar";
 import SideBarWrapper from "@/components/SideBar/SideBarWrapper";
 import { dgraphQuery } from "@/app/dgraphQuery";
+
+export const metadata: Metadata = {
+  title: "ExploraNotes - Professeur",
+};
 
 const publicKey = readFileSync("public.key");
 

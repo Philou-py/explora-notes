@@ -130,6 +130,12 @@ export default function CreateEvalForm({ closeDialog }: { closeDialog: () => voi
               setCriteriaToObserve={setCriteriaToObserve}
             />
           </fieldset>
+          {ed === "simple" && (
+            <p style={{ color: "red" }}>
+              Attention ! La modification du barème d&rsquo;une évaluation avec des copies déjà
+              corrigées implique la révision des questions modifiées dans chacune des copies.
+            </p>
+          )}
         </CardContent>
         <CardActions>
           <Spacer />

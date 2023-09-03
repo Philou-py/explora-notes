@@ -37,7 +37,7 @@ export default function TeacherMenu({
     useContext(SideBarContext);
   const areDialogsOpen = cGDialogOpen || cEDialogOpen;
   const colours = {
-    level1: ["indigo--text", "indigo"],
+    level1: ["indigo--text text--darken-2", "indigo darken-2 white--text"],
     level2: ["purple--text", "purple white--text"],
     level3: ["deep-orange--text text--darken-3", "deep-orange darken-3"],
   };
@@ -45,10 +45,6 @@ export default function TeacherMenu({
   const teacherMenuTemplate = (
     <>
       <div className={cx("teacherMenu")}>
-        <Button className={colours.level1[0]} type="text" justifyContent="flex-start" isFullWidth>
-          Gestion des modèles
-        </Button>
-
         {groups.map(({ groupId, name, evaluations }) => (
           <ButtonGroup
             key={groupId}
@@ -108,10 +104,6 @@ export default function TeacherMenu({
                 </Button>
               ))}
             </ButtonGroup>
-
-            <Button className="purple--text" type="text" justifyContent="flex-start" isFullWidth>
-              Synthèse des notes
-            </Button>
 
             <Button
               className={

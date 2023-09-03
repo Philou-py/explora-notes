@@ -42,6 +42,9 @@ async function getGroupTeacher(groupId: string): Promise<Group> {
 interface Evaluation {
   title: string;
   totalPoints: number;
+  group: {
+    name: string;
+  };
   copies: {
     totalPoints: number;
     mark: number;
@@ -180,9 +183,10 @@ export async function GET(_: Request, { params: { teacherEmail, groupId, evalId 
     "Note sur 20": 20,
   };
   evaluation.copies[0].categoryResults.forEach((catRes) => {
-    headers[catRes.category.label] = catRes.category.maxPoints;
+    const catLabel = catRes.category.label;
+    headers[catLabel] = catRes.category.maxPoints;
     catRes.criterionResults.forEach((critRes) => {
-      headers[critRes.criterion.label] = critRes.criterion.maxPoints;
+      headers[catLabel + " - " + critRes.criterion.label] = critRes.criterion.maxPoints;
     });
   });
   headers.Bonus = 0;
@@ -196,9 +200,10 @@ export async function GET(_: Request, { params: { teacherEmail, groupId, evalId 
       "Note sur 20": roundNum(copy.mark, 2),
     };
     copy.categoryResults.forEach((catRes) => {
-      obj[catRes.category.label] = catRes.points;
+      const catLabel = catRes.category.label;
+      obj[catLabel] = catRes.points;
       catRes.criterionResults.forEach((critRes) => {
-        obj[critRes.criterion.label] = critRes.points;
+        obj[catLabel + " - " + critRes.criterion.label] = critRes.points;
       });
     });
     obj.Bonus = copy.bonusPoints;

@@ -5,7 +5,7 @@ import Button from "@/components/Button";
 import { SnackContext } from "@/contexts/SnackContext";
 import { useParams } from "next/navigation";
 
-function useHandleExport(evalTitle: string) {
+function useHandleExport(evalTitle: string, groupName: string) {
   const { haveASnack } = useContext(SnackContext);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,7 +22,7 @@ function useHandleExport(evalTitle: string) {
           const url = window.URL.createObjectURL(new Blob([blob]));
           const link = document.createElement("a");
           link.href = url;
-          link.setAttribute("download", `${evalTitle}.xlsx`);
+          link.setAttribute("download", `${evalTitle} - ${groupName}.xlsx`);
           document.body.appendChild(link);
           link.click();
           link.parentNode.removeChild(link);
@@ -34,14 +34,14 @@ function useHandleExport(evalTitle: string) {
         setIsLoading(false);
       }
     },
-    [haveASnack, setIsLoading, evalTitle]
+    [haveASnack, setIsLoading, evalTitle, groupName]
   );
   return { isLoading, submitExport };
 }
 
-export default function ExportEvalButton({ evalTitle }) {
+export default function ExportEvalButton({ evalTitle, groupName }) {
   const { teacherEmail, groupId, evalId } = useParams();
-  const { submitExport, isLoading } = useHandleExport(evalTitle);
+  const { submitExport, isLoading } = useHandleExport(evalTitle, groupName);
 
   return (
     <Button

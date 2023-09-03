@@ -26,7 +26,7 @@ export default function EditEvalTrigger({ evalId, groupId, groupName }) {
   }, [setIsEditingEval, setCreateEvalTemplate, evalId, groupId, groupName]);
 
   return (
-    <Button type="elevated" className="green darken-2" onClick={editEval}>
+    <Button type="elevated" className="green darken-2" prependIcon="edit" onClick={editEval}>
       Modifier le barème
     </Button>
   );

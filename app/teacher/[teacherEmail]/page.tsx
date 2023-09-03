@@ -1,9 +1,4 @@
-import { Metadata } from "next";
 import Container from "@/components/Container";
-
-export const metadata: Metadata = {
-  title: "ExploraNotes - Professeur",
-};
 
 export default function TeacherHome() {
   return (
