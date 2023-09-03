@@ -43,8 +43,8 @@ export default function CopyForm({
 
   useEffect(() => {
     setCatRes(copy.categoryResults);
-    setBonusPoints(0);
-    setPenaltyPoints(0);
+    setBonusPoints(copy.bonusPoints);
+    setPenaltyPoints(copy.penaltyPoints);
     setRemoveBtns(false);
     if (actionType === "editCopy") {
       setRemoveBtns(true);
