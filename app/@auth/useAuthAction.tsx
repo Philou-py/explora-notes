@@ -25,8 +25,9 @@ export function useAuthAction() {
         if (result.status === "success") {
           setShowAuthModal(false);
           setTimeout(() => {
+            // Don't use refresh and push together
             router.refresh();
-            router.push(result.redirectURL);
+            router.back();
           }, 200);
         } else {
           setIsLoading(false);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useMemo } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams } from "next/navigation";
 import { SideBarContext, TemplateForGr } from "@/contexts/SideBarContext";
 import Card, { CardHeader, CardContent, CardActions } from "@/components/Card";

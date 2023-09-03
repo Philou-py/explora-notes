@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Copy } from "./CopyDialog";
 import { Scale } from "./StudentMarksTable";
 import Card, { CardHeader, CardContent, CardActions } from "@/components/Card";
@@ -40,89 +40,81 @@ export default function CopyForm({
   const [penaltyPoints, setPenaltyPoints] = useState(0);
   const [catRes, setCatRes] = useState(copy.categoryResults);
 
-  useEffect(() => setCatRes(copy.categoryResults), [copy]);
+  useEffect(() => {
+    setCatRes(copy.categoryResults);
+    setBonusPoints(0);
+    setPenaltyPoints(0);
+  }, [copy]);
 
-  const totalPoints = useMemo(
-    () => catRes.reduce((sum, catRes) => (catRes.points === -1 ? sum : sum + catRes.points), 0),
-    [catRes]
-  );
+  const totalPoints = useMemo(() => {
+    const categoryPoints = catRes.reduce(
+      (sum, catRes) => (catRes.points === -1 ? sum : sum + catRes.points),
+      0
+    );
+    return categoryPoints + bonusPoints - penaltyPoints;
+  }, [catRes, bonusPoints, penaltyPoints]);
 
-  const mark = useMemo(
-    () => ((bonusPoints - penaltyPoints + totalPoints) * 20) / scale.totalPoints,
-    [bonusPoints, penaltyPoints, totalPoints, scale]
-  );
+  const mark = useMemo(() => (totalPoints * 20) / scale.totalPoints, [totalPoints, scale]);
 
   const areAllChecked = useMemo(
     () => catRes.every((c) => c.criterionResults.every((d) => d.points !== -2)),
     [catRes]
   );
 
-  const giveAllPoints = useCallback(
-    () =>
-      setCatRes((catRes) =>
-        catRes.map((c, cI) => ({
-          ...c,
-          points: scale.categories[cI].maxPoints,
-          criterionResults: c.criterionResults.map((d, dI) => ({
-            ...d,
-            points: scale.categories[cI].criteria[dI].maxPoints,
-          })),
-        }))
-      ),
-    [scale]
-  );
+  const giveAllPoints = () => {
+    const newCatRes = catRes.map((c, cI) => ({
+      ...c,
+      points: scale.categories[cI].maxPoints,
+      criterionResults: c.criterionResults.map((d, dI) => ({
+        ...d,
+        points: scale.categories[cI].criteria[dI].maxPoints,
+      })),
+    }));
+    setCatRes(newCatRes);
+  };
 
-  const giveNoPoints = useCallback(
-    () =>
-      setCatRes((catRes) =>
-        catRes.map((c) => ({
-          ...c,
-          points: 0,
-          criterionResults: c.criterionResults.map((d) => ({ ...d, points: 0 })),
-        }))
-      ),
-    []
-  );
+  const giveNoPoints = () => {
+    const newCatRes = catRes.map((c) => ({
+      ...c,
+      points: 0,
+      criterionResults: c.criterionResults.map((d) => ({ ...d, points: 0 })),
+    }));
+    setCatRes(newCatRes);
+  };
 
-  const handleSelectNA = useCallback(
-    (catIndex: number, critIndex: number) =>
-      setCatRes((catRes) => {
-        let oldPoints = catRes[catIndex].criterionResults[critIndex].points;
-        if (oldPoints === -2 || oldPoints === -1) oldPoints = 0;
-        return catRes.map((c, cI) =>
-          cI === catIndex
-            ? {
-                ...c,
-                points: c.points - oldPoints,
-                criterionResults: c.criterionResults.map((d, dI) =>
-                  dI === critIndex ? { ...d, points: -1 } : d
-                ),
-              }
-            : c
-        );
-      }),
-    []
-  );
+  const handleSelectNA = (catIndex: number, critIndex: number) => {
+    let oldPoints = catRes[catIndex].criterionResults[critIndex].points;
+    if (oldPoints === -2 || oldPoints === -1) oldPoints = 0;
+    const newCatRes = catRes.map((c, cI) =>
+      cI === catIndex
+        ? {
+            ...c,
+            points: c.points - oldPoints,
+            criterionResults: c.criterionResults.map((d, dI) =>
+              dI === critIndex ? { ...d, points: -1 } : d
+            ),
+          }
+        : c
+    );
+    setCatRes(newCatRes);
+  };
 
-  const handleSelectPoints = useCallback(
-    (catIndex: number, critIndex: number, points: number) =>
-      setCatRes((catRes) => {
-        let oldPoints = catRes[catIndex].criterionResults[critIndex].points;
-        if (oldPoints === -2 || oldPoints === -1) oldPoints = 0;
-        return catRes.map((c, cI) =>
-          cI === catIndex
-            ? {
-                ...c,
-                points: c.points - oldPoints + points,
-                criterionResults: c.criterionResults.map((d, dI) =>
-                  dI === critIndex ? { ...d, points } : d
-                ),
-              }
-            : c
-        );
-      }),
-    []
-  );
+  const handleSelectPoints = (catIndex: number, critIndex: number, points: number) => {
+    let oldPoints = catRes[catIndex].criterionResults[critIndex].points;
+    if (oldPoints === -2 || oldPoints === -1) oldPoints = 0;
+    const newCatRes = catRes.map((c, cI) =>
+      cI === catIndex
+        ? {
+            ...c,
+            points: c.points - oldPoints + points,
+            criterionResults: c.criterionResults.map((d, dI) =>
+              dI === critIndex ? { ...d, points } : d
+            ),
+          }
+        : c
+    );
+    setCatRes(newCatRes);
+  };
 
   const resultsTemplate =
     catRes.length !== 0 &&
@@ -139,10 +131,10 @@ export default function CopyForm({
                     <label>
                       <input
                         type="radio"
-                        name={`crit-${crit.id}`}
-                        value=""
+                        name={`cat-${cat.id}-crit-${crit.id}`}
+                        value="NA"
                         checked={catRes[catIndex].criterionResults[critIndex].points === -1}
-                        onChange={() => handleSelectNA(catIndex, critIndex)}
+                        onInput={() => handleSelectNA(catIndex, critIndex)}
                         required
                       />
                       N/T
@@ -161,10 +153,10 @@ export default function CopyForm({
                         <label>
                           <input
                             type="radio"
-                            name={`crit-${crit.id}`}
+                            name={`cat-${cat.id}-crit-${crit.id}`}
                             value={i}
                             checked={i === catRes[catIndex].criterionResults[critIndex].points}
-                            onChange={() => handleSelectPoints(catIndex, critIndex, i)}
+                            onInput={() => handleSelectPoints(catIndex, critIndex, i)}
                             required
                           />
                           {i}
@@ -207,24 +199,28 @@ export default function CopyForm({
 
         <CardContent>
           <p className={cx("studentInQuestion")}>Élève : {studentName}</p>
-          <div className={cx("preselectControls")}>
-            <Button
-              type="text"
-              className="teal--text"
-              prependIcon="done_all"
-              onClick={giveAllPoints}
-            >
-              Note max
-            </Button>
-            <Button
-              type="text"
-              className="purple--text text--lighten-1"
-              prependIcon="block"
-              onClick={giveNoPoints}
-            >
-              Copie blanche
-            </Button>
-          </div>
+          {!copy.shouldObserve && (
+            <>
+              <div className={cx("preselectControls")}>
+                <Button
+                  type="text"
+                  className="teal--text"
+                  prependIcon="done_all"
+                  onClick={giveAllPoints}
+                >
+                  Note max
+                </Button>
+                <Button
+                  type="text"
+                  className="purple--text text--lighten-1"
+                  prependIcon="block"
+                  onClick={giveNoPoints}
+                >
+                  Copie blanche
+                </Button>
+              </div>
+            </>
+          )}
           <Spacer />
           {resultsTemplate}
           <div className={cx("bonusPenalty")}>
@@ -258,7 +254,8 @@ export default function CopyForm({
             />
           </div>
           <p>
-            Note : {totalPoints} {bonusPoints !== 0 && `+ ${bonusPoints} `}
+            Note : {totalPoints + penaltyPoints - bonusPoints}{" "}
+            {bonusPoints !== 0 && `+ ${bonusPoints} `}
             {penaltyPoints !== 0 && `- ${penaltyPoints} `}/ {scale.totalPoints}
             {scale.totalPoints !== 20 && ` | Note sur 20 : ${roundNum(mark, 2)} / 20`}
           </p>
