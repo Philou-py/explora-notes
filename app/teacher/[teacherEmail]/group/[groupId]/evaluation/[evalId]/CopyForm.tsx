@@ -39,12 +39,17 @@ export default function CopyForm({
   const [bonusPoints, setBonusPoints] = useState(0);
   const [penaltyPoints, setPenaltyPoints] = useState(0);
   const [catRes, setCatRes] = useState(copy.categoryResults);
+  const [removeBtns, setRemoveBtns] = useState(false);
 
   useEffect(() => {
     setCatRes(copy.categoryResults);
     setBonusPoints(0);
     setPenaltyPoints(0);
-  }, [copy]);
+    setRemoveBtns(false);
+    if (actionType === "editCopy") {
+      setRemoveBtns(true);
+    }
+  }, [copy, actionType]);
 
   const totalPoints = useMemo(() => {
     const categoryPoints = catRes.reduce(
@@ -71,6 +76,7 @@ export default function CopyForm({
       })),
     }));
     setCatRes(newCatRes);
+    setRemoveBtns(true);
   };
 
   const giveNoPoints = () => {
@@ -80,6 +86,7 @@ export default function CopyForm({
       criterionResults: c.criterionResults.map((d) => ({ ...d, points: 0 })),
     }));
     setCatRes(newCatRes);
+    setRemoveBtns(true);
   };
 
   const handleSelectNA = (catIndex: number, critIndex: number) => {
@@ -97,6 +104,7 @@ export default function CopyForm({
         : c
     );
     setCatRes(newCatRes);
+    setRemoveBtns(true);
   };
 
   const handleSelectPoints = (catIndex: number, critIndex: number, points: number) => {
@@ -114,6 +122,7 @@ export default function CopyForm({
         : c
     );
     setCatRes(newCatRes);
+    setRemoveBtns(true);
   };
 
   const resultsTemplate =
@@ -134,7 +143,7 @@ export default function CopyForm({
                         name={`cat-${cat.id}-crit-${crit.id}`}
                         value="NA"
                         checked={catRes[catIndex].criterionResults[critIndex].points === -1}
-                        onInput={() => handleSelectNA(catIndex, critIndex)}
+                        onChange={() => handleSelectNA(catIndex, critIndex)}
                         required
                       />
                       N/T
@@ -156,7 +165,7 @@ export default function CopyForm({
                             name={`cat-${cat.id}-crit-${crit.id}`}
                             value={i}
                             checked={i === catRes[catIndex].criterionResults[critIndex].points}
-                            onInput={() => handleSelectPoints(catIndex, critIndex, i)}
+                            onChange={() => handleSelectPoints(catIndex, critIndex, i)}
                             required
                           />
                           {i}
@@ -199,7 +208,7 @@ export default function CopyForm({
 
         <CardContent>
           <p className={cx("studentInQuestion")}>Élève : {studentName}</p>
-          {!copy.shouldObserve && (
+          {!copy.shouldObserve && !removeBtns && (
             <>
               <div className={cx("preselectControls")}>
                 <Button
