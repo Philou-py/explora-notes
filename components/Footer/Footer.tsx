@@ -5,7 +5,7 @@ let cx = cn.bind(footerStyles);
 
 export default function Footer() {
   return (
-    <footer className={cx("footer")}>
+    <footer className={cn(cx("footer"), "noprint")}>
       <StackedWavesSVG className={cx("bgSVG")} />
       <p>
         Contactez-nous via <a href="mailto:exploranotes@gmail.com">exploranotes@gmail.com</a> !

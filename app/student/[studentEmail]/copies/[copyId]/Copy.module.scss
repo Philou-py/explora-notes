@@ -1,0 +1,45 @@
+$xs: 600px;
+
+.copyDisplay {
+  .markSummary {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 40px;
+  }
+
+  .results {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-size: 24px;
+
+    .categoryResult {
+      margin: 20px 30px;
+      padding: 10px 30px;
+      border-radius: 20px;
+      box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%),
+        0px 1px 5px 0px rgb(0 0 0 / 12%);
+
+      @media (max-width: $xs) {
+        width: 100%;
+        margin: 20px 0;
+      }
+    }
+
+    .category {
+      text-align: center;
+      font-size: 1.3em;
+      text-decoration: underline;
+    }
+
+    .criteria {
+      list-style-type: none;
+      padding-left: 0;
+
+      li {
+        margin: 10px 0;
+        font-size: 1em;
+      }
+    }
+  }
+}

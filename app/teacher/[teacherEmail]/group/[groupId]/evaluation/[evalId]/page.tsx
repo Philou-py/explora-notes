@@ -7,6 +7,7 @@ import { dgraphQuery } from "@/app/dgraphQuery";
 import EditEvalTrigger from "./EditEvalTrigger";
 import DeleteEvalButton from "./DeleteEvalButton";
 import ExportEvalButton from "./ExportEvalButton";
+import PublishEvalButton from "./PublishEvalButton";
 
 const cx = cn.bind(evalStyles);
 
@@ -18,9 +19,13 @@ const GET_EVAL = `
   }
 `;
 
-interface Evaluation {
-  title: string;
-}
+const GET_EVAL_PUBLISHED = `
+  query($evalId: ID!) {
+    getEvaluation(id: $evalId) {
+      isPublished
+    }
+  }
+`;
 
 const GET_GROUP = `
   query($groupId: ID!) {
@@ -34,8 +39,19 @@ interface Group {
   name: string;
 }
 
-async function fetchEval(evalId: string): Promise<Evaluation> {
-  return await dgraphQuery(GET_EVAL, { evalId }, "getEvaluation", `getEvalTitle-${evalId}`);
+async function fetchEvalTitle(evalId: string): Promise<string> {
+  const e = await dgraphQuery(GET_EVAL, { evalId }, "getEvaluation", `getEvalTitle-${evalId}`);
+  return e.title;
+}
+
+async function fetchEvalPublished(evalId: string): Promise<boolean> {
+  const e = await dgraphQuery(
+    GET_EVAL_PUBLISHED,
+    { evalId },
+    "getEvaluation",
+    `getEvalPublished-${evalId}`
+  );
+  return e.isPublished;
 }
 
 async function fetchGroup(groupId: string): Promise<Group> {
@@ -43,12 +59,14 @@ async function fetchGroup(groupId: string): Promise<Group> {
 }
 
 export default async function Page({ params: { groupId, evalId } }) {
-  const evaluation = await fetchEval(evalId);
+  const evalTitle = await fetchEvalTitle(evalId);
   const { name: groupName } = await fetchGroup(groupId);
+  const isPublished = await fetchEvalPublished(evalId);
+  console.log(isPublished);
 
   return (
     <Container className={cx("evaluation")} narrow>
-      <h1>{evaluation.title}</h1>
+      <h1>{evalTitle}</h1>
       <ActionContextProvider>
         <section>
           <h2 className={cx("editEvalTrigger")}>
@@ -58,8 +76,13 @@ export default async function Page({ params: { groupId, evalId } }) {
           <StudentMarksTable evalId={evalId} />
         </section>
         <div className={cx("evalButtons")}>
-          <DeleteEvalButton />
-          <ExportEvalButton evalTitle={evaluation.title} groupName={groupName} />
+          <div className={cx("publish")}>
+            <PublishEvalButton isPublished={isPublished} />
+          </div>
+          <div className={cx("exportDelete")}>
+            <DeleteEvalButton />
+            <ExportEvalButton evalTitle={evalTitle} groupName={groupName} />
+          </div>
         </div>
       </ActionContextProvider>
     </Container>

@@ -1,0 +1,8 @@
+$sm: 960px;
+
+.joinGroupCard {
+  width: clamp(300px, 40%, 600px);
+  @media (max-width: $sm) {
+    width: 90%;
+  }
+}

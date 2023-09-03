@@ -21,7 +21,7 @@ export default function SignOutButton() {
 
   return (
     <Button
-      className="primary--text"
+      className="primary--text mt-4"
       type="outlined"
       prependIcon="logout"
       onClick={signOut}

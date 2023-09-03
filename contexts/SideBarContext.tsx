@@ -5,6 +5,7 @@ import Dialog from "@/components/Dialog";
 import CreateGroupForm from "@/app/teacher/[teacherEmail]/group/CreateGroupForm";
 import CreateEvalForm from "@/app/teacher/[teacherEmail]/group/[groupId]/evaluation/CreateEvalForm";
 import { EvalTemplate } from "@/app/teacher/[teacherEmail]/template/[templateId]/get-template/route";
+import JoinGroupForm from "@/app/student/[studentEmail]/JoinGroupForm";
 
 async function fetchTemplate(url: string): Promise<EvalTemplate> {
   const response = await fetch(url);
@@ -46,6 +47,8 @@ export const SideBarContext = createContext({
   isEditingEval: "",
   setIsEditingEval: (_: string) => {},
   getPrefillInfo: (_: string, __: string, ___: string, ____: string) => {},
+  jGDialogOpen: false,
+  setJGDialogOpen: (_: boolean | ((_: boolean) => boolean)) => {},
 });
 
 export default function SideBarProvider({
@@ -63,6 +66,8 @@ export default function SideBarProvider({
     setIsEditingEval("");
     setCreateEvalTemplate(null);
   }, []);
+  const [jGDialogOpen, setJGDialogOpen] = useState(false);
+  const closeJGDialog = useCallback(() => setJGDialogOpen(false), []);
   const [createEvalTemplate, setCreateEvalTemplate] = useState<TemplateForGr>(null);
   const [isEditingEval, setIsEditingEval] = useState("");
   const getPrefillInfo = useCallback(
@@ -106,6 +111,8 @@ export default function SideBarProvider({
         isEditingEval,
         setIsEditingEval,
         getPrefillInfo,
+        jGDialogOpen,
+        setJGDialogOpen,
       }}
     >
       <Dialog showDialog={cGDialogOpen}>
@@ -113,6 +120,9 @@ export default function SideBarProvider({
       </Dialog>
       <Dialog showDialog={cEDialogOpen}>
         <CreateEvalForm closeDialog={closeCEDialog} />
+      </Dialog>
+      <Dialog showDialog={jGDialogOpen}>
+        <JoinGroupForm closeDialog={closeJGDialog} />
       </Dialog>
       {children}
     </SideBarContext.Provider>

@@ -14,7 +14,7 @@ interface SideBarProps {
 
 export default async function SideBar({ accountType, currentUser }: SideBarProps) {
   return (
-    <div className={cx("content")}>
+    <div className={cn(cx("content"), "noprint")}>
       {currentUser && (
         <>
           <Avatar

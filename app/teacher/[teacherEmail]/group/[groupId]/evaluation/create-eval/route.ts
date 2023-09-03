@@ -104,6 +104,7 @@ export async function POST(request: Request, { params: { teacherEmail, groupId }
     average: -1,
     isClosed: false,
     criteriaToObserve: [],
+    isPublished: false,
     teacher: {
       email: teacherEmail,
     },

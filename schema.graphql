@@ -76,6 +76,7 @@ type Evaluation {
   teacher: Teacher!
   isClosed: Boolean!
   criteriaToObserve: [Criterion!]!
+  isPublished: Boolean!
 }
 
 type Category {

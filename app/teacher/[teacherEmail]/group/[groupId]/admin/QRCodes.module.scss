@@ -1,0 +1,14 @@
+.studentQRs {
+  display: flex;
+  flex-wrap: wrap;
+
+  .studentWithQR {
+    padding-right: 20px;
+    height: 33vh;
+
+    p {
+      text-align: center;
+      margin: 0;
+    }
+  }
+}
