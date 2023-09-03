@@ -49,7 +49,11 @@ export async function POST(request: Request) {
     });
 
     const response = NextResponse.json(
-      { msg: `Content de vous revoir, ${checkedUser.displayName} !`, status: "success" },
+      {
+        msg: `Content de vous revoir, ${checkedUser.displayName} !`,
+        redirectURL: `/${aT}/${email}`,
+        status: "success",
+      },
       { status: 201 }
     );
 

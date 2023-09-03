@@ -20,4 +20,14 @@ $xs: 600px;
       }
     }
   }
+
+  .evalButtons {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+
+    button {
+      margin-right: 10px;
+    }
+  }
 }

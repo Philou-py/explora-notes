@@ -78,7 +78,11 @@ export async function POST(request: Request) {
     });
 
     const response = NextResponse.json(
-      { msg: `Bienvenue, ${newUser.displayName} !`, status: "success" },
+      {
+        msg: `Bienvenue, ${newUser.displayName} !`,
+        redirectURL: `/${accountType}/${newUser.email}`,
+        status: "success",
+      },
       { status: 201 }
     );
     response.cookies.set({

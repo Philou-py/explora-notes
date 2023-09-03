@@ -26,7 +26,7 @@ export function useAuthAction() {
           setShowAuthModal(false);
           setTimeout(() => {
             router.refresh();
-            router.back();
+            router.push(result.redirectURL);
           }, 200);
         } else {
           setIsLoading(false);

@@ -49,9 +49,8 @@ export default function DeleteEvalButton() {
         )
       }
       isLoading={isLoading}
-      style={{ margin: "40px auto" }}
     >
-      Supprimer l&rsquo;évaluation
+      Supprimer
     </Button>
   );
 }

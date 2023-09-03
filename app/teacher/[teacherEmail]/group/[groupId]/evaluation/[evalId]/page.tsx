@@ -6,6 +6,7 @@ import StudentMarksTable from "./StudentMarksTable";
 import { dgraphQuery } from "@/app/dgraphQuery";
 import EditEvalTrigger from "./EditEvalTrigger";
 import DeleteEvalButton from "./DeleteEvalButton";
+import ExportEvalButton from "./ExportEvalButton";
 
 const cx = cn.bind(evalStyles);
 
@@ -56,7 +57,10 @@ export default async function Page({ params: { groupId, evalId } }) {
           </h2>
           <StudentMarksTable evalId={evalId} />
         </section>
-        <DeleteEvalButton />
+        <div className={cx("evalButtons")}>
+          <DeleteEvalButton />
+          <ExportEvalButton evalTitle={evaluation.title} />
+        </div>
       </ActionContextProvider>
     </Container>
   );
