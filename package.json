@@ -1,6 +1,6 @@
 {
-  "name": "explora-note",
-  "version": "1.3.1",
+  "name": "explora-notes",
+  "version": "2.0.0",
   "private": true,
   "author": "Philippe Schoenhenz",
   "scripts": {
