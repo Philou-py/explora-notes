@@ -13,7 +13,7 @@ import SideBarWrapper from "@/components/SideBar/SideBarWrapper";
 import { DGRAPH_URL } from "@/config";
 
 export const metadata: Metadata = {
-  title: "ExploraNotes - Professeur",
+  title: "ExploraNotes - Élève",
 };
 
 const publicKey = readFileSync("public.key");

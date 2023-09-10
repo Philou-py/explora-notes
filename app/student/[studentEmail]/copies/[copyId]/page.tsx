@@ -117,7 +117,7 @@ export default async function Page({ params: { copyId } }) {
         {copy.categoryResults.map((catRes) => (
           <div className={cx("categoryResult")} key={catRes.id}>
             <p className={cx("category")}>
-              {catRes.category.label} : {catRes.points}
+              {catRes.category.label} : {catRes.points} / {catRes.category.maxPoints}
             </p>
             <ul className={cx("criteria")}>
               {catRes.criterionResults.map((critRes) => (
