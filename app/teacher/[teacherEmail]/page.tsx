@@ -7,9 +7,13 @@ export default function TeacherHome() {
       <p className="text-justify">
         Cette application s&rsquo;adresse aux professeurs à la recherche d&rsquo;un outil
         informatique de saisie, de synthèse et d&rsquo;archivage des notes de leurs élèves. Elle
-        permet de créer ses groupes d&rsquo;élèves, définir le barème de ses évaluations, saisir les
-        résultats détaillés de chaque copie, consulter les moyennes de classes et les moyennes
-        individuelles.
+        permet de créer ses groupes d&rsquo;élèves, définir le barème de ses évaluations et de
+        saisir les résultats détaillés de chaque copie.
+      </p>
+      <p className="text-justify">
+        Une fois les copies corrigées et les résultats publiés, les élèves possédant un compte
+        peuvent rapidement consulter le détail de leurs notes. Pour rejoindre un groupe, rien de
+        plus simple : il suffit de scanner un QR Code fourni par le professeur.
       </p>
       <p className="text-justify">
         Ce site a été créé pour répondre à la demande d&rsquo;un professeur. Son créateur sera ravi
