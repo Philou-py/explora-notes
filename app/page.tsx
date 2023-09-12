@@ -29,8 +29,8 @@ export default function Home() {
   return (
     <>
       <NavBar />
-      <Container>
-        <h1 className="pageTitle text-center">Bienvenue dans ExploraNotes !</h1>
+      <Container narrow>
+        <h1 className="pageTitle text-center mx-0">Bienvenue dans ExploraNotes !</h1>
         <p className="text-justify">
           Cette application s&rsquo;adresse aux professeurs à la recherche d&rsquo;un outil
           informatique de saisie, de synthèse et d&rsquo;archivage des notes de leurs élèves. Elle

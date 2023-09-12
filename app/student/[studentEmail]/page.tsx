@@ -2,8 +2,8 @@ import Container from "@/components/Container";
 
 export default function StudentHome() {
   return (
-    <Container>
-      <h1 className="pageTitle text-center">Élève, Bienvenue dans ExploraNotes !</h1>
+    <Container narrow>
+      <h1 className="pageTitle text-center mx-0">Élève, Bienvenue dans ExploraNotes !</h1>
       <p className="text-justify">
         Cette application s&rsquo;adresse aux professeurs à la recherche d&rsquo;un outil
         informatique de saisie, de synthèse et d&rsquo;archivage des notes de leurs élèves. Elle
