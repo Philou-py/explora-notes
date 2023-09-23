@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       value: jwt,
       httpOnly: true,
       maxAge: 60 * 60 * 24 * 365, // valid for one year
-      sameSite: "strict",
+      sameSite: "lax", // Allow cookies to be sent on navigation
       secure: true,
     });
 
