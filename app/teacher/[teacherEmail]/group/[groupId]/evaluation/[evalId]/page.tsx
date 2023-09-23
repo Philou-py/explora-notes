@@ -62,7 +62,6 @@ export default async function Page({ params: { groupId, evalId } }) {
   const evalTitle = await fetchEvalTitle(evalId);
   const { name: groupName } = await fetchGroup(groupId);
   const isPublished = await fetchEvalPublished(evalId);
-  console.log(isPublished);
 
   return (
     <Container className={cx("evaluation")} narrow>

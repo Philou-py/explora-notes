@@ -1,8 +1,17 @@
 .studentQRs {
-  display: flex;
-  flex-wrap: wrap;
+  display: none;
+
+  &.show {
+    display: flex;
+    flex-wrap: wrap;
+
+    .studentWithQR {
+      display: block;
+    }
+  }
 
   .studentWithQR {
+    display: none;
     padding-right: 20px;
     height: 33vh;
 

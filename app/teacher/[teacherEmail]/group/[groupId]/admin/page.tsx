@@ -5,10 +5,6 @@ import AddStudents from "./AddStudents";
 import StudentsTable from "./StudentsTable";
 import QRCodes from "./QRCodes";
 import { dgraphQuery } from "@/app/dgraphQuery";
-import { readFileSync } from "fs";
-import { sign } from "jsonwebtoken";
-
-const privateKey = readFileSync("private.key");
 
 const cx = cn.bind(groupAdminStyles);
 
@@ -52,18 +48,8 @@ async function getGroup(groupId: string): Promise<Group> {
   return await dgraphQuery(GET_GROUP, { groupId }, "getGroup", "getGroup-" + groupId);
 }
 
-async function getSignedIDs(groupStudentIDs: string[]) {
-  return groupStudentIDs.map((id) => {
-    return sign({ groupStudentId: id }, privateKey, {
-      algorithm: "RS256",
-      expiresIn: "1y",
-    });
-  });
-}
-
 export default async function Page({ params: { groupId } }: { params: { groupId: string } }) {
   const group = await getGroup(groupId);
-  const signedIDs = await getSignedIDs(group.groupStudents.map((grSt) => grSt.id));
 
   return (
     <Container className={cx("groupAdmin")} narrow>
@@ -75,7 +61,7 @@ export default async function Page({ params: { groupId } }: { params: { groupId:
         <AddStudents />
         <StudentsTable groupStudents={group.groupStudents} />
       </div>
-      <QRCodes groupStudents={group.groupStudents} signedIDs={signedIDs} />
+      <QRCodes groupStudents={group.groupStudents} />
     </Container>
   );
 }
