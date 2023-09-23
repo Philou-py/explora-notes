@@ -15,6 +15,8 @@ const cormorantUpright = Cormorant_Upright({
 
 export const metadata: Metadata = {
   title: "ExploraNotes",
+  description:
+    "ExploraNotes est une application web de gestion des notes qui permet de saisir et de consulter facilement toutes ses évaluations et copies.",
   manifest: "/manifest.json",
   applicationName: "ExploraNotes",
   appleWebApp: {
