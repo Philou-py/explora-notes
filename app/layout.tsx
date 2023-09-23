@@ -1,4 +1,4 @@
-import "material-symbols/rounded.scss";
+import "@material-symbols/font-600/rounded.scss";
 import "@/styles/globals.scss";
 import "@/styles/typography.scss";
 import "@/styles/colours.scss";
