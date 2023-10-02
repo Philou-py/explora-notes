@@ -30,7 +30,7 @@ export default function useValidation(
     } else {
       // Default validation (email)
       let defaultValidationPassed = true;
-      const emailRegex = /^[a-z]+(\.[a-z]+)?@[a-z-]+\.[a-z]+(\.[a-z]+)?$/;
+      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
       if (inputType === "email" && !emailRegex.test(inputValue)) {
         setMessage("Invalid email");
         defaultValidationPassed = false;
