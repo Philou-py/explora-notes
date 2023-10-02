@@ -14,6 +14,13 @@ import { useParams } from "next/navigation";
 
 const cx = cn.bind(copyFormStyles);
 
+let counter = 0;
+
+// Add counter to avoid radio button conflicts between two forms
+function incrementCounter() {
+  counter++;
+}
+
 interface Props {
   copy: Copy;
   scale: Scale;
@@ -42,6 +49,7 @@ export default function CopyForm({
   const [removeBtns, setRemoveBtns] = useState(false);
 
   useEffect(() => {
+    incrementCounter();
     setCatRes(copy.categoryResults);
     setBonusPoints(copy.bonusPoints);
     setPenaltyPoints(copy.penaltyPoints);
@@ -140,7 +148,7 @@ export default function CopyForm({
                     <label>
                       <input
                         type="radio"
-                        name={`cat-${cat.id}-crit-${crit.id}`}
+                        name={`copy-${counter}-cat-${cat.id}-crit-${crit.id}`}
                         value="NA"
                         checked={catRes[catIndex].criterionResults[critIndex].points === -1}
                         onChange={() => handleSelectNA(catIndex, critIndex)}
@@ -162,7 +170,7 @@ export default function CopyForm({
                         <label>
                           <input
                             type="radio"
-                            name={`cat-${cat.id}-crit-${crit.id}`}
+                            name={`copy-${counter}-cat-${cat.id}-crit-${crit.id}`}
                             value={i}
                             checked={i === catRes[catIndex].criterionResults[critIndex].points}
                             onChange={() => handleSelectPoints(catIndex, critIndex, i)}
