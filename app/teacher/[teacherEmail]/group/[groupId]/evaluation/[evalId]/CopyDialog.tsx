@@ -5,10 +5,12 @@ import { Scale } from "./StudentMarksTable";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { ActionContext } from "./ActionContext";
 import Dialog from "@/components/Dialog";
+import { useParams } from "next/navigation";
 
 export interface Copy {
   id: string;
   totalPoints: number;
+  comments: string;
   bonusPoints: number;
   penaltyPoints: number;
   shouldObserve: boolean;
@@ -32,6 +34,7 @@ interface Props {
 
 const emptyCopy = {
   id: "",
+  comments: "",
   totalPoints: 0,
   bonusPoints: 0,
   penaltyPoints: 0,
@@ -40,6 +43,7 @@ const emptyCopy = {
 };
 
 export default function CopyDialog({ scale, criteriaToObserve }: Props) {
+  const { teacherEmail, groupId, evalId } = useParams();
   const { action, resetAction } = useContext(ActionContext);
   const [actionType, setActionType] = useState("");
   const [copy, setCopy] = useState(emptyCopy);
@@ -55,7 +59,9 @@ export default function CopyDialog({ scale, criteriaToObserve }: Props) {
     async function getCopy(copyId: string) {
       let copy: Copy;
       if (copyId) {
-        const response = await fetch(`/teacher/copy/${copyId}`);
+        const response = await fetch(
+          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/copy/${copyId}`
+        );
         copy = (await response.json()).copy;
       } else {
         copy = {
@@ -94,7 +100,7 @@ export default function CopyDialog({ scale, criteriaToObserve }: Props) {
     if (action.type) {
       getCopy(action.info.copyId);
     }
-  }, [action, scale]);
+  }, [action, scale, teacherEmail, groupId, evalId]);
 
   return (
     <Dialog showDialog={show}>

@@ -44,7 +44,7 @@ export default async function NavBar({
             className={cx("avatar")}
             initials={currentUser.displayName
               .split(" ")
-              .map((part: string) => part[0] ? part[0].toUpperCase() : "")
+              .map((part: string) => (part[0] ? part[0].toUpperCase() : ""))
               .join("")}
             borderColour="#33c9ff"
             size={50}

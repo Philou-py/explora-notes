@@ -22,7 +22,7 @@ export default async function SideBar({ accountType, currentUser }: SideBarProps
             className={sideBarStyles.avatar}
             initials={currentUser.displayName
               .split(" ")
-              .map((part: string) => part[0] ? part[0].toUpperCase() : "")
+              .map((part: string) => (part[0] ? part[0].toUpperCase() : ""))
               .join("")}
             borderColour="#33c9ff"
             size={150}

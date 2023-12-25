@@ -104,6 +104,7 @@ type Copy {
   groupStudent: GroupStudent! @hasInverse(field: "copies")
   totalPoints: Float! @search
   mark: Float! @search
+  comments: String
   bonusPoints: Float! @search
   penaltyPoints: Float! @search
   categoryResults: [CategoryResult!]! @hasInverse(field: "copy")

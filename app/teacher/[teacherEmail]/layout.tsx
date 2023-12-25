@@ -50,16 +50,6 @@ const GET_TEACHER = `
   }
 `;
 
-async function getCurrentUser(userEmail: string) {
-  const user = await dgraphQuery(
-    GET_TEACHER,
-    { email: userEmail },
-    "getTeacher",
-    "getTeacher-" + userEmail
-  );
-  return user || null;
-}
-
 interface Props {
   nav: ReactNode;
   children: ReactNode;
@@ -69,7 +59,13 @@ interface Props {
 export default async function TeacherLayout({ children, params: { teacherEmail } }: Props) {
   const decodedEmail = decodeURIComponent(teacherEmail);
   checkTeacherEmail(decodedEmail);
-  const currentUser = await getCurrentUser(decodedEmail);
+  const user = await dgraphQuery(
+    GET_TEACHER,
+    { email: decodedEmail },
+    "getTeacher",
+    "getTeacher-" + decodedEmail
+  );
+  const currentUser = user || null;
 
   return (
     <SideBarProvider clippedSideBar={true} openByDefault={true} isAuthenticated={true}>

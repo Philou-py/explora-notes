@@ -43,6 +43,7 @@ export default function CopyForm({
   const { teacherEmail, groupId, evalId } = useParams();
   const { submitAction, isLoading } = useHandleMutation(closeDialog);
 
+  const [comments, setComments] = useState("");
   const [bonusPoints, setBonusPoints] = useState(0);
   const [penaltyPoints, setPenaltyPoints] = useState(0);
   const [catRes, setCatRes] = useState(copy.categoryResults);
@@ -51,6 +52,7 @@ export default function CopyForm({
   useEffect(() => {
     incrementCounter();
     setCatRes(copy.categoryResults);
+    setComments(copy.comments);
     setBonusPoints(copy.bonusPoints);
     setPenaltyPoints(copy.penaltyPoints);
     setRemoveBtns(false);
@@ -191,6 +193,14 @@ export default function CopyForm({
       </div>
     ));
 
+  const pointsChoices = [
+    ["0", "0"],
+    ["0.5", "0.5"],
+    ["1", "1"],
+    ["1.5", "1.5"],
+    ["2", "2"],
+  ];
+
   return (
     <Card className={cx("copyCard")}>
       <Form
@@ -204,7 +214,7 @@ export default function CopyForm({
               copyId: copy.id,
               studentId,
               categoryResults: catRes,
-              summary: { totalPoints, mark, bonusPoints, penaltyPoints },
+              summary: { totalPoints, mark, comments, bonusPoints, penaltyPoints },
             }
           )
         }
@@ -245,13 +255,7 @@ export default function CopyForm({
               type="select"
               label="Points bonus"
               prependIcon="add_circle"
-              selectItems={[
-                ["0", "0"],
-                ["0.5", "0.5"],
-                ["1", "1"],
-                ["1.5", "1.5"],
-                ["2", "2"],
-              ]}
+              selectItems={pointsChoices}
               setValue={(newVal) => setBonusPoints(Number(newVal))}
               value={bonusPoints.toString()}
             />
@@ -259,13 +263,7 @@ export default function CopyForm({
               type="select"
               label="Points malus"
               prependIcon="cancel"
-              selectItems={[
-                ["0", "0"],
-                ["0.5", "0.5"],
-                ["1", "1"],
-                ["1.5", "1.5"],
-                ["2", "2"],
-              ]}
+              selectItems={pointsChoices}
               setValue={(newVal) => setPenaltyPoints(Number(newVal))}
               value={penaltyPoints.toString()}
             />
@@ -276,6 +274,15 @@ export default function CopyForm({
             {penaltyPoints !== 0 && `- ${penaltyPoints} `}/ {scale.totalPoints}
             {scale.totalPoints !== 20 && ` | Note sur 20 : ${roundNum(mark, 2)} / 20`}
           </p>
+          <InputField
+            type="textarea"
+            label="Commentaire"
+            prependIcon="rate_review"
+            maxLength={1000}
+            nbRows={4}
+            setValue={(newVal) => setComments(newVal)}
+            value={comments}
+          />
         </CardContent>
 
         <CardActions>

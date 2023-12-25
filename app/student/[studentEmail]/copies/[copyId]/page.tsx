@@ -52,6 +52,7 @@ const GET_COPY = `
       }
       totalPoints
       mark
+      comments
       bonusPoints
       penaltyPoints
       categoryResults {
