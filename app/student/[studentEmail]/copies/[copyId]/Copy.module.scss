@@ -7,6 +7,26 @@ $xs: 600px;
     margin-bottom: 40px;
   }
 
+  .bonusPoints,
+  .penaltyPoints {
+    font-size: 0.8em;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .bonusPoints {
+    color: forestgreen;
+  }
+
+  .penaltyPoints {
+    color: crimson;
+  }
+
+  .comments {
+    margin: 15px 15%;
+    text-align: justify;
+  }
+
   .results {
     display: flex;
     justify-content: center;
@@ -28,7 +48,7 @@ $xs: 600px;
 
     .category {
       text-align: center;
-      font-size: 1.3em;
+      font-size: 1.2em;
       text-decoration: underline;
     }
 

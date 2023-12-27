@@ -14,6 +14,7 @@ interface Copy {
   };
   totalPoints: number;
   mark: number;
+  comments: string;
   bonusPoints: number;
   penaltyPoints: number;
   categoryResults: {
@@ -113,7 +114,16 @@ export default async function Page({ params: { copyId } }) {
       <h2 className={cx("markSummary")}>
         Note : {copy.totalPoints} / {copy.evaluation.totalPoints}
         {copy.evaluation.totalPoints !== 20 && ` - ${roundNum(copy.mark, 2)} / 20`}
+        <br />
+      {copy.bonusPoints !== 0 && (
+        <span className={cx("bonusPoints")}>Points bonus : {copy.bonusPoints}</span>
+      )}
+      {(copy.bonusPoints !== 0 && copy.penaltyPoints !== 0) && " - "}
+      {copy.penaltyPoints !== 0 && (
+        <span className={cx("penaltyPoints")}>Points malus : {copy.penaltyPoints}</span>
+      )}
       </h2>
+      <p className={cx("comments")}>{copy.comments}</p>
       <div className={cx("results")}>
         {copy.categoryResults.map((catRes) => (
           <div className={cx("categoryResult")} key={catRes.id}>
