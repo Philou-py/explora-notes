@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
-import { verify } from "jsonwebtoken";
 import { readFileSync } from "fs";
 import { NextResponse } from "next/server";
 import { DGRAPH_URL } from "@/config";
 import { sign } from "jsonwebtoken";
+import { checkIdentity } from "@/app/checkIdentity";
 
-const publicKey = readFileSync("public.key");
 const privateKey = readFileSync("private.key");
 
 export interface GroupStudent {
@@ -66,26 +64,14 @@ async function getSignedIDs(groupStudentIDs: string[]) {
   });
 }
 
-export async function GET(_: Request, { params: { groupId } }) {
-  const cookieStore = cookies();
-  const jwt = cookieStore.get("X-ExploraNotes-Auth");
-  if (!jwt)
-    return NextResponse.json(
-      { status: "error", msg: "Oh non ! Vous n'êtes pas connecté(e) !" },
-      { status: 401 }
-    );
+export async function GET(_: Request, { params: { teacherEmail, groupId } }) {
+  const identityCheck = await checkIdentity(
+    "teacher",
+    teacherEmail,
+    "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de générer les QR Codes pour ce groupe !"
+  );
+  if (identityCheck !== true) return identityCheck;
 
-  const payload = verify(jwt.value, publicKey, { algorithms: ["RS256"] });
-  if (typeof payload !== "object" || payload.accountType === "student")
-    return NextResponse.json(
-      {
-        status: "error",
-        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de générer les QR Codes pour ce groupe !",
-      },
-      { status: 403 }
-    );
-
-  const teacherEmail = payload.email;
   const group = await getGroup(groupId);
   const groupTeacher = group.teacher.email;
   if (groupTeacher !== teacherEmail)

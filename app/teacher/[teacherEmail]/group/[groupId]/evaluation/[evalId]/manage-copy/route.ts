@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { DGRAPH_URL } from "@/config";
 import { revalidateTag } from "next/cache";
+import { DGRAPH_URL } from "@/config";
 import { checkIdentity } from "@/app/checkIdentity";
-import { checkGroupTeacher } from "@/app/teacher/[teacherEmail]/group/checkGroupTeacher";
+import { checkGroupTeacher } from "@/app/teacher/[teacherEmail]/group/[groupId]/checkGroupTeacher";
 
 const ADD_COPY = `
   mutation($input: [AddCopyInput!]!) {

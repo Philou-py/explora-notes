@@ -7,11 +7,11 @@ interface ConfirmationProviderProps {
   children: ReactNode;
 }
 
-export const ConfirmationContext = createContext<
-  (msg: string, ...submitArgs: [string, string, object]) => void
->(() => {});
-
 type SubmitArgs = [string, string, object];
+
+export const ConfirmationContext = createContext<(msg: string, ...submitArgs: SubmitArgs) => void>(
+  () => {}
+);
 
 export default function ConfirmationProvider({ children }: ConfirmationProviderProps) {
   const [showDialog, setShowDialog] = useState(false);

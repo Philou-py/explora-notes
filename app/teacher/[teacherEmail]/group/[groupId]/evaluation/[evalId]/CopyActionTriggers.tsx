@@ -51,9 +51,9 @@ export default function CopyActionTriggers({ copyId, studentId, studentName }: P
             onClick={() =>
               promptConfirmation(
                 `Confirmez-vous vouloir supprimer la copie de ${studentName} ?`,
-                `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/delete-copy`,
+                `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage-copy/${copyId}`,
                 "DELETE",
-                { copyId }
+                {}
               )
             }
           />

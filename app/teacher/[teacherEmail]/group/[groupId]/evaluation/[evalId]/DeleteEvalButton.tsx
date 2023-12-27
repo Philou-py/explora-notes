@@ -44,7 +44,7 @@ export default function DeleteEvalButton() {
       prependIcon="delete"
       onClick={() =>
         submitDeletion(
-          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/delete-eval`,
+          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage`,
           "DELETE"
         )
       }

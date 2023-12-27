@@ -206,12 +206,10 @@ export default function CopyForm({
       <Form
         onSubmit={() =>
           submitAction(
-            `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/${
-              copy.id ? "update" : "create"
-            }-copy`,
-            "POST",
+            `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage-copy` +
+              (copy.id ? `/${copy.id}` : ""),
+            copy.id ? "PUT" : "POST",
             {
-              copyId: copy.id,
               studentId,
               categoryResults: catRes,
               summary: { totalPoints, mark, comments, bonusPoints, penaltyPoints },

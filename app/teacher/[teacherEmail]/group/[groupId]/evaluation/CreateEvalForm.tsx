@@ -63,7 +63,7 @@ export default function CreateEvalForm({ closeDialog }: { closeDialog: () => voi
     } else if (ed === "detailed") {
       const handleDeleteCreate = async () => {
         await fetch(
-          `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/${template.id}/delete-eval`,
+          `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/${template.id}/manage`,
           { method: "DELETE" }
         );
         submitAction(
@@ -76,8 +76,8 @@ export default function CreateEvalForm({ closeDialog }: { closeDialog: () => voi
       handleDeleteCreate();
     } else if (ed === "simple") {
       submitAction(
-        `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/${template.id}/update-eval`,
-        "POST",
+        `/teacher/${teacherEmail}/group/${template.groupId}/evaluation/${template.id}/manage`,
+        "PUT",
         newEvalToSend
       );
     }

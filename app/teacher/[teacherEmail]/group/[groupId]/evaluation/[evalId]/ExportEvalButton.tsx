@@ -49,10 +49,7 @@ export default function ExportEvalButton({ evalTitle, groupName }) {
       className="blue darken-2"
       prependIcon="download"
       onClick={() =>
-        submitExport(
-          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/export-eval`,
-          "GET"
-        )
+        submitExport(`/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage`, "GET")
       }
       isLoading={isLoading}
     >

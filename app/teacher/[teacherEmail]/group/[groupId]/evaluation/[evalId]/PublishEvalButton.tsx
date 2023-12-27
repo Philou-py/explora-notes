@@ -20,9 +20,9 @@ function useHandlePublish() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage-public`,
+          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage`,
           {
-            method: "POST",
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ isPublished }),
           }

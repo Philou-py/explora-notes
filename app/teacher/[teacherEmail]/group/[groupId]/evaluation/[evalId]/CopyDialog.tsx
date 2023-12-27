@@ -60,7 +60,7 @@ export default function CopyDialog({ scale, criteriaToObserve }: Props) {
       let copy: Copy;
       if (copyId) {
         const response = await fetch(
-          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/copy/${copyId}`
+          `/teacher/${teacherEmail}/group/${groupId}/evaluation/${evalId}/manage-copy/${copyId}`
         );
         copy = (await response.json()).copy;
       } else {

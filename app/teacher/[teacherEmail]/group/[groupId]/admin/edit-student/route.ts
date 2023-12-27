@@ -1,11 +1,8 @@
-import { cookies } from "next/headers";
-import { verify } from "jsonwebtoken";
-import { readFileSync } from "fs";
 import { NextResponse } from "next/server";
 import { DGRAPH_URL } from "@/config";
 import { revalidateTag } from "next/cache";
-
-const publicKey = readFileSync("public.key");
+import { checkIdentity } from "@/app/checkIdentity";
+import { checkGroupTeacher } from "@/app/teacher/[teacherEmail]/group/[groupId]/checkGroupTeacher";
 
 const UPDATE_STUDENT = `
   mutation($input: UpdateGroupStudentInput!) {
@@ -17,66 +14,20 @@ const UPDATE_STUDENT = `
   }
 `;
 
-interface Group {
-  teacher: {
-    email: string;
-  };
-}
+export async function PUT(request: Request, { params: { teacherEmail, groupId } }) {
+  const identityCheck = await checkIdentity(
+    "teacher",
+    teacherEmail,
+    "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de modifier cet élève !"
+  );
+  if (identityCheck !== true) return identityCheck;
 
-const GET_GROUP = `
-  query($groupId: ID!) {
-    getGroup(id: $groupId) {
-      teacher {
-        email
-      }
-    }
-  }
-`;
-
-async function getGroupTeacher(groupId: string): Promise<Group> {
-  const dgraphRes = await fetch(DGRAPH_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: GET_GROUP,
-      variables: { groupId },
-    }),
-  });
-  const result = await dgraphRes.json();
-  return result.data.getGroup.teacher.email;
-}
-
-export async function PUT(request: Request, { params: { groupId } }) {
-  const cookieStore = cookies();
-  const jwt = cookieStore.get("X-ExploraNotes-Auth");
-  if (!jwt)
-    return NextResponse.json(
-      { status: "error", msg: "Oh non ! Vous n'êtes pas connecté(e) !" },
-      { status: 401 }
-    );
-
-  const payload = verify(jwt.value, publicKey, { algorithms: ["RS256"] });
-  if (typeof payload !== "object" || payload.accountType === "student")
-    return NextResponse.json(
-      {
-        status: "error",
-        msg: "Oh non ! Vous n'êtes pas connecté(e), ou bien vous n'avez pas la permission de modifier cet élève !",
-      },
-      { status: 403 }
-    );
-
-  const teacherEmail = payload.email;
-  const groupTeacher = await getGroupTeacher(groupId);
-  if (groupTeacher !== teacherEmail)
-    return NextResponse.json(
-      {
-        status: "error",
-        msg: "Désolé, mais vous n'avez pas la permission de modifier cet élève !",
-      },
-      { status: 403 }
-    );
+  const groupTeacherCheck = await checkGroupTeacher(
+    groupId,
+    teacherEmail,
+    "Désolé, mais vous n'avez pas la permission de modifier cet élève !"
+  );
+  if (groupTeacherCheck !== true) return groupTeacherCheck;
 
   const { firstName, lastName, id } = await request.json();
 
